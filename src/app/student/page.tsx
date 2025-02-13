@@ -11,7 +11,7 @@ import { Separator } from "@radix-ui/react-separator";
 
 export default function Page() {
     // Set initial moods state
-    const [moods, setMoods] = useState([
+    const [moods, ] = useState([
         { icon: "😲", percentage: "0.00", label: "Surprised", bgClass: "bg-gray-100/50" },
         { icon: "😊", percentage: "0.00", label: "Happy", bgClass: "bg-gray-100/50" },
         { icon: "😐", percentage: "0.00", label: "Neutral", bgClass: "bg-gray-100/50" },
@@ -21,7 +21,7 @@ export default function Page() {
         { icon: "😨", percentage: "0.00", label: "Fearful", bgClass: "bg-gray-100/50" }
     ]);
 
-  const [currentTime, setCurrentTime] = useState(new Date());  
+  const [, setCurrentTime] = useState(new Date());  
 
   useEffect(() => {
     // Update the time every second
