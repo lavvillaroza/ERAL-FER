@@ -1,0 +1,91 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  user_id            Int      @id @default(autoincrement())
+  email              String   @unique
+  password           String    
+  role               String  
+  online_status      String  //Active; Inactive
+}
+
+model UserDetails {
+  user_id     Int @unique
+  name        String
+  course      String
+  profile_image Bytes    
+}
+
+model ClassRoom {
+  id                    Int @id @default(autoincrement()) 
+  classroom_name        String
+  description           String
+  date_schedule         String
+  classroom_teacher_id  Int  //user_id from UserDetails Table
+}
+
+model ClassStudent {  
+  classroom_id       Int @unique
+  student_id         Int  //user_id from UserDetails Table
+  grades             Decimal 
+}
+
+model ClassSchedule {
+  id  Int @id @default(autoincrement())
+  classroom_id      Int
+  date_schedule     String 
+  time_start        String
+  time_end          String  
+}
+
+model ClassLessonPlanTimeline {  
+  classsched_id      Int @unique
+  start_time         String
+  title              String  
+  description        String
+  status              String //Completed; Ongoing; Pending
+}
+
+model ClassStudentAttendance {  
+  classsched_id      Int @unique
+  student_id         Int
+  grades             Decimal
+  status             String //attended; absent
+}
+
+model ClassStudentFER {  
+  classsched_id      Int  @unique
+  student_id         Int  //user_id from UserDetails Table
+  surprised          Decimal
+  happy              Decimal
+  neutral            Decimal
+  sad                Decimal
+  angry              Decimal
+  disgusted          Decimal
+  fearful            Decimal
+  result             String // surprised; happy; neutral; sad; angry; disgusted; fearful;
+  remarks            String // Face_Expression_Detected; No_Face_Expression_Detected;
+  datetime_stamp     DateTime @default(now())  
+}
+
+model Notification {
+  id                  Int @id @default(autoincrement())
+  datetime_stamp      DateTime @default(now())
+  title               String
+  message             String
+  user_id             Int
+  color_code          String // 0 Green = Good; 1 Yellow = Warning; 2 Red = Critical;
+  status              Int //0 - Unread; 1 - Read
+}

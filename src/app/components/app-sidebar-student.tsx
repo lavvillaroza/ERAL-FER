@@ -1,16 +1,13 @@
 "use client";
 
 import * as React from "react"
-import {
-  BookOpen,
-  BookCopy ,
-  LifeBuoy,    
-  Send,  
+import {  
+  BookCopy ,  
   LayoutDashboard ,
-  School
+  School,  
 } from "lucide-react"
-import { NavMain } from "@/app/student/components/nav-main"
-import { NavUser } from "@/app/student/components/nav-user"
+import { NavMain } from "@/components/ui/nav-main"
+import { NavUser } from "@/components/ui/nav-user"
 import {
   Sidebar,
   SidebarContent,
@@ -29,38 +26,31 @@ const data = {
   navMain: [
     {
       title: "Dashboard",
-      url: "/student/dashboard",
+      url: "/student",
       icon: LayoutDashboard,
       isActive: true,
       items: [],
     },
     {
-      title: "Classes",
+      title: "My Classes",
       url: "#",
       icon: School,
       items: [
         {
           title: "Completed",
-          url: "/student/classes/completed",
+          url: "/student/my-classes/completed",
         },
         {
-          title: "On-Going",
-          url: "/student/classes/on-going",
+          title: "Current",
+          url: "/student/my-classes/current",
         }
-      ],
-    },
-    {
-      title: "Performance",
-      url: "#",
-      icon: BookOpen,
-      items: [        
       ],
     }
   ]
 }
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+export function AppSidebarStudent({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
-    <Sidebar variant="inset" {...props}>
+    <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>

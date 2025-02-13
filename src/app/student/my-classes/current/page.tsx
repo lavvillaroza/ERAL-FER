@@ -1,4 +1,4 @@
-import { AppSidebar } from "@/app/student/components/app-sidebar"
+import { AppSidebarStudent } from "@/app/components/app-sidebar-student"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -14,7 +14,7 @@ import {
 export default function Page() {
   return (
     <SidebarProvider>
-      <AppSidebar />
+      <AppSidebarStudent />
       <SidebarInset>
         <header className="flex h-16 shrink-0 items-center gap-2">
           <div className="flex items-center gap-2 px-4">
@@ -24,7 +24,7 @@ export default function Page() {
               <BreadcrumbList>
                 <BreadcrumbItem className="hidden md:block">
                   <BreadcrumbLink href="#">
-                    Completed Class
+                    Current Classes
                   </BreadcrumbLink>
                 </BreadcrumbItem>                
               </BreadcrumbList>
