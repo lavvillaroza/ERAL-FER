@@ -17,55 +17,63 @@ model User {
   user_id            Int      @id @default(autoincrement())
   email              String   @unique
   password           String    
-  role               String  
-  online_status      String  //Active; Inactive
+  role               String  //Admin; Teacher; Student
+  account_status     String  //Activated; New; Disabled
+  userDetails        UserDetails? @relation(name: "UserToUserDetails") // ✅ Define relation name here only
 }
 
 model UserDetails {
-  user_id     Int @unique
-  name        String
-  course      String
-  profile_image Bytes    
+  user_id           Int @unique  
+  name              String
+  course            String?  //if Student -- N/A if teacher and admin
+  online_status     String  //Active; Inactive
+  profile_image     Bytes?
+  user              User @relation(name: "UserToUserDetails", fields: [user_id], references: [user_id]) // ✅ Define relation only here
 }
 
-model ClassRoom {
+model ClassInformation {
   id                    Int @id @default(autoincrement()) 
-  classroom_name        String
+  name                  String
   description           String
   date_schedule         String
-  classroom_teacher_id  Int  //user_id from UserDetails Table
+  teacher_user_id       Int  //user_id from UserDetails Table
 }
 
-model ClassStudent {  
-  classroom_id       Int @unique
-  student_id         Int  //user_id from UserDetails Table
-  grades             Decimal 
+model ClassStudents {  
+  id                 Int @id @default(autoincrement()) 
+  class_id           Int @unique
+  student_id         Int  //user_id from UserDetails Table  
 }
 
 model ClassSchedule {
-  id  Int @id @default(autoincrement())
-  classroom_id      Int
-  date_schedule     String 
-  time_start        String
-  time_end          String  
+  id                   Int @id @default(autoincrement())
+  class_id             Int
+  date_schedule        String 
+  time_start           String
+  time_end             String  
+  status               String //Open; Upcoming; Closed; Canceled
 }
 
-model ClassLessonPlanTimeline {  
-  classsched_id      Int @unique
-  start_time         String
-  title              String  
-  description        String
-  status              String //Completed; Ongoing; Pending
+model ClassLessonPlan {
+  id                    Int @id @default(autoincrement())   
+  class_id              Int @unique
+  start_time            String
+  title                 String  
+  description           String
+  status                String //Upcoming; Completed
 }
 
-model ClassStudentAttendance {  
-  classsched_id      Int @unique
+model ClassAttendance {  
+  id                 Int @id @default(autoincrement())   
+  classs_id          Int @unique
   student_id         Int
-  grades             Decimal
+  time_in            DateTime
+  time_out           DateTime
   status             String //attended; absent
 }
 
 model ClassStudentFER {  
+  id                 Int @id @default(autoincrement())   
   classsched_id      Int  @unique
   student_id         Int  //user_id from UserDetails Table
   surprised          Decimal
