@@ -5,7 +5,7 @@ const REFRESH_SECRET_KEY  = process.env.REFRESH_SECRET_KEY || "ERALFERSYSTEM"; /
 
 // Generate Access Token (Short-lived)
 export const signToken = (payload: object) => {
-  return jwt.sign(payload, SECRET_KEY, { expiresIn: "7d" });
+  return jwt.sign(payload, SECRET_KEY, { expiresIn: "15m" });
 };
 
 // Generate Refresh Token (Long-lived)

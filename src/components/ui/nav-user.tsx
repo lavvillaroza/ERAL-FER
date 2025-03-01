@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import {
   BadgeCheck,
@@ -27,6 +27,8 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
+import { logoutUser } from "@/services/authAppService"
+import { useRouter } from "next/navigation";
 
 export function NavUser({
   user,
@@ -38,7 +40,16 @@ export function NavUser({
   }
 }) {
   const { isMobile } = useSidebar()
-
+  const router = useRouter();
+   // ✅ Handle logout
+   const handleLogout = async () => {
+    try {
+      await logoutUser(); // Call the API logout function
+      router.push("/login"); // Redirect to login page after logout
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  };
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -89,7 +100,7 @@ export function NavUser({
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={handleLogout}>
               <LogOut />
               Log out
             </DropdownMenuItem>

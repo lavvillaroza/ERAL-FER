@@ -1,10 +1,11 @@
 "use client";
 
+import { useRouter } from 'next/navigation';
 import * as React from "react"
-import {  
-  BookCopy ,  
-  LayoutDashboard ,
-  School,  
+import {
+  BookCopy,
+  LayoutDashboard,
+  School,
 } from "lucide-react"
 import { NavMain } from "@/components/ui/nav-main"
 import { NavUser } from "@/components/ui/nav-user"
@@ -17,16 +18,17 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
+
 const data = {
   user: {
     name: "shadcn",
     email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
+    avatar: "",
   },
   navMain: [
     {
       title: "Dashboard",
-      url: "/student",
+      url: "/teacher",
       icon: LayoutDashboard,
       isActive: true,
       items: [],
@@ -48,7 +50,15 @@ const data = {
     }
   ]
 }
+
 export function AppSidebarTeacher({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const router = useRouter();
+
+  const handleProfileClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    router.push('teacher/profile');
+  };
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
@@ -69,10 +79,15 @@ export function AppSidebarTeacher({ ...props }: React.ComponentProps<typeof Side
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />             
+        <NavMain items={data.navMain} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <div
+          onClick={handleProfileClick}
+          className="cursor-pointer hover:bg-gray-100 transition-colors duration-200 rounded-lg p-2"
+        >
+          <NavUser user={data.user} />
+        </div>
       </SidebarFooter>
     </Sidebar>
   )

@@ -17,6 +17,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
+import { useRouter } from "next/navigation";
 const data = {
   user: {
     name: "shadcn",
@@ -49,6 +50,12 @@ const data = {
   ]
 }
 export function AppSidebarStudent({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const router = useRouter();
+
+  const handleProfileClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    router.push('student/profile');
+  };
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
@@ -72,7 +79,12 @@ export function AppSidebarStudent({ ...props }: React.ComponentProps<typeof Side
         <NavMain items={data.navMain} />             
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <div
+          onClick={handleProfileClick}
+          className="cursor-pointer hover:bg-gray-100 transition-colors duration-200 rounded-lg p-2"
+        >
+          <NavUser user={data.user} />
+        </div>
       </SidebarFooter>
     </Sidebar>
   )

@@ -1,9 +1,10 @@
-import { OnlineStatus } from "@/types/onlineStatus";
-
 export interface UserDetailsModel {    
     user_id: number;
-    name: string;
+    first_name: string;
+    middle_name: string | null;
+    last_name: string;
     course: string | null;
-    online_status: OnlineStatus;
+    online_status: string;
     profile_image: Buffer | null;
-  }
+    thresh_hold: number | 0;
+}

@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { AuthService } from "@/services/authService";
 import { handleApiError } from "@/app/utils/errorHandler";
 import { RegisterUserDto } from "@/dto/user.dto";
 import { UserModel } from "@/models/userModel";
 import { UserDetailsModel } from "@/models/userDetailsModel";
 import { OnlineStatus } from "@/types/onlineStatus";
 import { Buffer } from "buffer"; // ✅ Import Buffer
+import prisma from "@/lib/prisma";
+import bcrypt from "bcryptjs";
 
 // ✅ Handle POST request
 export async function POST(req: NextRequest) {
@@ -14,6 +15,8 @@ export async function POST(req: NextRequest) {
 
         // 🛑 Validate request body
         const validatedData = RegisterUserDto.parse(body);
+
+        console.log(validatedData);
 
         const userData: Omit<UserModel, "user_id"> = {
             email: validatedData.email,
@@ -28,30 +31,59 @@ export async function POST(req: NextRequest) {
             : null;
 
         const userDetailsData: Omit<UserDetailsModel, "user_id"> = {
-            name: validatedData.name,
+            first_name: validatedData.first_name,
+            middle_name: validatedData.middle_name,
+            last_name: validatedData.last_name,
             course: validatedData.course ?? null,
             online_status: validatedData.online_status ?? OnlineStatus.OFFLINE,
             profile_image: profileImageBuffer,
+            thresh_hold: 0,
         };      
 
-        const newUser = await AuthService.register(
-            userData,  // UserModel
-            userDetailsData // UserDetailsModel
-        );
+         // 🔍 Check if email already exists
+        const existingUser = await prisma.user.findUnique({
+            where: { email: userData.email },
+        });
+
+        if (existingUser) {
+            throw new Error("Email is already in use. Please use a different email.");
+        }
+
+        const hashedPassword = await bcrypt.hash(userData.password, 10);
+
+       // ✅ Transaction to create both user and user details
+        const newUser = await prisma.$transaction(async (tx) => {
+            const createdUser = await tx.user.create({
+                data: {
+                    email: userData.email,
+                    password: hashedPassword,
+                    role: userData.role,
+                    account_status: userData.account_status,
+                    userDetails: {
+                        create: {
+                            first_name: userDetailsData.first_name,
+                            middle_name: userDetailsData.middle_name,
+                            last_name: userDetailsData.last_name,
+                            course: userDetailsData.course,
+                            online_status: userDetailsData.online_status,
+                            profile_image: userDetailsData.profile_image, // ✅ Buffer for Blob storage
+                        },
+                    },
+                },
+                include: { userDetails: true }, // ✅ Include user details in response
+            });
+            console.log("createdUser: " + createdUser);
+            return createdUser;
+        });
+
         if (!newUser) throw new Error("User registration failed.");
+
+        console.log("newUser: " + newUser);
         
         // ✅ Convert Buffer to Base64 when returning JSON response
         return NextResponse.json(
-            {
-                ...newUser,
-                userDetails: newUser.userDetails
-                    ? {
-                          ...newUser.userDetails,
-                          profile_image: newUser.userDetails.profile_image
-                              ? Buffer.from(newUser.userDetails.profile_image).toString("base64")
-                              : null,
-                      }
-                    : null, // ✅ Ensure it remains null if userDetails is null
+            {                
+                success: "Registration has been successfully, please wait for the approval of the admin!"
             },
             { status: 201 }
         );
