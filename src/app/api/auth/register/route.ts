@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { handleApiError } from "@/app/utils/errorHandler";
 import { RegisterUserDto } from "@/dto/user.dto";
 import { UserModel } from "@/models/userModel";
-import { UserDetailsModel } from "@/models/userDetailsModel";
 import { OnlineStatus } from "@/types/onlineStatus";
 import { Buffer } from "buffer"; // ✅ Import Buffer
 import prisma from "@/lib/prisma";
@@ -15,31 +14,27 @@ export async function POST(req: NextRequest) {
 
         // 🛑 Validate request body
         const validatedData = RegisterUserDto.parse(body);
-
-        console.log(validatedData);
-
+         // ✅ Convert Base64 to Buffer properly
+         const profileImageBuffer = validatedData.profile_image
+         ? Buffer.from(validatedData.profile_image, "base64") // Ensure it's a string
+         : null;
+         
         const userData: Omit<UserModel, "user_id"> = {
             email: validatedData.email,
             password: validatedData.password,
             role: validatedData.role,
             account_status: validatedData.account_status,
+            userDetails: {
+                user_id: 0,
+                first_name: validatedData.first_name,
+                middle_name: validatedData.middle_name,
+                last_name: validatedData.last_name,
+                course: validatedData.course ?? null,
+                online_status: validatedData.online_status ?? OnlineStatus.OFFLINE,
+                profile_image: profileImageBuffer,
+                thresh_hold: 0,
+            }
         };
-
-        // ✅ Convert Base64 to Buffer properly
-        const profileImageBuffer = validatedData.profile_image
-            ? Buffer.from(validatedData.profile_image, "base64") // Ensure it's a string
-            : null;
-
-        const userDetailsData: Omit<UserDetailsModel, "user_id"> = {
-            first_name: validatedData.first_name,
-            middle_name: validatedData.middle_name,
-            last_name: validatedData.last_name,
-            course: validatedData.course ?? null,
-            online_status: validatedData.online_status ?? OnlineStatus.OFFLINE,
-            profile_image: profileImageBuffer,
-            thresh_hold: 0,
-        };      
-
          // 🔍 Check if email already exists
         const existingUser = await prisma.user.findUnique({
             where: { email: userData.email },
@@ -61,12 +56,12 @@ export async function POST(req: NextRequest) {
                     account_status: userData.account_status,
                     userDetails: {
                         create: {
-                            first_name: userDetailsData.first_name,
-                            middle_name: userDetailsData.middle_name,
-                            last_name: userDetailsData.last_name,
-                            course: userDetailsData.course,
-                            online_status: userDetailsData.online_status,
-                            profile_image: userDetailsData.profile_image, // ✅ Buffer for Blob storage
+                            first_name: userData.userDetails.first_name,
+                            middle_name: userData.userDetails.middle_name,
+                            last_name: userData.userDetails.last_name,
+                            course: userData.userDetails.course,
+                            online_status: userData.userDetails.online_status,
+                            profile_image: userData.userDetails.profile_image, // ✅ Buffer for Blob storage
                         },
                     },
                 },
@@ -82,8 +77,9 @@ export async function POST(req: NextRequest) {
         
         // ✅ Convert Buffer to Base64 when returning JSON response
         return NextResponse.json(
-            {                
-                success: "Registration has been successfully, please wait for the approval of the admin!"
+            {   
+                message: "Registration has been successfully, please wait for the approval of the admin!",
+                data: newUser
             },
             { status: 201 }
         );

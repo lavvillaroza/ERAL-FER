@@ -11,9 +11,15 @@ const rolePaths = {
 export function middleware(req: NextRequest) {
   const { nextUrl } = req;
   const role = req.cookies.get("user_role")?.value.toLowerCase(); // Get user role from cookie
+  const authToken = req.cookies.get("auth_token")?.value; // Get user role from cookie
   const url = req.nextUrl.clone();
-
+  
   console.log(role);
+
+  if (!authToken) {
+    return NextResponse.redirect(new URL("/login", req.url));
+  }
+  
   // If there's no role, redirect to login
   if (!role) {
     return NextResponse.redirect(new URL("/login", req.url));

@@ -11,6 +11,7 @@ import CurrentClasses from './components/CurrentClasses'
 import CompletedClasses from './components/CompletedClasses'
 
 export default function ClassManagement() {
+  
   return (
     <SidebarProvider>
       <AppSidebarAdmin />

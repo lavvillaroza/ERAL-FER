@@ -24,7 +24,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -33,97 +33,102 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { getUsersByRole } from "@/services/userAppService";
+import Loading from "@/components/loading";
+import { format } from "date-fns";
 
+// Define interface for the student type
 interface Teacher {
-  id: number;
-  name: string;
+  user_id: number;
   email: string;
-  status: "Activated" | "Disabled" | "New Register";
-  registrationDate: string;
+  role: string;  
+  account_status: "activated" | "disabled" | "new";
+  created_date: Date;
+  userDetails: {
+    first_name: string;
+    middle_name: string | null;
+    last_name: string;
+    course: string;
+    online_status: "online" | "offline";
+    profile_image: string;
+    thresh_hold: number;
+  };
 }
 
-const dummyTeachers: Teacher[] = [
-  {
-    id: 1,
-    name: "Prof. Sarah Smith",
-    email: "smith@teacher.com",
-    status: "Activated",
-    registrationDate: "2024-03-01",
-  },
-  {
-    id: 2,
-    name: "Dr. James Wilson",
-    email: "wilson@teacher.com",
-    status: "New Register",
-    registrationDate: "2024-03-15",
-  },
-  {
-    id: 3,
-    name: "Prof. Maria Garcia",
-    email: "garcia@teacher.com",
-    status: "Disabled",
-    registrationDate: "2024-02-10",
-  },
-  {
-    id: 4,
-    name: "Dr. David Kim",
-    email: "kim@teacher.com",
-    status: "Activated",
-    registrationDate: "2024-03-05",
-  },
-];
-
 export function TeacherTable() {
-  const [status, setStatus] = useState("all");
-  const [teachers, setTeachers] = useState<Teacher[]>(dummyTeachers);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [teacherToDelete, setTeacherToDelete] = useState<number | null>(null);
+    const [status, setStatus] = useState("all");
+    const [teachers, setTeachers] = useState<Teacher[]>([]);
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [teacherToDelete, setTeacherToDelete] = useState<number | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
-  const filteredTeachers = status === "all"
-    ? teachers
-    : teachers.filter(teacher => teacher.status.toLowerCase() === status.toLowerCase());
+  
+    useEffect(() => {
+        const fetchTeachers = async () => {
+          try {
+            const response = await getUsersByRole("teacher");
+            setTeachers(response);        
+          } catch (err) {
+            setError(`Failed to fetch students: ${err}`);
+          } finally {
+            setLoading(false);
+          }
+        };
+    
+        fetchTeachers();
+      }, []);
 
-  const handleActivate = (teacherId: number) => {
-    setTeachers(teachers.map(teacher => 
-      teacher.id === teacherId 
-        ? { ...teacher, status: "Activated" }
-        : teacher
-    ));
-  };
-
-  const handleDisable = (teacherId: number) => {
-    setTeachers(teachers.map(teacher => 
-      teacher.id === teacherId 
-        ? { ...teacher, status: "Disabled" }
-        : teacher
-    ));
-  };
-
-  const handleDeleteClick = (teacherId: number) => {
-    setTeacherToDelete(teacherId);
-    setDeleteDialogOpen(true);
-  };
-
-  const handleDelete = () => {
-    if (teacherToDelete) {
-      setTeachers(teachers.filter(teacher => teacher.id !== teacherToDelete));
-      setDeleteDialogOpen(false);
-      setTeacherToDelete(null);
-    }
-  };
+      const filteredTeachers = status === "all"
+        ? teachers
+        : teachers.filter(teacher => teacher.account_status.toLowerCase() === status.toLowerCase());
+          
+    
+      const handleActivate = (studentId: number) => {
+        setTeachers(teachers.map(teacher => 
+          teacher.user_id === studentId 
+            ? { ...teacher, status: "activated" }
+            : teacher
+        ));
+      };
+    
+      const handleDisable = (studentId: number) => {
+        setTeachers(teachers.map(teacher => 
+          teacher.user_id === studentId 
+            ? { ...teacher, status: "disabled" }
+            : teacher
+        ));
+      };
+    
+      const handleDeleteClick = (studentId: number) => {
+        setTeacherToDelete(studentId);
+        setDeleteDialogOpen(true);
+      };
+    
+      const handleDelete = () => {
+        if (teacherToDelete) {
+          setTeachers(teachers.filter(teacher => teacher.user_id !== teacherToDelete));
+          setDeleteDialogOpen(false);
+          setTeacherToDelete(null);
+        }
+      };
+    
+      if (loading) return <Loading />;
+      if (error) return <p className="text-red-500">{error}</p>;
+    
 
   return (
     <div>
-      <div className="flex items-center gap-4 mb-4">
+       <div className="flex items-center gap-4 mb-4">
         <Select defaultValue="all" onValueChange={setStatus}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Filter by status" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Teachers</SelectItem>
-            <SelectItem value="New Register">New Register</SelectItem>
-            <SelectItem value="Activated">Activated</SelectItem>
-            <SelectItem value="Disabled">Disabled</SelectItem>
+            <SelectItem value="new">New</SelectItem>
+            <SelectItem value="activated">Activated</SelectItem>
+            <SelectItem value="disabled">Disabled</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -132,6 +137,7 @@ export function TeacherTable() {
         <TableHeader>
           <TableRow>
             <TableHead>Name</TableHead>
+            <TableHead>Course</TableHead>
             <TableHead>Email</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Registration Date</TableHead>
@@ -139,28 +145,29 @@ export function TeacherTable() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {filteredTeachers.length === 0 ? (
+        {filteredTeachers && filteredTeachers.length === 0 ? (
             <TableRow>
               <TableCell colSpan={5} className="text-center h-24 text-muted-foreground">
                 No records found
               </TableCell>
             </TableRow>
           ) : (
-            filteredTeachers.map((teacher) => (
-              <TableRow key={teacher.id}>
-                <TableCell>{teacher.name}</TableCell>
+            filteredTeachers?.map((teacher) => (
+              <TableRow key={teacher.user_id}>
+                <TableCell>{teacher.userDetails.first_name  + " " + teacher.userDetails.middle_name  + " " + teacher.userDetails.last_name}</TableCell>
+                <TableCell>{teacher.userDetails.course}</TableCell>
                 <TableCell>{teacher.email}</TableCell>
                 <TableCell>
                   <Badge
                     variant={
-                      teacher.status === "Activated" ? "success" :
-                      teacher.status === "Disabled" ? "destructive" : "warning"
+                      teacher.account_status === "activated" ? "success" :
+                      teacher.account_status === "disabled" ? "destructive" : "warning"
                     }
                   >
-                    {teacher.status}
+                    {teacher.account_status}
                   </Badge>
                 </TableCell>
-                <TableCell>{new Date(teacher.registrationDate).toLocaleDateString()}</TableCell>
+                <TableCell>{format(new Date(teacher.created_date), "yyyy-MM-dd")}</TableCell>
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -169,18 +176,18 @@ export function TeacherTable() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      {teacher.status !== "Activated" && (
-                        <DropdownMenuItem onClick={() => handleActivate(teacher.id)}>
+                      {teacher.account_status !== "activated" && (
+                        <DropdownMenuItem onClick={() => handleActivate(teacher.user_id)}>
                           Activate
                         </DropdownMenuItem>
                       )}
-                      {teacher.status !== "Disabled" && (
-                        <DropdownMenuItem onClick={() => handleDisable(teacher.id)}>
+                      {teacher.account_status !== "disabled" && (
+                        <DropdownMenuItem onClick={() => handleDisable(teacher.user_id)}>
                           Disable
                         </DropdownMenuItem>
                       )}
                       <DropdownMenuItem 
-                        onClick={() => handleDeleteClick(teacher.id)}
+                        onClick={() => handleDeleteClick(teacher.user_id)}
                         className="text-destructive"
                       >
                         Delete

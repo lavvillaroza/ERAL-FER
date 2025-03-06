@@ -15,7 +15,7 @@ interface LessonPlanProps {
   className?: string;
 }
 
-export function LessonPlan({ items, title = "Lesson Progress", className = "" }: LessonPlanProps) {
+export function LessonPlan({ items, title = "Course Content", className = "" }: LessonPlanProps) {
   return (
     <Card className={`shadow-lg ${className}`}>
       <CardContent className="p-4 sm:p-4 lg:p-6">

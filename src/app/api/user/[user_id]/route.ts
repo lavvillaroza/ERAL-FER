@@ -4,20 +4,29 @@ import prisma from "@/lib/prisma";
 
 // 📌 GET: Fetch a single user by ID
 export async function GET(req: NextRequest, { params }: { params: { user_id: string } }) {
-  try {
-    const user_id = parseInt(params.user_id);
-    if (isNaN(user_id)) return NextResponse.json({ message: "Invalid user ID" }, { status: 400 });
+  try {    
+    
+    const {user_id} = await params;
+    
+    const userId = parseInt(user_id);
+
+    if (isNaN(userId)) {
+      return NextResponse.json({ message: "Invalid user ID" }, { status: 400 });
+    }
 
     const user = await prisma.user.findUnique({
-      where: { user_id },
+      where: { user_id: userId },
       include: { userDetails: true }, // Include UserDetails
     });
 
-    if (!user) return NextResponse.json({ message: "User not found" }, { status: 404 });
+    if (!user) {
+      return NextResponse.json({ message: "User not found" }, { status: 404 });
+    }
 
     return NextResponse.json(user, { status: 200 });
-  } catch (error) {
-    return handleApiError({ error: "Error fetching user by ID: " + error });    
+
+  } catch (error) {    
+    return handleApiError({ error: "Error fetching user by ID: " + error });
   }
 }
 

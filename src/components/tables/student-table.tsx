@@ -15,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -33,69 +33,67 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { getUsersByRole } from "@/services/userAppService";
+import Loading from "@/components/loading";
+import { format } from "date-fns";
 
 // Define interface for the student type
 interface Student {
-  id: number;
-  name: string;
+  user_id: number;
   email: string;
-  status: "Activated" | "Disabled" | "New Register";
-  registrationDate: string;
+  role: string;  
+  account_status: "activated" | "disabled" | "new";
+  created_date: Date;
+  userDetails: {
+    first_name: string;
+    middle_name: string | null;
+    last_name: string;
+    course: string;
+    online_status: "online" | "offline";
+    profile_image: string;
+    thresh_hold: number;
+  };
 }
-
-const dummyStudents: Student[] = [
-  {
-    id: 1,
-    name: "Alex Johnson",
-    email: "alex@student.com",
-    status: "Activated",
-    registrationDate: "2024-03-01",
-  },
-  {
-    id: 2,
-    name: "Emily Brown",
-    email: "emily@student.com",
-    status: "New Register",
-    registrationDate: "2024-03-15",
-  },
-  {
-    id: 3,
-    name: "Michael Chen",
-    email: "michael@student.com",
-    status: "Disabled",
-    registrationDate: "2024-02-20",
-  },
-  {
-    id: 4,
-    name: "Sofia Rodriguez",
-    email: "sofia@student.com",
-    status: "Activated",
-    registrationDate: "2024-03-10",
-  },
-];
 
 export function StudentTable() {
   const [status, setStatus] = useState("all");
-  const [students, setStudents] = useState<Student[]>(dummyStudents);
+  const [students, setStudents] = useState<Student[]>([]);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [studentToDelete, setStudentToDelete] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchStudents = async () => {
+      try {
+        const response = await getUsersByRole("student");
+        setStudents(response);        
+      } catch (err) {
+        setError(`Failed to fetch students: ${err}`);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStudents();
+  }, []);
 
   const filteredStudents = status === "all"
     ? students
-    : students.filter(student => student.status.toLowerCase() === status.toLowerCase());
+    : students.filter(student => student.account_status.toLowerCase() === status.toLowerCase());
 
   const handleActivate = (studentId: number) => {
     setStudents(students.map(student => 
-      student.id === studentId 
-        ? { ...student, status: "Activated" }
+      student.user_id === studentId 
+        ? { ...student, status: "activated" }
         : student
     ));
   };
 
   const handleDisable = (studentId: number) => {
     setStudents(students.map(student => 
-      student.id === studentId 
-        ? { ...student, status: "Disabled" }
+      student.user_id === studentId 
+        ? { ...student, status: "disabled" }
         : student
     ));
   };
@@ -107,11 +105,15 @@ export function StudentTable() {
 
   const handleDelete = () => {
     if (studentToDelete) {
-      setStudents(students.filter(student => student.id !== studentToDelete));
+      setStudents(students.filter(student => student.user_id !== studentToDelete));
       setDeleteDialogOpen(false);
       setStudentToDelete(null);
     }
   };
+
+  if (loading) return <Loading />;
+  if (error) return <p className="text-red-500">{error}</p>;
+
 
   return (
     <div>
@@ -122,9 +124,9 @@ export function StudentTable() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Students</SelectItem>
-            <SelectItem value="New Register">New Register</SelectItem>
-            <SelectItem value="Activated">Activated</SelectItem>
-            <SelectItem value="Disabled">Disabled</SelectItem>
+            <SelectItem value="new">New</SelectItem>
+            <SelectItem value="activated">Activated</SelectItem>
+            <SelectItem value="disabled">Disabled</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -133,6 +135,7 @@ export function StudentTable() {
         <TableHeader>
           <TableRow>
             <TableHead>Name</TableHead>
+            <TableHead>Course</TableHead>
             <TableHead>Email</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Registration Date</TableHead>
@@ -140,28 +143,29 @@ export function StudentTable() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {filteredStudents.length === 0 ? (
+          {filteredStudents && filteredStudents.length === 0 ? (
             <TableRow>
               <TableCell colSpan={5} className="text-center h-24 text-muted-foreground">
                 No records found
               </TableCell>
             </TableRow>
           ) : (
-            filteredStudents.map((student) => (
-              <TableRow key={student.id}>
-                <TableCell>{student.name}</TableCell>
+            filteredStudents?.map((student) => (
+              <TableRow key={student.user_id}>
+                <TableCell>{student.userDetails.first_name  + " " + student.userDetails.middle_name  + " " + student.userDetails.last_name}</TableCell>
+                <TableCell>{student.userDetails.course}</TableCell>
                 <TableCell>{student.email}</TableCell>
                 <TableCell>
                   <Badge
                     variant={
-                      student.status === "Activated" ? "success" :
-                      student.status === "Disabled" ? "destructive" : "warning"
+                      student.account_status === "activated" ? "success" :
+                      student.account_status === "disabled" ? "destructive" : "warning"
                     }
                   >
-                    {student.status}
+                    {student.account_status}
                   </Badge>
                 </TableCell>
-                <TableCell>{new Date(student.registrationDate).toLocaleDateString()}</TableCell>
+                <TableCell>{format(new Date(student.created_date), "yyyy-MM-dd")}</TableCell>
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -170,18 +174,18 @@ export function StudentTable() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      {student.status !== "Activated" && (
-                        <DropdownMenuItem onClick={() => handleActivate(student.id)}>
+                      {student.account_status !== "activated" && (
+                        <DropdownMenuItem onClick={() => handleActivate(student.user_id)}>
                           Activate
                         </DropdownMenuItem>
                       )}
-                      {student.status !== "Disabled" && (
-                        <DropdownMenuItem onClick={() => handleDisable(student.id)}>
+                      {student.account_status !== "disabled" && (
+                        <DropdownMenuItem onClick={() => handleDisable(student.user_id)}>
                           Disable
                         </DropdownMenuItem>
                       )}
                       <DropdownMenuItem 
-                        onClick={() => handleDeleteClick(student.id)}
+                        onClick={() => handleDeleteClick(student.user_id)}
                         className="text-destructive"
                       >
                         Delete

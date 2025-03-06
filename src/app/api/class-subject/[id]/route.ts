@@ -7,22 +7,17 @@ import prisma from "@/lib/prisma";
  */
 export async function GET(req: NextRequest, { params }: { params: { id: number } }) {
     try {
-      const { id } = params;
+      const { id } = await params;
       const classSubject = await prisma.classSubject.findUnique({
-        where: { id: Number(id) },
-        include: {
-          students: true, // Include related students
-          schedules: true, // Include related schedules
-        },
-      });
-  
+        where: { id: Number(id) },        
+      });      
       if (!classSubject) {
-        return NextResponse.json({ message: "ClassSubject not found" }, { status: 404 });
+        return NextResponse.json({ message: "ClassStudents not found" }, { status: 404 });
       }
   
       return NextResponse.json(classSubject, { status: 200 });
-    } catch (error) {
-      console.error("GET by ID Error:", error);
+      
+    } catch (error) {      
       return handleApiError(error);
     }
   }

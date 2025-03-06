@@ -4,8 +4,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebarTeacher } from "@/app/components/app-sidebar-teacher";
 import { Card, CardContent } from "@/components/ui/card";
 import { Smile, Meh, Laugh, XCircle, Book, Bell, HomeIcon } from "lucide-react";
-import { Component as PieChartComponent } from "@/components/pie-chart";
-import { Component as LineGraphComponent } from "@/components/ui/line-graph";
+import { FERPieChart } from "@/components/fer-pie-chart";
 import Image from 'next/image';
 import { Button } from "@/components/ui/button";
 import {
@@ -26,6 +25,7 @@ import {
 } from "@/components/ui/breadcrumb"
 import { useEffect, useState } from "react"
 import { LessonPlan, TimelineItem } from "@/components/lesson-plan";
+import { FERTimeLineChart } from "@/components/fer-timeline-chart";
 
 export default function Subject() {
   const [studentToRemove, setStudentToRemove] = useState<number | null>(null);
@@ -213,7 +213,7 @@ export default function Subject() {
               {/* Right Section - 2x2 Grid */}
               <div className="lg:col-span-2">
                 <div className="grid grid-cols-2 gap-6 h-full">
-                  <PieChartComponent />
+                  <FERPieChart />
                   {/* Notifications */}
                   <Card className="max-w-full">
                     <CardContent className="p-6">
@@ -239,7 +239,7 @@ export default function Subject() {
 
                   {/* Line Graph */}
                   <Card className="shadow-lg">
-                    <LineGraphComponent />
+                    <FERTimeLineChart />
                   </Card> 
 
                   {/* Lesson Plan */}

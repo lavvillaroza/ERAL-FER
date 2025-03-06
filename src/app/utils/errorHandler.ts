@@ -12,10 +12,10 @@ export function handleApiError(error: unknown) {
 
   if (error instanceof Error) {
     return NextResponse.json(
-      { error: error.message || "Internal Server Error" },
+      { message: error.message || "Internal Server Error" },
       { status: 500 }
     );
   }
 
-  return NextResponse.json({ error: "Unknown error occurred" }, { status: 500 });
+  return NextResponse.json({ message: "Unknown error occurred" }, { status: 500 });
 }

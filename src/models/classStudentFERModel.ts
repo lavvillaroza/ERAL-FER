@@ -1,4 +1,4 @@
-export interface classStudentFERModel {
+export interface ClassStudentFERModel {
     id: number;
     classsched_id: number;
     student_id: number;   

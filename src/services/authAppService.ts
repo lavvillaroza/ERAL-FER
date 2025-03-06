@@ -7,6 +7,7 @@ export const registerUser = async (userData: any) => {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify(userData),
+        credentials: 'include',
     });
 
     if (!response.ok) {
@@ -18,20 +19,21 @@ export const registerUser = async (userData: any) => {
 
 // ✅ Login User
 export const loginUser = async (credentials: { email: string; password: string }) => {
-    const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(credentials),
-        credentials: 'include', // 🔹 Important for session-based authentication
-    });
+    try {
+        const response = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(credentials),
+            credentials: 'include',
+        });
 
-    if (!response.ok) {
-        throw new Error(`API Error: ${response.status} ${response.statusText}`);
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || "Login failed");
+
+        return data;
+    } catch (error) {
+        throw new Error(`${error}`);
     }
-
-    return response.json();
 };
 
 // ✅ Logout User
@@ -64,3 +66,46 @@ export const getUserRole = async () => {
 
     return response.json();
 };
+
+// ✅ Fetch Auth Token
+export const getAuthToken = async () => {
+    const response = await fetch('/api/auth/token', {
+        method: 'GET',
+        credentials: 'include',
+    });
+
+    if (!response.ok) {
+        throw new Error(`Error: ${response.status} ${response.statusText}`);
+    }
+
+    return response.json();
+};
+
+// ✅ Fetch Secret Key
+export const getSecretKey = async () => {
+    const response = await fetch('/api/auth/secret-key', {
+        method: 'GET',
+        credentials: 'include',
+    });
+
+    if (!response.ok) {
+        throw new Error(`Error: ${response.status} ${response.statusText}`);
+    }
+
+    return response.json();
+};
+
+// ✅ Fetch Secret Key
+export const getRefreshSecretKey = async () => {
+    const response = await fetch('/api/auth/refresh-secret-key', {
+        method: 'GET',
+        credentials: 'include',
+    });
+
+    if (!response.ok) {
+        throw new Error(`Error: ${response.status} ${response.statusText}`);
+    }
+
+    return response.json();
+};
+

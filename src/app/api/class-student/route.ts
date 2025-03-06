@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { handleApiError } from "@/app/utils/errorHandler";
 import prisma from "@/lib/prisma";
+import { ClassStudentModel } from "@/models/classStudentModel";
 
 /**
  * GET: Fetch all class students with related ClassSubject
@@ -24,24 +25,22 @@ export async function GET() {
    */
   export async function POST(req: NextRequest) {
     try {
-      const body = await req.json();
-      const { class_subject_id, student_id } = body;
-  
-      if (!class_subject_id || !student_id) {
-        return NextResponse.json({ message: "Missing required fields" }, { status: 400 });
+      const body: ClassStudentModel[] = await req.json();      
+      
+      if (!Array.isArray(body) || body.length === 0) {
+        return NextResponse.json({ message: "Invalid or empty student list" }, { status: 400 });
       }
-  
-      const newStudent = await prisma.classStudents.create({
-        data: {
-          class_subject_id,
-          student_id,
-        },
-        include: {
-          subject: true,
-        },
-      });
-  
-      return NextResponse.json(newStudent, { status: 201 });
+
+      const newStudents = await prisma.classStudents.createMany({
+        data: 
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          body.map(({ id, ...student }) => student),
+      });  
+      return NextResponse.json(
+        { message: "Students added successfully", count: newStudents.count },
+        { status: 201 }
+      );
+      
     } catch (error) {
       console.error("POST Error:", error);
       return handleApiError(error);

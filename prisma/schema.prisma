@@ -35,16 +35,19 @@ model UserDetails {
   thresh_hold       Decimal @default(0) //0 if student and admin; 
   updated_date      DateTime @default(now())
   user              User @relation(name: "UserToUserDetails", fields: [user_id], references: [user_id]) // ✅ Define relation only here
+  class_students    ClassStudents[] @relation(name: "ClassStudentToUserDetails")
 }
 
 model ClassSubject {
   id                    Int @id @default(autoincrement()) 
   name                  String
   description           String
-  date_schedule         String
+  start_date            DateTime
+  end_date              DateTime
   time_schedule         String
+  days                  String
   teacher_user_id       Int  //user_id from UserDetails Table
-  status                String //closed; ongoing;
+  status                String //current; completed;
   created_date          DateTime @default(now())
   updated_date          DateTime @default(now())
   students              ClassStudents[] @relation(name: "ClassSubjectToClassStudents")
@@ -55,7 +58,8 @@ model ClassStudents {
   id                    Int @id @default(autoincrement()) 
   class_subject_id      Int 
   student_id            Int  //user_id from UserDetails Table  
-  subject               ClassSubject @relation(name: "ClassSubjectToClassStudents", fields: [class_subject_id], references: [id])
+  subject               ClassSubject @relation(name: "ClassSubjectToClassStudents", fields: [class_subject_id], references: [id])  
+  student_details       UserDetails @relation(name: "ClassStudentToUserDetails", fields: [student_id], references: [user_id])
 }
 
 model ClassSchedule {
@@ -65,6 +69,7 @@ model ClassSchedule {
   time_start           String
   time_end             String  
   status               String //Open; Upcoming; Closed; Canceled
+  remarks              String
   subject              ClassSubject @relation(name: "ClassSubjectToClassSchedule", fields: [class_subject_id], references: [id])
   lesson_plan          ClassLessonPlan? @relation(name: "ClassScheduleToClassLessonPlan")
   attendance           ClassAttendance[] @relation(name: "ClassScheduleToClassAttendance")

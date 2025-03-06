@@ -18,6 +18,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
+import Link from "next/link";
 const data = {
   user: {
     name: "shadcn",
@@ -62,7 +63,7 @@ export function AppSidebarAdmin({ ...props }: React.ComponentProps<typeof Sideba
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <a href="#">
+              <Link href="#">
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
                   <BookCopy className="size-4" />
                 </div>
@@ -70,7 +71,7 @@ export function AppSidebarAdmin({ ...props }: React.ComponentProps<typeof Sideba
                   <span className="truncate font-semibold">ERAL</span>
                   <span className="truncate text-xs">utilizing FER</span>
                 </div>
-              </a>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

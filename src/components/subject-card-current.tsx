@@ -1,129 +1,51 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @next/next/no-img-element */
 "use client";
+
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Clock, Search, Save } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-
-export interface Subject {
-  id: number;
-  title: string;
-  code: string;
-  time: string;
-  instructor: string;
-  instructorimage: string;
-  image: string;
-  status: string;
-  classId: string;
-  teacherId?: string;
-  isScheduled: boolean;
-}
+import { ClassSubjectModel } from "@/models/classSubjectModel";
+import { getUsersByRole, getUsersByUserId } from "@/services/userAppService";
+import { GetFullName } from "@/lib/fullName";
+import { UserModel } from "@/models/userModel";
+import { addClassStudents, getClassStudents } from "@/services/classStudentAppService";
+import { ClassStudentModel } from "@/models/classStudentModel";
+import { toast, Toaster } from "sonner"
 
 interface SubjectCardProps {
-  subject: Subject;
+  subject: ClassSubjectModel;
+  user_id: number;
   variant: "student" | "teacher";
   onViewStudents?: () => void;
 }
 
-interface Student {
-  id: number;
-  name: string;
-  grade: string;
-  section: string;
-  course?: string;
-}
-
-export const SubjectCard = ({ subject, variant, onViewStudents }: SubjectCardProps) => {
+export const SubjectCard = ({ subject, user_id, variant, onViewStudents }: SubjectCardProps) => {
   const router = useRouter();
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [currentStudents, setCurrentStudents] = useState<Student[]>([
-    { id: 7, name: "Anna Brown", grade: "Grade 10", section: "A" },
-    { id: 8, name: "Michael Chen", grade: "Grade 10", section: "B" },
-    { id: 9, name: "Sarah Johnson", grade: "Grade 10", section: "C" },
-  ]);
-  const [originalStudents, setOriginalStudents] = useState<Student[]>([]);
-  const [studentToRemove, setStudentToRemove] = useState<Student | null>(null);
-  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
+  const [teacher, setTeacher] = useState<UserModel | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const availableStudents = [
-    { id: 1, name: "Emma Wilson", grade: "Grade 10", section: "A" },
-    { id: 2, name: "James Anderson", grade: "Grade 10", section: "B" },
-    { id: 3, name: "Sophia Garcia", grade: "Grade 10", section: "A" },
-    { id: 4, name: "Lucas Martinez", grade: "Grade 10", section: "C" },
-    { id: 5, name: "Olivia Thompson", grade: "Grade 10", section: "B" },
-    { id: 6, name: "William Lee", grade: "Grade 10", section: "A" },
-  ];
+  useEffect(() => {           
+      const fetchTeacher = async () => {
+        try {
+          const response = await getUsersByUserId(user_id);          
+          setTeacher(response);
 
-  const filteredStudents = availableStudents.filter(
-    (student) =>
-      student.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
-      !currentStudents.some((selected) => selected.id === student.id)
-  );
-
-  const handleAddStudent = (student: Student) => {
-    if (!currentStudents.some((selected) => selected.id === student.id)) {
-      setCurrentStudents((prev) => [...prev, student]);
-      setSearchQuery("");
-    }
-  };
-
-  const handleRemoveInitiate = (student: Student) => {
-    setStudentToRemove(student);
-    setShowConfirmDialog(true);
-  };
-
-  const handleConfirmRemove = () => {
-    if (studentToRemove) {
-      setCurrentStudents((prev) => 
-        prev.filter((student) => student.id !== studentToRemove.id)
-      );
-      setShowConfirmDialog(false);
-      setStudentToRemove(null);
-    }
-  };
+        } catch(error) {
+          console.log(error);
+          setError("Failed to fetch teachers!");        
+        }
+      };      
+      fetchTeacher();
+    }, [user_id]);
 
   const handleJoin = () => {
     const basePath = variant === "student" ? "/student" : "/teacher";
-    router.push(`${basePath}/my-classes/current/${variant === "student" ? subject.classId : subject.teacherId}`);
-  };
-
-  const handleDialogOpen = (open: boolean) => {
-    if (open) {
-      // Store original students to allow cancellation
-      setOriginalStudents([...currentStudents]);
-    } else {
-      // Reset to original if dialog is closed without saving
-      setCurrentStudents([...originalStudents]);
-    }
-    setIsModalOpen(open);
-  };
-
-  const handleSaveStudents = async () => {
-    setIsSaving(true);
-    
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Update original students with current selection
-      setOriginalStudents([...currentStudents]);
-      
-      // Show success toast or notification
-      console.log("Students saved successfully:", currentStudents);
-      
-      // Close the dialog
-      setIsModalOpen(false);
-    } catch (error) {
-      console.error("Error saving students:", error);
-    } finally {
-      setIsSaving(false);
-    }
+    router.push(`${basePath}/my-classes/current/${variant === "student" ? subject.id : subject.teacher_user_id}`);
   };
 
   const checkIfCurrentTime = (timeRange: string) => {
@@ -153,16 +75,16 @@ export const SubjectCard = ({ subject, variant, onViewStudents }: SubjectCardPro
     return now >= startTime && now <= endTime;
   };
 
-  const isCurrentTime = checkIfCurrentTime(subject.time);
-  const isJoinable = subject.isScheduled && isCurrentTime;
+  const isCurrentTime = checkIfCurrentTime(subject.time_schedule);
+  const isJoinable = isCurrentTime;
 
   return (
     <Card className="hover:shadow-lg transition-shadow">
       <CardContent className="p-0">
         <div className="relative">
           <img 
-            src={subject.image}
-            alt={subject.title}
+            src="/images/subject-image.png"
+            alt="title"
             className="w-full h-48 rounded-2xl object-cover"
           />
           <button 
@@ -170,202 +92,43 @@ export const SubjectCard = ({ subject, variant, onViewStudents }: SubjectCardPro
             disabled={!isJoinable}
             className={`absolute top-3 right-3 ${
               isJoinable ? 'bg-green-500 hover:bg-green-600' : 'bg-gray-400 cursor-not-allowed'
-            } text-white font-bold px-3 py-1 rounded-full text-sm transition-colors`}
-          >
-            Join
+            } text-white font-bold px-3 py-1 rounded-full text-sm transition-colors`}>
+            Online
           </button>
         </div>
         
         <div className="p-4">
           <h3 className="font-semibold mb-2">
-            {subject.title} - {subject.code}
+            {subject.name} 
           </h3>
           <div className="flex items-center text-gray-500 text-sm">
             <Clock size={16} className="mr-2" />
-            {subject.time}
+            {subject.time_schedule + " [ " + subject.days + " ]"}
           </div>
           <div className="flex items-center mt-3">
             <img 
-              src={subject.instructorimage}
-              alt={subject.instructor}
+              src="/images/user.png"
+              alt="title"
               className="w-8 h-8 rounded-full mr-2"
             />
-            <span className="text-sm text-gray-600">{subject.instructor}</span>
+            <span className="text-sm text-gray-600">{GetFullName(teacher?.userDetails)}</span>
           </div>
 
-          <div className="flex gap-2 mt-4">
+          <div className="flex gap-2 mt-4">            
             <Button
               variant="outline" 
               className="flex-1"
-              onClick={() => router.push(`/${variant}/my-classes/current/subjectDetails`)}
-            >
+              onClick={() => router.push(`/${variant}/my-classes/current/class-details/${subject.id}`)}>
               Details
-            </Button>
+            </Button>            
             {variant === "teacher" && (
-              <Dialog open={isModalOpen} onOpenChange={handleDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button variant="outline" className="flex-1">
-                    View Students
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[800px] max-h-[80vh] overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle>Manage Students</DialogTitle>
-                    <DialogDescription>
-                      Add or remove students from {subject.title}
-                    </DialogDescription>
-                  </DialogHeader>
-                  
-                  <div className="grid grid-cols-1 gap-6 mt-4">
-                    {/* Current Students Section */}
-                    <div className="bg-white rounded-lg border p-4">
-                      <h3 className="text-lg font-semibold mb-4">Current Students</h3>
-                      
-                      {currentStudents.length === 0 ? (
-                        <p className="text-gray-500 italic">No students added yet</p>
-                      ) : (
-                        <div className="overflow-x-auto">
-                          <table className="w-full">
-                            <thead className="bg-gray-50">
-                              <tr>
-                                <th className="px-4 py-2 text-left font-medium text-gray-600">Name</th>
-                                <th className="px-4 py-2 text-left font-medium text-gray-600">Grade</th>
-                                <th className="px-4 py-2 text-left font-medium text-gray-600">Section</th>
-                                <th className="px-4 py-2 text-left font-medium text-gray-600">Action</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {currentStudents.map((student) => (
-                                <tr key={student.id} className="border-b hover:bg-gray-50">
-                                  <td className="px-4 py-3">{student.name}</td>
-                                  <td className="px-4 py-3">{student.grade}</td>
-                                  <td className="px-4 py-3">Section {student.section}</td>
-                                  <td className="px-4 py-3">
-                                    <button 
-                                      onClick={() => handleRemoveInitiate(student)}
-                                      className="text-red-500 hover:text-red-700 font-medium"
-                                    >
-                                      Remove
-                                    </button>
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      )}
-                    </div>
-                    
-                    {/* Add Students Section */}
-                    <div className="bg-white rounded-lg border p-4">
-                      <h3 className="text-lg font-semibold mb-4">Add Students</h3>
-                      
-                      <div className="relative mb-4">
-                        <div className="absolute inset-y-0 left-0 flex items-center pl-3">
-                          <Search className="h-5 w-5 text-gray-400" />
-                        </div>
-                        <Input
-                          type="text"
-                          placeholder="Search students..."
-                          value={searchQuery}
-                          onChange={(e) => setSearchQuery(e.target.value)}
-                          className="pl-10 w-full"
-                        />
-                      </div>
-                      
-                      {filteredStudents.length === 0 ? (
-                        <p className="text-gray-500 italic">No matching students found</p>
-                      ) : (
-                        <div className="overflow-x-auto">
-                          <table className="w-full">
-                            <thead className="bg-gray-50">
-                              <tr>
-                                <th className="px-4 py-2 text-left font-medium text-gray-600">Name</th>
-                                <th className="px-4 py-2 text-left font-medium text-gray-600">Grade</th>
-                                <th className="px-4 py-2 text-left font-medium text-gray-600">Section</th>
-                                <th className="px-4 py-2 text-left font-medium text-gray-600">Action</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {filteredStudents.map((student) => (
-                                <tr key={student.id} className="border-b hover:bg-gray-50">
-                                  <td className="px-4 py-3">{student.name}</td>
-                                  <td className="px-4 py-3">{student.grade}</td>
-                                  <td className="px-4 py-3">Section {student.section}</td>
-                                  <td className="px-4 py-3">
-                                    <button 
-                                      onClick={() => handleAddStudent(student)}
-                                      className="text-green-500 hover:text-green-700 font-medium"
-                                    >
-                                      Add
-                                    </button>
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      )}
-                    </div>
-                    
-                    {/* Save Button */}
-                    <div className="flex justify-end gap-2 mt-2">
-                      <Button
-                        variant="outline"
-                        onClick={() => setIsModalOpen(false)}
-                      >
-                        Cancel
-                      </Button>
-                      <Button
-                        variant="default"
-                        onClick={handleSaveStudents}
-                        disabled={isSaving}
-                        className="gap-2"
-                      >
-                        {isSaving ? (
-                          <>
-                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-200 border-t-white"></div>
-                            Saving...
-                          </>
-                        ) : (
-                          <>
-                            <Save className="h-4 w-4" />
-                            Save Changes
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
-            )}
-
-            {showConfirmDialog && (
-              <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
-                <DialogContent className="sm:max-w-[425px]">
-                  <DialogHeader>
-                    <DialogTitle>Confirm Removal</DialogTitle>
-                    <DialogDescription>
-                      Are you sure you want to remove {studentToRemove?.name} from this class?
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="flex justify-end gap-2 mt-4">
-                    <Button
-                      variant="outline"
-                      onClick={() => setShowConfirmDialog(false)}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      onClick={handleConfirmRemove}
-                    >
-                      Remove
-                    </Button>
-                  </div>
-                </DialogContent>
-              </Dialog>
-            )}
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => router.push(`/${variant}/my-classes/current/view-students/${subject.id}`)}>
+                View Students
+              </Button>
+            )}                      
           </div>
         </div>
       </CardContent>

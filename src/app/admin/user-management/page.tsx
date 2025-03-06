@@ -18,8 +18,15 @@ import { Separator } from "@radix-ui/react-separator";
 import { StudentTable } from "@/components/tables/student-table";
 import { TeacherTable } from "@/components/tables/teacher-table";
 import { AdminTable } from "@/components/tables/admin-table";
+import { useEffect, useState } from "react";
 
 export default function UserManagementPage() {
+  const [selectedTab, setSelectedTab] = useState<string | null>(null);
+
+  useEffect(() => {
+    setSelectedTab("students"); // Set after hydration
+  }, []);
+  
   return (
     <SidebarProvider>
       <AppSidebarAdmin />
@@ -40,36 +47,38 @@ export default function UserManagementPage() {
 
         <div className="flex-1 p-6">
           <Card className="p-6">
-            <Tabs defaultValue="students" className="w-full">
-              <div className="flex justify-between items-center mb-4">
-                <TabsList>
-                  <TabsTrigger value="students">Students</TabsTrigger>
-                  <TabsTrigger value="teachers">Teachers</TabsTrigger>
-                  <TabsTrigger value="admins">Admins</TabsTrigger>
-                </TabsList>
-                
-                <div className="admin-actions">
-                  <TabsContent value="admins" className="m-0">
-                    <Button>
-                      <Plus className="mr-2 h-4 w-4" />
-                      Add Admin
-                    </Button>
+            {selectedTab && ( // Render only after hydration
+                <Tabs defaultValue={selectedTab} className="w-full">
+                  <div className="flex justify-between items-center mb-4">
+                    <TabsList>
+                      <TabsTrigger value="students">Students</TabsTrigger>
+                      <TabsTrigger value="teachers">Teachers</TabsTrigger>
+                      <TabsTrigger value="admins">Admins</TabsTrigger>
+                    </TabsList>
+                    
+                    <div className="admin-actions">
+                      <TabsContent value="admins" className="m-0">
+                        <Button>
+                          <Plus className="mr-2 h-4 w-4" />
+                          Add Admin
+                        </Button>
+                      </TabsContent>
+                    </div>
+                  </div>
+
+                  <TabsContent value="students">
+                    <StudentTable />
                   </TabsContent>
-                </div>
-              </div>
 
-              <TabsContent value="students">
-                <StudentTable />
-              </TabsContent>
+                  <TabsContent value="teachers">
+                    <TeacherTable />
+                  </TabsContent>
 
-              <TabsContent value="teachers">
-                <TeacherTable />
-              </TabsContent>
-
-              <TabsContent value="admins">
-                <AdminTable />
-              </TabsContent>
-            </Tabs>
+                  <TabsContent value="admins">
+                    <AdminTable />
+                  </TabsContent>
+                </Tabs>
+              )}
           </Card>
         </div>
       </SidebarInset>
