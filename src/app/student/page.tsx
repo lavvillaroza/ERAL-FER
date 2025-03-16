@@ -3,28 +3,80 @@
 
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebarStudent } from "@/app/components/app-sidebar-student";
-import { Card, CardContent } from "@/components/ui/card";
 import { Bell } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList } from "@/components/ui/breadcrumb";
 import { Separator } from "@radix-ui/react-separator";
 import { TopClassesCard } from "@/components/top-classes-card";
+import { useRouter } from "next/navigation";
+import { getDecodedAuthToken, refreshAuthToken } from "@/services/authAppService";
+import { toast, Toaster } from "sonner"
+import { ExpressionChartsDummy } from "@/components/expression-charts-dummy";
 
 export default function Page() {
     // Set initial moods state
-    const [moods, ] = useState([
-        { icon: "😲", percentage: "0.00", label: "Surprised", bgClass: "bg-gray-100/50" },
-        { icon: "😊", percentage: "0.00", label: "Happy", bgClass: "bg-gray-100/50" },
-        { icon: "😐", percentage: "0.00", label: "Neutral", bgClass: "bg-gray-100/50" },
-        { icon: "😢", percentage: "0.00", label: "Sad", bgClass: "bg-gray-100/50" },
-        { icon: "🤢", percentage: "0.00", label: "Disgusted", bgClass: "bg-gray-100/50" },
-        { icon: "😡", percentage: "0.00", label: "Angry", bgClass: "bg-gray-100/50" },
-        { icon: "😨", percentage: "0.00", label: "Fearful", bgClass: "bg-gray-100/50" }
-    ]);
+    const [moods] = useState([
+      { icon: "😲", percentage: "25.00", label: "Surprised", bgClass: "bg-gray-100/50", color: "text-orange-500" },
+      { icon: "😊", percentage: "15.00", label: "Happy", bgClass: "bg-gray-100/50", color: "text-green-500" },
+      { icon: "😐", percentage: "20.00", label: "Neutral", bgClass: "bg-gray-100/50", color: "text-blue-500" },
+      { icon: "😢", percentage: "10.00", label: "Sad", bgClass: "bg-gray-100/50", color: "text-purple-500" },
+      { icon: "🤢", percentage: "8.00", label: "Disgusted", bgClass: "bg-gray-100/50", color: "text-zinc-700" },
+      { icon: "😡", percentage: "12.00", label: "Angry", bgClass: "bg-gray-100/50", color: "text-red-500" },
+      { icon: "😨", percentage: "10.00", label: "Fearful", bgClass: "bg-gray-100/50", color: "text-slate-500" }
+  ]);
+
 
   const [, setCurrentTime] = useState(new Date());  
+  const router = useRouter();
+  const [studentUserId, setStudentUserId] = useState<number>(0);  
+  // const [classStudentFer, setClassStudentFer] = useState<ClassStudentFERModel>({
+  //           id: 0, // Assuming id is auto-generated
+  //           classsched_id: 0,
+  //           student_user_id: 0, // Assuming student_user_id is available
+  //           surprised: 0,
+  //           happy: 0,
+  //           neutral: 0,
+  //           sad: 0,
+  //           angry: 0,
+  //           disgusted: 0,
+  //           fearful: 0,        
+  //           na: 0,
+  //           datetime_stamp: new Date(),
+  //     });
 
   useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const token = await getDecodedAuthToken();
+        if (!token) {
+          console.log("No auth token found.");
+          toast.error("Failed to fetch class subjects!", {
+            description: "No auth token found.",
+          });
+          router.push("/login");
+          return; // Stop execution
+        }
+        const decodedToken = token.data; 
+        if (!decodedToken) {
+          const refreshToken = await refreshAuthToken();
+          if (!refreshToken || refreshToken.success === false) {
+            router.push("/login");
+          }
+          setStudentUserId(refreshToken.data.id);
+        }
+        setStudentUserId(decodedToken.id);
+      } catch (error) {
+        console.error("Error checking session:", error);
+        router.push("/login");
+      }
+    };
+    checkSession();    
+  }, [router]);
+
+  
+
+  useEffect(() => {
+    console.log(studentUserId);
     // Update the time every second
     const interval = setInterval(() => {
       setCurrentTime(new Date());
@@ -103,7 +155,8 @@ export default function Page() {
     // Add more current classes...
   ]);
 
-  return (    
+  return (   
+    <> 
     <SidebarProvider>
       <AppSidebarStudent />
       <SidebarInset>
@@ -132,22 +185,10 @@ export default function Page() {
               </div>
           </div>
         </header>
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">            
-            <div className="w-full">
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2 sm:gap-4 mb-4 sm:mb-6">
-                {moods.map((mood, index) => (
-                  <Card key={index} className="shadow-sm">
-                    <CardContent className={`flex flex-col items-center justify-center h-full p-2 sm:p-4 ${mood.bgClass}`}>                    
-                      <div className="flex items-center gap-1 sm:gap-2">
-                        <span className="text-xl sm:text-2xl">{mood.icon}</span>
-                        <span className="text-sm sm:text-lg font-semibold text-gray-800">{mood.label}</span>
-                      </div>
-                      <p className="text-sm sm:text-lg font-semibold text-gray-800">{mood.percentage}%</p>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>              
-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-5">
+        <div className="flex-1 p-2 sm:p-4 pt-0">            
+            <div className="h-full flex flex-col gap-2 sm:gap-4">               
+              <ExpressionChartsDummy moods={moods} /> 
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-5 flex-1">                
                 <TopClassesCard 
                   title="Top Completed Classes with Positive Expressions"
                   classes={completedClasses}
@@ -163,5 +204,7 @@ export default function Page() {
         </div>
       </SidebarInset>
     </SidebarProvider>    
+    <Toaster />
+    </>
   );
 }

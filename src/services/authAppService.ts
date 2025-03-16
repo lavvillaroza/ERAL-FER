@@ -1,20 +1,24 @@
-// ✅ Register User
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const registerUser = async (userData: any) => {
-    const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(userData),
-        credentials: 'include',
-    });
+    try {
+        const response = await fetch('/api/auth/register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(userData),
+            credentials: 'include',
+        });
 
-    if (!response.ok) {
-        throw new Error(`API Error: ${response.status} ${response.statusText}`);
+        const result = await response.json();
+        if (result.success === false) {
+            throw new Error(result.message);
+        }
+        return result;
     }
-
-    return response.json();
+    catch (error) {
+        throw new Error("AuthAppService @ registerUser API error:" + error);
+    }       
 };
 
 // ✅ Login User
@@ -27,85 +31,78 @@ export const loginUser = async (credentials: { email: string; password: string }
             credentials: 'include',
         });
 
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.message || "Login failed");
-
-        return data;
-    } catch (error) {
-        throw new Error(`${error}`);
+        const result = await response.json();
+        if (result.success === false) {
+            throw new Error(result.message);
+        }
+        return result;
     }
+    catch (error) {
+        throw new Error("AuthAppService @ loginUser API error:" + error);
+    }      
 };
+
+export const refreshAuthToken = async () => {
+    try {
+        const response = await fetch('/api/auth/token/refresh', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include', // Ensures cookies (refresh token) are sent        
+        });
+
+        const result = await response.json();
+        if (result.success === false) {
+            throw new Error(result.message);
+        }
+        return result;
+    }
+    catch (error) {
+        throw new Error("AuthAppService @ refreshToken API error:" + error);
+    } 
+}
 
 // ✅ Logout User
 export const logoutUser = async () => {
-    const response = await fetch('/api/auth/logout', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-    });
+    try {
+        const response = await fetch('/api/auth/logout', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+        });
 
-    if (!response.ok) {
-        throw new Error(`API Error: ${response.status} ${response.statusText}`);
+        const result = await response.json();
+        if (result.success === false) {
+            throw new Error(result.message);
+        }
+        return result;
     }
-
-    return response.json();
-};
-
-// ✅ Fetch User Role
-export const getUserRole = async () => {
-    const response = await fetch('/api/auth/role', {
-        method: 'GET',
-        credentials: 'include',
-    });
-
-    if (!response.ok) {
-        throw new Error(`Error: ${response.status} ${response.statusText}`);
-    }
-
-    return response.json();
+    catch (error) {
+        throw new Error("AuthAppService @ logoutUser API error:" + error);
+    } 
 };
 
 // ✅ Fetch Auth Token
-export const getAuthToken = async () => {
-    const response = await fetch('/api/auth/token', {
-        method: 'GET',
-        credentials: 'include',
-    });
+export const getDecodedAuthToken = async () => {
+    try {
+        const response = await fetch('/api/auth/token', {
+            method: 'GET',
+            credentials: 'include',
+        });
 
-    if (!response.ok) {
-        throw new Error(`Error: ${response.status} ${response.statusText}`);
+        const result = await response.json();
+        if (result.success === false) {
+            throw new Error(result.message);
+        }
+        return result;
     }
-
-    return response.json();
+    catch (error) {
+        throw new Error("AuthAppService @ getDecodedAuthToken API error:" + error);
+    } 
 };
 
-// ✅ Fetch Secret Key
-export const getSecretKey = async () => {
-    const response = await fetch('/api/auth/secret-key', {
-        method: 'GET',
-        credentials: 'include',
-    });
 
-    if (!response.ok) {
-        throw new Error(`Error: ${response.status} ${response.statusText}`);
-    }
-
-    return response.json();
-};
-
-// ✅ Fetch Secret Key
-export const getRefreshSecretKey = async () => {
-    const response = await fetch('/api/auth/refresh-secret-key', {
-        method: 'GET',
-        credentials: 'include',
-    });
-
-    if (!response.ok) {
-        throw new Error(`Error: ${response.status} ${response.statusText}`);
-    }
-
-    return response.json();
-};
 

@@ -6,9 +6,9 @@ import { Bell } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList } from "@/components/ui/breadcrumb";
 import { Separator } from "@radix-ui/react-separator";
-import { ExpressionCharts } from "@/components/expression-charts";
 import { TopTenCard } from "@/components/top-ten-card";
 import { TopStudents } from "@/components/top-students";
+import { ExpressionChartsDummy } from "@/components/expression-charts-dummy";
 
 export default function Page() {
     const [moods] = useState([
@@ -69,7 +69,7 @@ export default function Page() {
                 </header>
                 <div className="flex-1 p-2 sm:p-4 pt-0">            
                     <div className="h-full flex flex-col gap-2 sm:gap-4">
-                        <ExpressionCharts moods={moods} />
+                        <ExpressionChartsDummy moods={moods} />
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-5 flex-1">
                             <TopStudents />
                             <TopTenCard

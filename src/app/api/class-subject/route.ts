@@ -5,17 +5,32 @@ import { classSubjectDto } from "@/dto/class-subject.dto";
 /**
  * GET: Fetch all class subjects
  */
-export async function GET() {
-  try {
-    const subjects = await prisma.classSubject.findMany({
+export async function GET(req: NextRequest) {
+  try {    
+
+    // Parse query parameters from the URL
+    const { searchParams } = new URL(req.url);
+    const status = searchParams.get("status"); // 'current' or 'completed'
+    
+
+    // Build query filters
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const whereClause: any = {
+      status: status,
+    };
+
+    const classSubjects = await prisma.classSubject.findMany({
+      where: whereClause,
       include: {
         students: true, // Include related students
         schedules: true, // Include related schedules
       },
     });
-
-    return NextResponse.json(subjects, { status: 200 });
-
+    return NextResponse.json({
+      success: true,
+      message: "Class Subjects fetched successfully!",
+      data: classSubjects},
+      { status: 200 });  
   } catch (error) {    
     return handleApiError(error);
   }
@@ -32,11 +47,12 @@ export async function POST(req: NextRequest) {
 
     const validatedData = classSubjectDto.parse(body);
 
-    console.log("ValidatedData:");
-    console.log(validatedData);
-
     if (!validatedData.name || !validatedData.teacher_user_id) {
-      return NextResponse.json({ message: "Missing required fields" }, { status: 400 });
+      return NextResponse.json({ 
+        success: false,
+        message: "Missing required fields",
+        data: validatedData }, 
+        { status: 400 });
     }
 
     const addHours = (date: Date, hours: number) => {
@@ -58,6 +74,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(
       {   
+          success: true,
           message: "Class Subject has been successfully created!",
           data: newSubject
       },
@@ -65,6 +82,7 @@ export async function POST(req: NextRequest) {
   );
 
   } catch (error) {    
+    console.error("Get Class subject by Id");
     return handleApiError(error);
   }
 }

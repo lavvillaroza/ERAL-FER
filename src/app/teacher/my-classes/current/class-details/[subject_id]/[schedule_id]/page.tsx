@@ -2,112 +2,120 @@
 import { useState, useEffect } from "react";
 import { AppSidebarTeacher } from "@/app/components/app-sidebar-teacher";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { ChevronRight, AlertCircle, Bell } from "lucide-react";
+import { ChevronRight, Bell} from "lucide-react";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
-import { LessonPlan, TimelineItem } from "@/components/lesson-plan";
+import { CourceContents } from "@/components/course-contents";
 import { ClassSubjectModel } from "@/models/classSubjectModel";
 import { getClassSubjectById } from "@/services/classSubjectAppService";
-import { ClassScheduleModel } from "@/models/classScheduleModel";
-import { ClassStudentModel } from "@/models/classStudentModel";
 import { toast, Toaster } from "sonner";
-import { getClassStudents } from "@/services/classStudentAppService";
-import { createClassSchedule, getClassSchedules } from "@/services/classScheduleAppService";
-import { useParams } from "next/navigation";
-import { FERPieChart } from "@/components/fer-pie-chart";
+import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { ClassCourseContentModel } from "@/models/classCourseContentModel";
+import { getServerTime } from "@/services/timeAppService";
+import { formatDate } from "@/lib/formatTime";
+import { ClassScheduleModel } from "@/models/classScheduleModel";
+import { getClassScheduleById, updateClassCourseContentsStatusByScheduleIdAndId, updateClassScheduleStatus } from "@/services/classScheduleAppService";
+import Loading from "@/components/loading";
+import { ClassCourseContentStatus } from "@/types/classCourseContentStatus";
 import { FERTimeLineChart } from "@/components/fer-timeline-chart";
-import Subject from "../../../[room-id]/page";
+import { ClassScheduleStatus } from "@/types/classScheduleStatus";
+import { FERPieChart } from "@/components/fer-pie-chart";
+import { ClassStudentFERAggChartModel } from "@/models/classStudentFERAggChartModel";
+import { ClassStduentFERAggTimelineModel } from "@/models/classStudentFERAggTimelineModel";
+import { getFERChartDataBySubjectSchedIds, getFERStudentsDataBySubjectScheduleIds, getFERTimelineDataBySubjectSchedIds } from "@/services/classStudentFerAppService";
+import { StudentsFERList } from "@/components/student-fer-list";
+import { ClassStudentFERAggStudentModel } from "@/models/classStudentFERAggStudentModel";
+import { getDecodedAuthToken, refreshAuthToken } from "@/services/authAppService";
+import { UserDetails } from "@prisma/client";
+import { getUserDetailsByUserId } from "@/services/userAppService";
+import { AlertDestructive } from "@/components/alert-destructive";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
-type Expression = "Happy" | "Sad" | "Angry" | "Fearful" | "Disgusted" | "Surprised" | "Neutral";
+const ScheduleSession = () => {  
+  const params = useParams();   
+  const router = useRouter(); 
+  const [classSubject, setClassSubject] = useState<ClassSubjectModel>({} as ClassSubjectModel);  
+  const [classSchedule, setClassSchedule] = useState<ClassScheduleModel>({
+      id: 0, // Assume ID is auto-generated
+      class_subject_id: 0, // Passed as prop
+      date_schedule: "",
+      time_start: "",
+      time_end: "",
+      status: "", // Default value
+      topic_title: "",
+      remarks: ""
+    });
+  const [classCourseContents, setClassCourseContents] = useState<ClassCourseContentModel[]>([]);   
+  //const [currentClassAverage] = useState(78);
+  const [showNotification, setShowNotification] = useState(false);
+  const [notificationMessage, setNotificationMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(true);            
+  const [serverTime, setServerTime] = useState(new Date());  
+  const [classStudentFERChartData, setClassStudentFERChartData] = useState<ClassStudentFERAggChartModel>({} as ClassStudentFERAggChartModel);
+  const [classStudentFERTimelineData, setClassStudentFERTimelineData] = useState<ClassStduentFERAggTimelineModel[]>([]); 
+  const [classStudentFERStudentData, setclassStudentFERStudentData] = useState<ClassStudentFERAggStudentModel[]>([]);
+  const [teacherUserId, setTeacherUserId] = useState<number>(0);
+  const [teacherUserDetails, setTeacherUserDetails] = useState<UserDetails>({} as UserDetails);
+  const [isEndSessionDialogOpen, setIsEndSessionDialogOpen] = useState(false);    
+  const [isEndSessionLoading, setIsEndSessionLoading] = useState(false);
 
-// Mock component for donut chart
-const FERDonutChart = ({ average }: { average: number }) => (
-  <div className="flex flex-col items-center justify-center p-4">
-    <div className="relative h-36 w-36 flex items-center justify-center bg-blue-100 rounded-full">
-      <div className="absolute inset-3 bg-white rounded-full flex items-center justify-center">
-        <span className="text-2xl font-bold">{average}%</span>
-      </div>
-    </div>
-    <p className="mt-2 text-center font-medium">Average FER</p>
-  </div>
-);
+  useEffect(() => {
+      const checkSession = async () => {
+        try {
+          const token = await getDecodedAuthToken();
+          if (!token) {
+            console.log("No auth token found.");
+            toast.error("Failed to fetch class subjects!", {
+              description: "No auth token found.",
+            });
+            router.push("/login");
+            return; // Stop execution
+          }
+          const decodedToken = token.data;
+          if (!decodedToken) {
+            const refreshToken = await refreshAuthToken();
+            if (!refreshToken || refreshToken.success === false) {
+              router.push("/login");
+            }
+            setTeacherUserId(refreshToken.data.id);
+          } else {
+            setTeacherUserId(decodedToken.id);
+          }
+        } catch (error) {
+          console.error("Error checking session:", error);
+          router.push("/login");
+        }
+      };
+      checkSession();
+    }, [router]);
 
-// Mock component for live student FER cards
-const StudentFERCard = ({ student }: { student: { name: string; dominantExpression: Expression; average: number } }) => (
-  <Card className="w-full">
-    <CardContent className="p-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="font-medium">{student.name}</h3>
-          <p
-            className={`text-sm ${getExpressionColor(
-              student.dominantExpression
-            )}`}
-          >
-            {student.dominantExpression}
-          </p>
-        </div>
-        <div className="text-xl font-bold">{student.average}%</div>
-      </div>
-    </CardContent>
-  </Card>
-);
-
-const getExpressionColor = (expression: Expression) => {
-  switch (expression) {
-    case "Happy":
-      return "text-green-500";
-    case "Sad":
-      return "text-purple-500";
-    case "Angry":
-      return "text-red-500";
-    case "Fearful":
-      return "text-slate-500";
-    case "Disgusted":
-      return "text-zinc-700";
-    case "Surprised":
-      return "text-orange-500";
-    default:
-      return "text-blue-500"; // Neutral
-  }
-};
-
-const ScheduleSession = () => {
-  const [classSubject, setClassSubject] = useState<ClassSubjectModel>({} as ClassSubjectModel);
-  const [classSchedules, setClassSchedules] = useState<ClassScheduleModel[]>([]);
-  const [newSchedule, setNewSchedule] = useState<ClassScheduleModel>({
-    id: 0, // Assume ID is auto-generated
-    class_subject_id: 0, // Passed as prop
-    date_schedule: "",
-    time_start: "",
-    time_end: "",
-    status: "upcoming", // Default value
-    remarks: "",
-  });
-  const params = useParams();  
-  const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
-  
-  const [classStudents, setClassStudents] = useState<ClassStudentModel[]>([]);
-  // const [classAttendance, setClassAttendance] = useState<ClassAttendanceModel[]>([]);
-  // const [classStudentsFer, setClassStudentsFer] = useState<ClassStudentFERModel[]>([]);
-  // const [classLessonPlan, setClassLessonPlan] = useState<ClassLessonPlanModel[]>([]);
   useEffect(() => {
     const fetchData = async () => {
-      try {                                    
-        const [resSubject, resStudents, resSchedules] = await Promise.all([
-          getClassSubjectById(Number(params.subject_id)),
-          getClassStudents(Number(params.subject_id)),
-          getClassSchedules(Number(params.subject_id)),
-        ])        
-        setClassSubject(resSubject);  
-        setClassStudents(resStudents); 
-        setClassSchedules(resSchedules);  
-        console.log(resStudents);
-        console.log(resSchedules);      
+      try {     
+        console.log("teacherUserId:", teacherUserId);    
+        if (teacherUserId === 0)  return;    
+
+        const [resSubject, resUserDetails, resSchedule] = await Promise.all([
+          getClassSubjectById(Number(params.subject_id)),          
+          getUserDetailsByUserId(teacherUserId),
+          getClassScheduleById(Number(params.subject_id), Number(params.schedule_id)),          
+        ])
+        if (!resSubject.success) {
+          throw new Error(resSubject.message);
+        }
+
+        if (!resUserDetails.success) {
+          throw new Error(resSchedule.message);
+        }  
+       
+        if (!resSchedule.success) {
+          throw new Error(resSchedule.message);
+        }  
+        setClassSubject(resSubject.data);          
+        setClassSchedule(resSchedule.data);    
+        setClassCourseContents(resSchedule.data.course_contents);                        
+        setTeacherUserDetails(resUserDetails.data);
 
       } catch (error) {
         console.log("Error fetching class subject:", error);
@@ -115,235 +123,182 @@ const ScheduleSession = () => {
           description: error instanceof Error ? error.message : JSON.stringify(error),
         });
       } 
-
+      finally {
+        setIsLoading(false);
+      }
     }
     fetchData();
-  }, [params.subject_id]);
+  }, [params.schedule_id, params.subject_id, teacherUserId]);
+
   
 
-  const [moods, setMoods] = useState([
-    {
-      icon: "😲",
-      percentage: "25.00",
-      label: "Surprised",
-      bgClass: "bg-gray-100/50",
-      color: "text-orange-500",
-    },
-    {
-      icon: "😊",
-      percentage: "15.00",
-      label: "Happy",
-      bgClass: "bg-gray-100/50",
-      color: "text-green-500",
-    },
-    {
-      icon: "😐",
-      percentage: "20.00",
-      label: "Neutral",
-      bgClass: "bg-gray-100/50",
-      color: "text-blue-500",
-    },
-    {
-      icon: "😢",
-      percentage: "10.00",
-      label: "Sad",
-      bgClass: "bg-gray-100/50",
-      color: "text-purple-500",
-    },
-    {
-      icon: "🤢",
-      percentage: "8.00",
-      label: "Disgusted",
-      bgClass: "bg-gray-100/50",
-      color: "text-zinc-700",
-    },
-    {
-      icon: "😡",
-      percentage: "12.00",
-      label: "Angry",
-      bgClass: "bg-gray-100/50",
-      color: "text-red-500",
-    },
-    {
-      icon: "😨",
-      percentage: "10.00",
-      label: "Fearful",
-      bgClass: "bg-gray-100/50",
-      color: "text-slate-500",
-    },
-  ]);
-
-  const ferTimeSeriesData = [
-    {
-      time: "09:00",
-      happy: 30,
-      neutral: 40,
-      surprised: 15,
-      sad: 10,
-      disgusted: 2,
-      angry: 3,
-    },
-    {
-      time: "09:15",
-      happy: 35,
-      neutral: 35,
-      surprised: 20,
-      sad: 8,
-      disgusted: 1,
-      angry: 1,
-    },
-    {
-      time: "09:30",
-      happy: 40,
-      neutral: 30,
-      surprised: 15,
-      sad: 10,
-      disgusted: 3,
-      angry: 2,
-    },
-    {
-      time: "09:45",
-      happy: 25,
-      neutral: 45,
-      surprised: 20,
-      sad: 5,
-      disgusted: 2,
-      angry: 3,
-    },
-    {
-      time: "10:00",
-      happy: 35,
-      neutral: 40,
-      surprised: 15,
-      sad: 5,
-      disgusted: 2,
-      angry: 3,
-    },
-    {
-      time: "10:15",
-      happy: 45,
-      neutral: 35,
-      surprised: 10,
-      sad: 5,
-      disgusted: 2,
-      angry: 3,
-    },
-  ];
-
-  const [students] = useState([
-    { id: 1, name: "Emma Wilson", dominantExpression: "Happy", average: 85 },
-    {
-      id: 2,
-      name: "James Anderson",
-      dominantExpression: "Neutral",
-      average: 78,
-    },
-    { id: 3, name: "Sophia Garcia", dominantExpression: "Happy", average: 92 },
-    { id: 4, name: "Lucas Martinez", dominantExpression: "Sad", average: 65 },
-    {
-      id: 5,
-      name: "Olivia Thompson",
-      dominantExpression: "Happy",
-      average: 88,
-    },
-  ]);
-
-  const [isInSession, setIsInSession] = useState(false);
-  const [currentClassAverage] = useState(78);
-  const [showNotification, setShowNotification] = useState(false);
-  const [notificationMessage, setNotificationMessage] = useState("");
-
-  // Timeline-based lesson plan
-  const [timelineItems] = useState<TimelineItem[]>([
-    {
-      time: "10:00 AM - 10:15 AM",
-      title: "Introduction and Overview",
-      desc: "Welcome and introduction to today's topics",
-      completed: true,
-      current: false,
-    },
-    {
-      time: "10:15 AM - 10:35 AM",
-      title: "Control Structures - If/Else",
-      desc: "Understanding conditional logic and decision making in programming",
-      completed: false,
-      current: true,
-    },
-    {
-      time: "10:35 AM - 10:55 AM",
-      title: "Control Structures - Loops",
-      desc: "Exploring for loops, while loops, and iterative processes",
-      completed: false,
-      current: false,
-    },
-    {
-      time: "10:55 AM - 11:20 AM",
-      title: "Practice Exercises",
-      desc: "Hands-on exercises to implement control structures",
-      completed: false,
-      current: false,
-    },
-    {
-      time: "11:20 AM - 11:30 AM",
-      title: "Summary and Assignment",
-      desc: "Recap of key concepts and overview of homework assignment",
-      completed: false,
-      current: false,
-    },
-  ]);
-
-  // Simulate FER updates every 3 seconds
   useEffect(() => {
-    if (isInSession) {
+    let syncInterval: NodeJS.Timeout;
+    let tickInterval: NodeJS.Timeout;
+  
+    const fetchServerTime = async () => {
+      try {
+        const response = await getServerTime();
+        const serverDate = new Date(response.data);
+        setServerTime(serverDate);
+      } catch (error) {
+        console.error("Error fetching server time:", error);
+      }
+    };
+    fetchServerTime(); // Initial fetch
+    // Sync with the server every 5 minutes (300,000 ms)
+    // eslint-disable-next-line prefer-const
+    syncInterval = setInterval(fetchServerTime, 300000);
+  
+    // Increment local time every second
+    // eslint-disable-next-line prefer-const
+    tickInterval = setInterval(() => {
+      setServerTime((prevTime) => (prevTime ? new Date(prevTime.getTime() + 1000) : new Date()));
+    }, 1000);
+  
+    return () => {
+      clearInterval(syncInterval);
+      clearInterval(tickInterval);
+    };
+  }, []); 
+
+  useEffect(() => {
+    const updateCourseContents = async () => {      
+      const allFinished = classCourseContents.every(content => content.status === ClassCourseContentStatus.FINISHED);
+      if (allFinished) {
+        return;
+      }
+      const currentTime = serverTime.getTime();
+      const scheduleEndTime = new Date(`${classSchedule.date_schedule}T${classSchedule.time_end}`).getTime();      
+      const updatedContents = await Promise.all(classCourseContents.map(async (content) => {
+      const contentStartTime = new Date(`${classSchedule.date_schedule}T${content.time_start}`).getTime();
+
+      if (currentTime < contentStartTime) {                      
+        const response = await updateClassCourseContentsStatusByScheduleIdAndId(ClassCourseContentStatus.UPCOMING, content.id, classSchedule.id);
+        if (response.success === false) {
+          toast.error("Failed to fetch class subject!", {
+            description: response.message,
+          });
+        }          
+        return { ...content, status: "upcoming" };
+      } else if (currentTime >= contentStartTime && currentTime <= scheduleEndTime) {
+        const response = await updateClassCourseContentsStatusByScheduleIdAndId(ClassCourseContentStatus.ONGOING, content.id, classSchedule.id);
+        if (response.success === false) {
+          toast.error("Failed to fetch class subject!", {
+            description: response.message,
+          });
+        }
+        return { ...content, status: "ongoing" };
+      } else {
+        const response = await updateClassCourseContentsStatusByScheduleIdAndId(ClassCourseContentStatus.FINISHED, content.id, classSchedule.id);
+        if (response.success === false) {
+          toast.error("Failed to fetch class subject!", {
+            description: response.message,
+          });
+        }
+        return { ...content, status: "finished" };
+      }
+      }));        
+        setClassCourseContents(updatedContents);
+    };
+    const interval = setInterval(updateCourseContents, 1000); // Check every second
+    return () => clearInterval(interval); // Clear interval on component unmount
+  }, [serverTime, classCourseContents, classSchedule.date_schedule, classSchedule.time_start, classSchedule.time_end, classSchedule.id]);
+
+  //Get Student FER Data Per Minute 
+  useEffect(() => {
+    const fetchStudentFERData = async () => {
+      try {
+        const [responseFERTimelineData, responseFERChartData, responseFERStudentData] = await Promise.all([
+          getFERTimelineDataBySubjectSchedIds(Number(params.subject_id), Number(params.schedule_id)),
+          getFERChartDataBySubjectSchedIds(Number(params.subject_id), Number(params.schedule_id)),
+          getFERStudentsDataBySubjectScheduleIds(Number(params.subject_id), Number(params.schedule_id))
+        ]);
+
+        if (responseFERTimelineData.success === false) {
+          throw new Error(responseFERTimelineData.message);
+        }
+        if (responseFERChartData.success === false) {
+          throw new Error(responseFERChartData.message);
+        }
+        if (responseFERStudentData.success === false) {
+          throw new Error(responseFERStudentData.message);
+        }
+        setClassStudentFERTimelineData(responseFERTimelineData.data);
+        setClassStudentFERChartData({
+          surprised: responseFERChartData.data.surprised,
+          happy: responseFERChartData.data.happy,
+          neutral: responseFERChartData.data.neutral,
+          sad: responseFERChartData.data.sad,
+          angry: responseFERChartData.data.angry,
+          disgusted: responseFERChartData.data.disgusted,
+          fearful: responseFERChartData.data.fearful,
+          na: responseFERChartData.data.na,
+        });
+        setclassStudentFERStudentData(responseFERStudentData.data);              
+      } catch (error) {
+        console.error("Error fetching student FER data:", error);
+      }
+    };
+    const interval = setInterval(() => {
+      //const now = new Date(); // Use the current system time
+      //const seconds = now.getSeconds();      
+      // if (seconds === 1) { // Trigger exactly when seconds are 0
+      //   fetchStudentFERData();
+      // }
+      fetchStudentFERData();
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, [serverTime, params.subject_id, params.schedule_id]);
+
+  useEffect(() => {
+    if (classSchedule.status === ClassScheduleStatus.OPENED) {
       const interval = setInterval(() => {
-        // Update moods with slight variations
-        setMoods((prev) =>
-          prev.map((mood) => ({
-            ...mood,
-            percentage: (
-              parseFloat(mood.percentage) +
-              (Math.random() * 2 - 1)
-            ).toFixed(2),
-          }))
-        );
+        const negativeThresholdTrigger = classStudentFERChartData.angry + classStudentFERChartData.disgusted + 
+                                        classStudentFERChartData.fearful + classStudentFERChartData.sad +
+                                        classStudentFERChartData.na;
 
-        // Check for threshold notifications (example: if Sad or Angry > 15%)
-        const sadPercentage = parseFloat(
-          moods.find((m) => m.label === "Sad")?.percentage || "0"
-        );
-        const angryPercentage = parseFloat(
-          moods.find((m) => m.label === "Angry")?.percentage || "0"
-        );
+        console.log("ThreshHold:",negativeThresholdTrigger);
 
-        if (sadPercentage > 15 || angryPercentage > 15) {
+        if (negativeThresholdTrigger >= Number(teacherUserDetails.thresh_hold)) {
           setShowNotification(true);
           setNotificationMessage(
-            `Alert: ${
-              sadPercentage > 15 ? "Sad" : "Angry"
-            } expression threshold exceeded!`
-          );
-
-          // Auto-dismiss notification after 3 seconds
-          setTimeout(() => {
-            setShowNotification(false);
-          }, 3000);
+            `Negative Expression: ${Number(negativeThresholdTrigger).toFixed(2)}%              
+            threshold exceeded!`
+          );          
         }
-      }, 3000);
-
+        // Auto-dismiss notification after 3 seconds
+        // setTimeout(() => {
+        //   setShowNotification(false);
+        // }, 3000);
+      }, 3000);      
       return () => clearInterval(interval);
     }
-  }, [isInSession, moods]);
+  }, [classSchedule.status, classStudentFERChartData.angry, 
+    classStudentFERChartData.disgusted, classStudentFERChartData.fearful, 
+    classStudentFERChartData.na, classStudentFERChartData.sad, 
+    teacherUserDetails.thresh_hold]);
 
-  const [currentTime, setCurrentTime] = useState(new Date());  
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
+  const handleEndSession = async () => { 
+    if (isEndSessionLoading) return; // Prevent duplicate requests
+    
+    setIsEndSessionLoading(true);
+    const response = await updateClassScheduleStatus(Number(params.subject_id), Number(params.schedule_id), ClassScheduleStatus.FiNISHED)      
+    if (response.success) {        
+      setIsEndSessionLoading(false);
+      router.push(`/teacher/my-classes/current/class-details/${classSubject.id}/${Number(params.schedule_id)}`)      
+    }
+    else {
+      toast.error("Error!", {
+        description: `${response.data.message}`,
+      });
+      setIsEndSessionLoading(false);
+    }
+  }
 
-    return () => clearInterval(interval);
-  }, []);
-  
   return (
+    <>
     <SidebarProvider>
       <AppSidebarTeacher />
       <SidebarInset>
@@ -363,15 +318,7 @@ const ScheduleSession = () => {
                             <BreadcrumbLink href="/teacher/my-classes/current">
                               Current
                             </BreadcrumbLink>
-                        </BreadcrumbItem>  
-                        <BreadcrumbSeparator>
-                            <ChevronRight className="h-4 w-4" />
-                        </BreadcrumbSeparator>   
-                        <BreadcrumbItem>
-                            <BreadcrumbLink href={"/teacher/my-classes/current/class-details/" + classSubject.id}>
-                              {classSubject.name}
-                            </BreadcrumbLink>
-                        </BreadcrumbItem>    
+                        </BreadcrumbItem>                          
                         <BreadcrumbSeparator>
                             <ChevronRight className="h-4 w-4" />
                         </BreadcrumbSeparator>   
@@ -400,65 +347,78 @@ const ScheduleSession = () => {
                 </div>
             </div>
         </header>
-        <div className="flex-1 p-2 sm:p-4 pt-0">          
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0 mb-6">
-            <div>              
-              <pre className="mt-2 text-base text-black-600">Time: {currentTime.toLocaleTimeString()}</pre>
-            </div>
-            <Button
-                variant="destructive"
-                onClick={() => setIsInSession(false)}
-                className="w-full sm:w-auto">   
-                End Session
-            </Button>           
-          </div>          
-            {/* Notification */}
-            {showNotification && (
-            <div className="fixed top-6 right-6 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded shadow-md flex items-center z-50">
-                <AlertCircle className="h-5 w-5 mr-2" />
-                <p>{notificationMessage}</p>
-            </div>
-            )}
+        <div className="flex-1 p-2 sm:p-4 pt-0">  
+          {isLoading ? (
+              <Loading/>
+            ) : (   
+              <>
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0 mb-6">
+                  <div>  
+                    <h1 className="text-base sm:text-2xl font-bold">
+                      {`${classSubject.name ?? ""} [ ${classSubject.days} ]`}
+                    </h1>
+                    <pre className="mt-0 text-base text-gray-600">{formatDate(classSchedule.date_schedule)} • {`${classSchedule.time_start} - ${classSchedule.time_end}`}</pre>
+                    <pre className="mt-2 text-base text-black-600">Time: {serverTime.toLocaleTimeString()}</pre>
+                  </div>
+                  <Button
+                      variant="destructive"
+                      onClick={() => handleEndSession()}
+                      disabled={isEndSessionLoading}
+                      className="w-full sm:w-auto">   
+                      End Session
+                  </Button>           
+                </div>          
+                {/* Notification */}
+                {showNotification && (
+                  <AlertDestructive 
+                      message={notificationMessage}
+                      show={showNotification} 
+                      onClose={() => setShowNotification(false)}
+                    />                                   
+                )}
 
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
-                {/* Average FER Donut Chart */}
-                <FERPieChart />
-
-                {/* Real-time FER Chart */}
-                <FERTimeLineChart />
-            </div>
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">                
-                {/* Student FER Cards */}
-                <Card >
-                    <CardHeader>
-                    <CardTitle className="text-lg">
-                        Student Expressions
-                    </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                    <ScrollArea className="h-[400px] pr-4">
-                        <div className="grid grid-cols-1 gap-4">
-                        {students.map((student) => (
-                            <StudentFERCard 
-                            key={student.id} 
-                            student={{
-                                name: student.name,
-                                dominantExpression: student.dominantExpression as Expression,
-                                average: student.average
-                            }} 
-                            />
-                        ))}
-                        </div>
-                    </ScrollArea>
-                    </CardContent>
-                </Card>
-                {/* Timeline-based Lesson Plan */}
-                <LessonPlan className="xl:col-span-2" items={timelineItems} />
-            </div>                      
+                <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
+                  {/* Average FER Donut Chart */}
+                  <FERPieChart data={classStudentFERChartData} />
+                  {/* Real-time FER Chart */}
+                  <FERTimeLineChart data={classStudentFERTimelineData} />
+                </div>
+                <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">                
+                    {/* Student FER Cards */}
+                    <StudentsFERList students={classStudentFERStudentData} />
+                    {/* Timeline-based Lesson Plan */}
+                    <CourceContents className="xl:col-span-2" items={classCourseContents} />
+                </div>              
+              </>              
+            )}                                  
         </div>
         <Toaster />
       </SidebarInset>
     </SidebarProvider>    
+
+    <Dialog open={isEndSessionDialogOpen} onOpenChange={setIsEndSessionDialogOpen}>          
+      <DialogContent className="max-w-sm sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Confirmation Dialog</DialogTitle>
+          <DialogDescription>   
+            Are you sure you want to end this subject?         
+          </DialogDescription>
+        </DialogHeader>                    
+        <DialogFooter className="flex-col sm:flex-row gap-2">
+          <Button 
+              variant="outline" 
+              type="button" 
+              className="w-full sm:w-auto"
+              onClick={() => setIsEndSessionDialogOpen(false)}>
+            no
+          </Button>
+          <Button type="submit" variant="default" className="w-full sm:w-auto" onClick={handleEndSession}>
+            yes
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 };
 

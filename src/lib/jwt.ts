@@ -1,49 +1,46 @@
-import jwt from "jsonwebtoken";
+import jwt, { JwtPayload } from "jsonwebtoken";
 
 // Generate Access Token (Short-lived)
 export const signToken = (payload: object, SECRET_KEY: string) => {
-  return jwt.sign(payload, SECRET_KEY, { expiresIn: "15m" });
+  return jwt.sign(payload, SECRET_KEY, { expiresIn: "1d" });
 };
 
 // Generate Refresh Token (Long-lived)
 export function signRefreshToken(payload: object, REFRESH_SECRET_KEY: string) {
-    return jwt.sign(payload, REFRESH_SECRET_KEY, { expiresIn: "7d" });
+    return jwt.sign(payload, REFRESH_SECRET_KEY, { expiresIn: "2d" });
 }
 
 // Verify Access Token
-export const verifyToken = (token: string, SECRET_KEY: string) => {
-  return jwt.verify(token, SECRET_KEY);
+export const verifyToken = (token: string, SECRET_KEY: string) => {  
+  try {    
+    const decoded = jwt.verify(token, SECRET_KEY);    
+    return { valid: true, expired: false, decoded: decoded };
+  } catch (err) {
+    if (err instanceof Error) {
+      if (err.name === "TokenExpiredError") {
+          return { valid: false, expired: true, message: "Auth Token has expired" };
+      } else if (err.name === "JsonWebTokenError") {
+          return { valid: false, expired: false, message: "Invalid Auth Token" };
+      }
+    }
+    return { valid: false, expired: false, message: "Unknown error verifying auth token" };
+  }
 };
 
 // Verify Refresh Token
 export function verifyRefreshToken(token: string, REFRESH_SECRET_KEY: string) {
-    return jwt.verify(token, REFRESH_SECRET_KEY);
-}
-
-//Get user_id from Token
-export function getUserIdFromToken(token: string) {
   try {
-    if (!token) {
-      console.error("Token is missing");
-      return null;
+    const decoded = jwt.verify(token, REFRESH_SECRET_KEY) as JwtPayload;
+    return { valid: true, expired: false, decoded: decoded };
+  } catch (err) {
+    if (err instanceof Error) {
+      if (err.name === "TokenExpiredError") {
+          return { valid: false, expired: true, message: "Refresh Token has expired" };
+      } else if (err.name === "JsonWebTokenError") {
+          return { valid: false, expired: false, message: "Invalid Refresh Token" };
+      }
     }
-    
-    // Decode without verifying
-    const decodedWithoutVerify = jwt.decode(token) as jwt.JwtPayload | null;
-    //console.log("Decoded (without verify):", decodedWithoutVerify);
-
-    if (!decodedWithoutVerify) {
-      console.error("Token is not properly formatted");
-      return null;
-    }
-    
-    
-    //const decoded = jwt.verify(token, SECRET_KEY) as jwt.JwtPayload;    
-
-    return decodedWithoutVerify;
-
-  } catch (error) {
-    console.error("Token verification failed:", error);
-    return null;
+    return { valid: false, expired: false, message: "Unknown error verifying refresh token" };
   }
 }
+

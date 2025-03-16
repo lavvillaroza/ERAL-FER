@@ -16,34 +16,52 @@ export async function POST(req: NextRequest) {
       const user = await prisma.user.findUnique({ where: { email } });
       if (!user) {
           console.error("User not found:", email);
-          return NextResponse.json({ message: "Invalid credentials" }, { status: 401 });
+          return NextResponse.json(
+            { 
+                success: false,
+                message: "Invalid credentials" }, 
+                { status: 401 }
+            );
       }
 
       // Check password
       const isMatch = await bcrypt.compare(password, user.password);
       if (!isMatch) {
           console.error("Password mismatch for user:", email);
-          return NextResponse.json({ message: "Invalid credentials" }, { status: 401 });
+          return NextResponse.json(
+            { 
+                success: false,
+                message: "Invalid credentials" }, 
+                { status: 401 }
+            );
       }
 
       if (user.account_status === "new" || user.account_status === "deactivated") {
-          return NextResponse.json({
-              message: "Your account is not activated yet. Please wait for admin approval.",
-              status: 403
-          });
+          return NextResponse.json(
+            {
+                success:false,
+                message: "Your account is not activated yet. Please wait for admin approval."},
+                { status: 403 }
+            );
       }
 
       // Generate tokens
       const accessToken = signToken({ id: user.user_id, email: user.email, role: user.role }, SECRET_KEY);
-      const refreshToken = signRefreshToken({ id: user.user_id, email: user.email }, REFRESH_SECRET_KEY);
+      const refreshToken = signRefreshToken({ id: user.user_id, email: user.email, role: user.role }, REFRESH_SECRET_KEY);
 
       // Set cookies securely
-      const response = NextResponse.json({ message: "Login successful!", status: 202 });
+      const response = NextResponse.json(
+        { 
+            success: true,
+            message: "Login successful!", 
+            data: {role: user.role}},
+            {status: 202 } //202 Accepted – The request has been received but is still being processed.
+        );
+        
       response.cookies.set("auth_token", accessToken, { httpOnly: true, secure: true, path: "/", sameSite: "strict" });
-      response.cookies.set("refresh_token", refreshToken, { httpOnly: true, secure: true, path: "/", sameSite: "strict" });
-      response.cookies.set("user_role", user.role, { httpOnly: true, secure: true, path: "/", sameSite: "strict" });
-
+      response.cookies.set("refresh_token", refreshToken, { httpOnly: true, secure: true, path: "/", sameSite: "strict" });      
       return response;
+      
   } catch (error) {
       console.error("Login API Error:", error);
       return handleApiError(error);

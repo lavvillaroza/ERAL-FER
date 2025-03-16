@@ -20,10 +20,14 @@ export async function GET(req: NextRequest, { params }: { params: { user_id: str
     });
 
     if (!user) {
-      return NextResponse.json({ message: "User not found" }, { status: 404 });
+      throw new Error("User not found!")
     }
 
-    return NextResponse.json(user, { status: 200 });
+    return NextResponse.json({
+      success: true,
+      message: "User fetched successfully",
+      data: user}, 
+      { status: 200 });
 
   } catch (error) {    
     return handleApiError({ error: "Error fetching user by ID: " + error });

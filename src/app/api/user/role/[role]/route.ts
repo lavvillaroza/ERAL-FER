@@ -8,28 +8,20 @@ export async function GET(req: NextRequest, { params }: { params: { role: string
             
       const users = await prisma.user.findMany({
         where: { role: role }, // Filter users by role
-        select: {
-          user_id: true,
-          email: true,
-          role: true,
-          account_status: true,
-          created_date: true,
-          userDetails: {
-            select: {
-              first_name: true,
-              middle_name: true,
-              last_name: true,
-              course: true,
-              online_status: true,
-              profile_image: true,
-              thresh_hold: true,
-            },
-          },
+        include: {          
+          userDetails: true,      
         },
-      });
-            
-      return NextResponse.json(users, { status: 200 });
-  
+      });            
+
+      // Extract userDetails from each user
+      const userDetails = users.map(user => user.userDetails);      
+
+      return NextResponse.json({
+          success: true,
+          message: "Student users fetched successfully!",
+          data: userDetails, // Return extracted userDetails
+      }, { status: 200 });
+        
     } catch (error) {
       return handleApiError({ error: "Error fetching users by role: " + error });
     }

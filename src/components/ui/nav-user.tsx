@@ -29,7 +29,9 @@ import {
 } from "@/components/ui/sidebar"
 import { logoutUser } from "@/services/authAppService"
 import { useRouter } from "next/navigation";
-
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
 export function NavUser({
   user,
 }: {
@@ -41,6 +43,7 @@ export function NavUser({
 }) {
   const { isMobile } = useSidebar()
   const router = useRouter();
+  const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);    
    // ✅ Handle logout
    const handleLogout = async () => {
     try {
@@ -49,8 +52,12 @@ export function NavUser({
     } catch (error) {
       console.error("Logout failed:", error);
     }
+    finally {
+      setIsCancelDialogOpen(false);
+    }
   };
   return (
+    <>
     <SidebarMenu>
       <SidebarMenuItem>
         <DropdownMenu>
@@ -74,8 +81,7 @@ export function NavUser({
             className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
             side={isMobile ? "bottom" : "right"}
             align="end"
-            sideOffset={4}
-          >
+            sideOffset={4}>
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
@@ -100,13 +106,36 @@ export function NavUser({
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleLogout}>
+            <DropdownMenuItem onClick={() => setIsCancelDialogOpen(true)}>
               <LogOut />
-              Log out
+                Log out                
             </DropdownMenuItem>
           </DropdownMenuContent>
-        </DropdownMenu>
+        </DropdownMenu>        
       </SidebarMenuItem>
     </SidebarMenu>
+    <Dialog open={isCancelDialogOpen} onOpenChange={setIsCancelDialogOpen}>          
+      <DialogContent className="max-w-sm sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Confirmation Dialog</DialogTitle>
+          <DialogDescription>   
+            Are you sure you want to logout?         
+          </DialogDescription>
+        </DialogHeader>                    
+        <DialogFooter className="flex-col sm:flex-row gap-2">
+          <Button 
+              variant="outline" 
+              type="button" 
+              className="w-full sm:w-auto"
+              onClick={() => setIsCancelDialogOpen(false)}>
+            no
+          </Button>
+          <Button type="submit" variant="default" className="w-full sm:w-auto" onClick={handleLogout}>
+            yes
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    </>
   )
 }

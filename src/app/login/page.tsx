@@ -2,15 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { getUserRole, loginUser } from "@/services/authAppService";
+import { loginUser } from "@/services/authAppService";
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { GalleryVerticalEnd } from "lucide-react";
@@ -20,49 +14,44 @@ export default function LoginPage() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
     const router = useRouter();
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setError("");
 
+        if (isLoading) return; // Prevent multiple clicks
+        setIsLoading(true);
+
         try {
             // 🔹 Call login API
-            const data = await loginUser({ email, password });
-            console.log("Login Response:", data);
-
-            if (!data) throw new Error("Invalid email or password");
-
-            if (data.status === 403) throw new Error(data.message);
-
-            // ✅ After login, fetch the user role
-            const roleData = await getUserRole();
-            console.log("User Role Response:", roleData);
-
-            if (!roleData || !roleData.user_role) throw new Error("Failed to fetch user role");
-
+            const responseLogin = await loginUser({ email, password });            
             // 🔀 Redirect based on role
-            switch (roleData.user_role) {
-                case "ADMIN":
+            switch (responseLogin.data.role) {
+                case "admin":
                     router.push("/admin");
                     break;
-                case "TEACHER":
+                case "teacher":
                     router.push("/teacher");
                     break;
-                case "STUDENT":
+                case "student":
                     router.push("/student");
                     break;
                 default:
                     router.push("/");
             }
         } catch (err) {
-            setError(`${err}`);
+            setError(`${err}`);            
+        }
+        finally {
+            setIsLoading(false);
         }
     };
 
     return (
     <div className="flex min-h-svh flex-col items-center justify-center gap-6 bg-muted p-6 md:p-10">
-        <div className="flex w-full max-w-sm flex-col gap-6">
+        <div className="flex w-full max-w-sm flex-col gap-6">            
             <Link  href="#" className="flex items-center gap-2 self-center font-medium">
                 <div className="flex h-6 w-6 items-center justify-center rounded-md bg-primary text-primary-foreground">
                     <GalleryVerticalEnd className="size-4" />
@@ -102,14 +91,13 @@ export default function LoginPage() {
                             <div className="flex justify-end">
                                 <Link 
                                     href="#"
-                                    className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
-                                >
+                                    className="ml-auto inline-block text-sm underline-offset-4 hover:underline">
                                     Forgot your password?
                                 </Link >
                             </div>
                             {error && <p className="text-red-500">{error}</p>}
-                            <Button type="submit" className="w-full">
-                                Login
+                            <Button type="submit" disabled={isLoading} className="w-full">
+                                {isLoading ? "Logging in..." : "Login"}
                             </Button>
                             </div>
                             <div className="mt-4 text-center text-sm">

@@ -1,3 +1,5 @@
+import { ClassCourseContentModel } from "./classCourseContentModel";
+
 export interface ClassScheduleModel {
     id: number;
     class_subject_id: number;
@@ -5,5 +7,7 @@ export interface ClassScheduleModel {
     time_start: string;   
     time_end: string;
     status: string;    
-    remarks: string;     
+    topic_title: string;
+    remarks: string;    
+    course_contents?: ClassCourseContentModel[];
   }

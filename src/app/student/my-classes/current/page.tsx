@@ -4,53 +4,103 @@ import { Separator } from "@/components/ui/separator"
 import { SidebarInset, SidebarProvider, SidebarTrigger,} from "@/components/ui/sidebar"
 import { useEffect, useState } from "react"
 import { SubjectCard } from "@/components/subject-card-current"
-import { getUserIdFromToken } from "@/lib/jwt";
 import { ClassSubjectModel } from "@/models/classSubjectModel";
 import { toast, Toaster } from "sonner"
-import { getAuthToken } from "@/services/authAppService";
 import { Bell } from "lucide-react";
 import { AppSidebarStudent } from "@/app/components/app-sidebar-student";
-import {  getClassSubjectsByStudentId } from "@/services/classStudentAppService";
+import { getClassSubjectsByStudentId } from "@/services/classSubjectAppService";
+import { useRouter } from "next/navigation";
+import { getDecodedAuthToken, refreshAuthToken } from "@/services/authAppService";
+import { ClassStatus } from "@/types/classStatus";
+import Loading from "@/components/loading";
 
 export default function Page() {
+  const router = useRouter();
   const [classSubjects, setClassSubjects] = useState<ClassSubjectModel[]>([]);
-  const [studentUserId, setStudentUserId] = useState<number>(0);
+  const [studentUserId, setStudentUserId] = useState<number>(0);  
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-      const fetchClassSubjects = async () => {
-      const authToken = await getAuthToken();                 
-      if (!authToken) {
-        console.log("No auth token found.");
-        toast.error("Failed to fetch class subjects!", {
-          description: "No auth token found.",
-        });
-        return;
-      }      
-
-      try {        
-        const user_id = getUserIdFromToken(authToken.auth_token); // Extract user_id        
-        if (!user_id) {
-          console.log("Failed to extract user ID from token.");
+    const checkSession = async () => {
+      try {
+        const token = await getDecodedAuthToken();
+        if (!token) {
+          console.log("No auth token found.");
           toast.error("Failed to fetch class subjects!", {
-            description: "No teacher user id found.",
+            description: "No auth token found.",
           });
-          return;
+          router.push("/login");
+          return; // Stop execution
         }
-        
-        setStudentUserId(user_id?.id);
-        
-        const response = await getClassSubjectsByStudentId(user_id?.id);        
-
-        setClassSubjects(response);  
+        const decodedToken = token.data; 
+        if (!decodedToken) {
+          const refreshToken = await refreshAuthToken();
+          if (!refreshToken || refreshToken.success === false) {
+            router.push("/login");
+          }
+          setStudentUserId(refreshToken.data.id);
+        }
+        setStudentUserId(decodedToken.id);
       } catch (error) {
-        console.log("Error fetching class subjects:", error);
-        toast.error("Failed to fetch class subjects!", {
-          description: error instanceof Error ? error.message : JSON.stringify(error),
-        });
-      } 
+        console.error("Error checking session:", error);
+        router.push("/login");
+      }
+    };
+    checkSession();
+  }, [router]);
+  
+  useEffect(() => {
+      const checkSession = async () => {
+        try {
+          const token = await getDecodedAuthToken();
+          if (!token) {
+            console.log("No auth token found.");
+            toast.error("Failed to fetch class subjects!", {
+              description: "No auth token found.",
+            });
+            router.push("/login");
+            return; // Stop execution
+          }
+          const decodedToken = token.data; 
+          if (!decodedToken) {
+            const refreshToken = await refreshAuthToken();
+            if (!refreshToken || refreshToken.success === false) {
+              router.push("/login");
+            }
+            setStudentUserId(refreshToken.data.id);
+          }
+          setStudentUserId(decodedToken.id);
+        } catch (error) {
+          console.error("Error checking session:", error);
+          router.push("/login");
+        }
+      };
+      checkSession();
+    }, [router]);
+
+  useEffect(() => {
+    const fetchClassSubjects = async () => {                               
+        try {            
+          if(studentUserId === 0) return;          
+          const response = await getClassSubjectsByStudentId(studentUserId, ClassStatus.CURRENT);        
+          if (response.success === true) {
+            setClassSubjects(response.data);  
+          }
+          else {
+            toast.error("Failed to fetch class subjects!", response.message)
+          }
+        } catch (error) {
+          console.log("Error fetching class subjects:", error);
+          toast.error("Failed to fetch class subjects!", {
+            description: error instanceof Error ? error.message : JSON.stringify(error),
+          });
+        } 
+        finally {
+          setIsLoading(false);
+        }      
     };
     fetchClassSubjects();
-  }, []);
+  }, [studentUserId]);
 
   return (
     <>
@@ -64,11 +114,11 @@ export default function Page() {
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem className="hidden md:block">
-                  <BreadcrumbLink href='/teacher'>My Classes</BreadcrumbLink>
+                  <BreadcrumbLink href='/student'>My Classes</BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator className="hidden md:block" />
                 <BreadcrumbItem>
-                  <BreadcrumbLink href='/teacher/my-classes/current'>Current</BreadcrumbLink>
+                  <BreadcrumbLink href='/student/my-classes/current'>Current</BreadcrumbLink>
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>
@@ -82,19 +132,21 @@ export default function Page() {
           </div>                   
         </header>
         <div className="flex-1 p-2 sm:p-4 pt-0">
-          <div className="grid lg:grid-cols-4 md:grid-cols-3 sm:grid-cols-2 grid-cols-1 gap-6 mt-8">
-            {classSubjects.map((classSubject) => (
-              <SubjectCard 
-                key={classSubject.id} 
-                subject={classSubject} 
-                user_id={studentUserId}
-                variant="student"
-                onViewStudents={() => {
-                  // Handle view students logic here
-                }}
-              />
-            ))}
-          </div>
+            {isLoading ? (
+                <Loading/>
+              ) : classSubjects.length > 0 ? (
+                <div className="grid lg:grid-cols-4 md:grid-cols-3 sm:grid-cols-2 grid-cols-1 gap-6">
+                  {classSubjects.map((classSubject) => (
+                    <SubjectCard key={classSubject.id} subject={classSubject} user_id={studentUserId} variant="student" />
+                  ))}
+                </div>
+              ) : (
+                <div className="flex h-full w-full items-center justify-center">
+                  <div className="flex flex-col items-center space-y-4">                  
+                    <p className="text-gray-500 text-center mt-8">No available current class.</p>
+                  </div>
+                </div>              
+              )}            
         </div>
       </SidebarInset>
     </SidebarProvider>

@@ -1,52 +1,82 @@
 // ✅ Fetch User and User Details
 export const getUserRole = async () => {
-    const response = await fetch('/api/auth/role', {
-        method: 'GET',
-        credentials: 'include',
-    });
+    try {
+        const response = await fetch('/api/auth/role', {
+            method: 'GET',
+            credentials: 'include',
+        });
 
-    if (!response.ok) {
-        throw new Error(`Error: ${response.status} ${response.statusText}`);
+        const result = await response.json();
+        if (result.success === false) {
+            throw new Error(result.message);
+        }
+        return result;
     }
-
-    return response.json();
+    catch (error) {
+        throw new Error("UserAppService @ getUsersByUserId API error:" + error);
+    }      
 };
 
 
 export const getUsersByRole = async (role: string) => {
-    const response = await fetch(`/api/user/role/${role}`, {
-        method: 'GET',
-        credentials: 'include', // ✅ Ensure cookies are sent if needed
-        headers: {
-            'Content-Type': 'application/json'
-        }        
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-        throw new Error(`Error: ${response.status} ${response.statusText}`);
+    try {
+        const response = await fetch(`/api/user/role/${role}`, {
+            method: 'GET',
+            credentials: 'include', // ✅ Ensure cookies are sent if needed
+            headers: {
+                'Content-Type': 'application/json'
+            }        
+        });    
+        const result = await response.json();
+        if (result.success === false) {
+            throw new Error(result.message);
+        }
+        return result;
     }
-
-    return data;
+    catch (error) {
+        throw new Error("UserAppService @ getClassStudents API error:" + error);
+    }    
 };
 
-export const getUsersByUserId = async (user_id: number) => {    
-    const response = await fetch(`/api/user/${user_id}`, {
-        method: 'GET',
-        credentials: 'include', // ✅ Ensure cookies are sent if needed
-        headers: {
-            'Content-Type': 'application/json'
-        }        
-    });
-
-    if (!response.ok) {
-        throw new Error(`Error: ${response.status} ${response.statusText}`);
+export const getUsersByUserId = async (user_id: number) => {        
+    try {
+        const response = await fetch(`/api/user/${user_id}`, {
+            method: 'GET',
+            credentials: 'include', // ✅ Ensure cookies are sent if needed
+            headers: {
+                'Content-Type': 'application/json'
+            }        
+        });   
+        const result = await response.json();
+        if (result.success === false) {
+            throw new Error(result.message);
+        }
+        return result;
     }
-    
-    const data = await response.json();
-    
-    return data;
+    catch (error) {
+        throw new Error("UserAppService @ getUsersByUserId API error:" + error);
+    }  
 };
+
+export const getUserDetailsByUserId = async (user_id: number) => {        
+    try {
+        const response = await fetch(`/api/user/${user_id}/details`, {
+            method: 'GET',
+            credentials: 'include', // ✅ Ensure cookies are sent if needed
+            headers: {
+                'Content-Type': 'application/json'
+            }        
+        });   
+        const result = await response.json();        
+        if (result.success === false) {
+            throw new Error(result.message);
+        }
+        return result;
+    }
+    catch (error) {
+        throw new Error("UserAppService @ getUsersByUserId API error:" + error);
+    }  
+};
+
 
 

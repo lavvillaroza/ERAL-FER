@@ -1,7 +1,7 @@
 export interface ClassStudentFERModel {
     id: number;
     classsched_id: number;
-    student_id: number;   
+    student_user_id: number;   
     surprised: number;
     happy: number;
     neutral: number;
@@ -9,7 +9,6 @@ export interface ClassStudentFERModel {
     angry: number;
     disgusted: number;
     fearful: number;
-    result: string;
-    remarks: string;
+    na: number;
     datetime_stamp: Date;    
   }

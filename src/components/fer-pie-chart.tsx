@@ -1,11 +1,12 @@
 "use client"
 
-import { Pie, PieChart, ResponsiveContainer } from "recharts"
+import { Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts"
 
 import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
@@ -15,69 +16,113 @@ import {
   ChartLegend,
   ChartLegendContent,
 } from "@/components/ui/chart"
-const chartData = [
-  { browser: "surprised", visitors: 275, fill: "hsl(17.5, 88.3%, 40.4%)" },
-  { browser: "happy", visitors: 200, fill: "hsl(142.4, 71.8%, 29.2%)" },
-  { browser: "neutral", visitors: 187, fill: "hsl(224.3, 76.3%, 48%)" },
-  { browser: "sad", visitors: 173, fill: "hsl(272.1, 71.7%, 47.1%)" },
-  { browser: "disgusted", visitors: 90, fill: "hsl(240, 5.3%, 26.1%)" },
-  { browser: "angry", visitors: 90, fill: "hsl(0, 73.7%, 41.8%)" },
-  { browser: "fearful", visitors: 90, fill: "hsl(215.3, 25%, 26.7%)" },
-]
+import { ClassStudentFERAggChartModel } from "@/models/classStudentFERAggChartModel";
+import { ChartPie } from "lucide-react";
 
 const chartConfig = { 
   surprised: {
     label: "Surprised",
-    color: "hsl(17.5, 88.3%, 40.4%",
+    color: "hsl(30, 100%, 50%)", // Bright orange
   },
   happy: {
     label: "Happy",
-    color: "hsl(142.4, 71.8%, 29.2%)",
+    color: "hsl(120, 100%, 40%)", // Bright green
   },
   neutral: {
     label: "Neutral",
-    color: "hsl(224.3, 76.3%, 48%)",
+    color: "hsl(210, 20%, 50%)", // Neutral gray
   },
   sad: {
     label: "Sad",
-    color: "hsl(272.1, 71.7%, 47.1%)",
+    color: "hsl(240, 100%, 50%)", // Cool blue
   },
   disgusted: {
     label: "Disgusted",
-    color: "hsl(240, 5.3%, 26.1%)",
+    color: "hsl(60, 100%, 20%)", // Olive
   },
   angry: {
     label: "Angry",
-    color: "hsl(0, 73.7%, 41.8%)",
+    color: "hsl(0, 100%, 50%)", // Intense red
   },
   fearful: {
     label: "Fearful",
-    color: "hsl(215.3, 25%, 26.7%)",
+    color: "hsl(210, 30%, 30%)", // Dark gray
   },
-} satisfies ChartConfig
+  na: {
+    label: "NA",
+    color: "hsl(222.2, 84%, 4.9%)", // Black
+  },
+} satisfies ChartConfig;
 
-export function FERPieChart() {
+interface FERPieChartProps {
+  data: ClassStudentFERAggChartModel;
+}
+
+export function FERPieChart({ data }: FERPieChartProps) {  
+  if (!data) {
+    return (
+      <Card className="flex flex-col">
+        <CardHeader className="items-center pb-0">
+          <CardTitle>Pie Chart - Facial Expression Recognition</CardTitle>
+          <CardDescription>No data available</CardDescription>
+        </CardHeader>
+      </Card>
+    );
+  }
+  const chartData = Object.keys(data).map((key) => ({
+    //expression: key,
+    emotion: chartConfig[key as keyof typeof chartConfig]?.label.toLowerCase() || key,
+    average: Number(data[key as keyof ClassStudentFERAggChartModel]), // Convert to number
+    fill: chartConfig[key as keyof typeof chartConfig]?.color || "hsl(0, 0%, 50%)",
+  }));  
   return (
     <Card className="flex flex-col">
       <CardHeader className="items-center pb-0">
-        <CardTitle>Pie Chart - Facial Expression Recognition</CardTitle>
-        <CardDescription>January - June 2024</CardDescription>
-      </CardHeader>
-      <CardContent className="flex-1 pb-0">
+        <CardTitle>Pie Chart - Facial Expression Recognition</CardTitle>        
+        <CardDescription>Tracking the most dominant emotion per schedule.</CardDescription>
+      </CardHeader>      
+      <CardContent className="h-[400px]">
         <ResponsiveContainer width="100%" height="100%">
           <ChartContainer
             config={chartConfig}
-            className="mx-auto aspect-square max-h-[300px]">
-            <PieChart>
-              <Pie data={chartData} dataKey="visitors" />
-              <ChartLegend
-                content={<ChartLegendContent nameKey="browser" />}
-                className="-translate-y-2 flex-wrap gap-2 [&>*]:basis-1/4 [&>*]:justify-center"
-              />
-            </PieChart>
+            className="mx-auto max-h-[500px] w-full">
+            {chartData.length > 0 ? (
+              <PieChart>
+                <Tooltip formatter={(value, name) => [`${value}%`, name]} />
+                <Pie 
+                  data={chartData} 
+                  dataKey="average" 
+                  nameKey="emotion" 
+                  cx="50%" 
+                  cy="50%" 
+                  outerRadius={120}/>
+                <ChartLegend
+                  content={<ChartLegendContent nameKey="emotion" />}
+                  className="-translate-y-2 flex-wrap gap-2 [&>*]:basis-1/4 [&>*]:justify-center"
+                />
+              </PieChart>                
+            ) : (
+                <svg viewBox="0 0 100 100" className="mx-auto aspect-square max-h-[300px]">
+                <circle cx="50" cy="50" r="40" fill="hsl(0, 0%, 90%)" />
+                <text
+                  x="50%"
+                  y="50%"
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  fill="hsl(0, 0%, 50%)"
+                  fontSize="10">
+                  No Data
+                </text>
+                </svg>
+            )}
           </ChartContainer>
         </ResponsiveContainer>        
       </CardContent>
+      <CardFooter className="flex-col items-start gap-2 text-sm">
+        <div className="flex gap-2 font-medium leading-none">
+          Average expression trends for each schedule <ChartPie className="h-4 w-4" />
+        </div>        
+      </CardFooter>
     </Card>
   )
 }

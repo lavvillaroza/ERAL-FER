@@ -7,10 +7,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Bell } from "lucide-react";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList } from "@/components/ui/breadcrumb";
 import { Separator } from "@/components/ui/separator";
-import { ExpressionCharts } from "@/components/expression-charts";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { TopClassesCard } from "@/components/top-classes-card";
+import { ExpressionChartsDummy } from '@/components/expression-charts-dummy';
 
 export default function Page() {
   // Previous state definitions remain the same until topClasses
@@ -122,7 +122,7 @@ export default function Page() {
 
         <div className="flex flex-1 flex-col gap-4 p-4 pt-4">            
           <div className="w-full">
-            <ExpressionCharts moods={moods} chartSize={100} strokeWidth={10} className="mb-6" />
+            <ExpressionChartsDummy moods={moods} chartSize={100} strokeWidth={10} className="mb-6" />
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
                  {/* For Notifications Card */}

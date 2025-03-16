@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { decodeJwtPayload } from "./lib/decodeJwt";
 
 // Define allowed paths for each role
 const rolePaths = {
@@ -8,26 +9,41 @@ const rolePaths = {
   student: ["/student"],
 };
 
-export function middleware(req: NextRequest) {
+export async function middleware(req: NextRequest) {
   const { nextUrl } = req;
-  const role = req.cookies.get("user_role")?.value.toLowerCase(); // Get user role from cookie
   const authToken = req.cookies.get("auth_token")?.value; // Get user role from cookie
-  const url = req.nextUrl.clone();
-  
-  console.log(role);
+  const refreshToken = req.cookies.get("refresh_token")?.value; // Get user role from cookie
+  const url = req.nextUrl.clone();  
 
-  if (!authToken) {
+  if (!authToken ) {        
+    return NextResponse.redirect(new URL("/login", req.url));
+  }
+
+  if (!refreshToken ) {        
+    return NextResponse.redirect(new URL("/login", req.url));
+  }
+
+  const decodeRefreshToken = decodeJwtPayload(refreshToken);
+  if (!decodeRefreshToken) {    
     return NextResponse.redirect(new URL("/login", req.url));
   }
   
+  const decodedAuthToken = decodeJwtPayload(authToken);
+
+  if (!decodedAuthToken) {
+    return NextResponse.redirect(new URL("/login", req.url)); // Redirect if token is invalid
+  }
+  
+  const userRole = decodedAuthToken.role;
+
   // If there's no role, redirect to login
-  if (!role) {
+  if (!userRole) {
     return NextResponse.redirect(new URL("/login", req.url));
   }
 
    // Redirect based on role
    if (url.pathname === "/") {
-    switch (role) {
+    switch (userRole) {
       case "admin":
         return NextResponse.redirect(new URL("/admin", req.url));
       case "teacher":
@@ -40,8 +56,7 @@ export function middleware(req: NextRequest) {
   }
 
   // Get allowed paths for this role
-  const allowedPaths = rolePaths[role as keyof typeof rolePaths] || [];
-  console.log("Allowed Paths:", allowedPaths);
+  const allowedPaths = rolePaths[userRole as keyof typeof rolePaths] || [];
   
   // Check if the user is trying to access an unauthorized page
   if (!allowedPaths.some((path) => nextUrl.pathname.startsWith(path))) {

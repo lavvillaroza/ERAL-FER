@@ -14,126 +14,112 @@ datasource db {
 }
 
 model User {
-  user_id            Int      @id @default(autoincrement())
-  email              String   @unique
-  password           String    
-  role               String  //Admin; Teacher; Student
-  account_status     String  //Activated; New; Disabled
-  created_date       DateTime @default(now())
-  updated_date       DateTime @default(now())
-  userDetails        UserDetails? @relation(name: "UserToUserDetails") // ✅ Define relation name here only
+  user_id        Int          @id @default(autoincrement())
+  email          String       @unique
+  password       String
+  role           String //Admin; Teacher; Student
+  account_status String //Activated; New; Disabled
+  created_date   DateTime     @default(now())
+  updated_date   DateTime     @default(now())
+  userDetails    UserDetails? @relation(name: "UserToUserDetails") // ✅ Define relation name here only
 }
 
 model UserDetails {
-  user_id           Int @unique  
-  first_name        String
-  middle_name       String?
-  last_name         String  
-  course            String?  //if Student -- N/A if teacher and admin
-  online_status     String  //Active; Inactive
-  profile_image     Bytes?
-  thresh_hold       Decimal @default(0) //0 if student and admin; 
-  updated_date      DateTime @default(now())
-  user              User @relation(name: "UserToUserDetails", fields: [user_id], references: [user_id]) // ✅ Define relation only here
-  class_students    ClassStudents[] @relation(name: "ClassStudentToUserDetails")
+  user_id        Int             @unique
+  first_name     String
+  middle_name    String?
+  last_name      String
+  course         String? //if Student -- N/A if teacher and admin
+  online_status  String //Active; Inactive
+  profile_image  Bytes?
+  thresh_hold    Decimal         @default(0) //0 if student and admin; 
+  updated_date   DateTime        @default(now())
+  user           User            @relation(name: "UserToUserDetails", fields: [user_id], references: [user_id]) // ✅ Define relation only here
+  class_students ClassStudents[] @relation(name: "ClassStudentToUserDetails")
 }
 
 model ClassSubject {
-  id                    Int @id @default(autoincrement()) 
-  name                  String
-  description           String
-  start_date            DateTime
-  end_date              DateTime
-  time_schedule         String
-  days                  String
-  teacher_user_id       Int  //user_id from UserDetails Table
-  status                String //current; completed;
-  created_date          DateTime @default(now())
-  updated_date          DateTime @default(now())
-  students              ClassStudents[] @relation(name: "ClassSubjectToClassStudents")
-  schedules             ClassSchedule[] @relation(name: "ClassSubjectToClassSchedule")
+  id              Int             @id @default(autoincrement())
+  name            String
+  description     String
+  start_date      DateTime
+  end_date        DateTime
+  time_schedule   String
+  days            String
+  teacher_user_id Int //user_id from UserDetails Table
+  status          String //current; completed;
+  created_date    DateTime        @default(now())
+  updated_date    DateTime        @default(now())
+  students        ClassStudents[] @relation(name: "ClassSubjectToClassStudents")
+  schedules       ClassSchedule[] @relation(name: "ClassSubjectToClassSchedule")
 }
 
-model ClassStudents {  
-  id                    Int @id @default(autoincrement()) 
-  class_subject_id      Int 
-  student_id            Int  //user_id from UserDetails Table  
-  subject               ClassSubject @relation(name: "ClassSubjectToClassStudents", fields: [class_subject_id], references: [id])  
-  student_details       UserDetails @relation(name: "ClassStudentToUserDetails", fields: [student_id], references: [user_id])
+model ClassStudents {
+  id               Int          @id @default(autoincrement())
+  class_subject_id Int
+  student_id       Int //user_id from UserDetails Table  
+  subject          ClassSubject @relation(name: "ClassSubjectToClassStudents", fields: [class_subject_id], references: [id])
+  student_details  UserDetails  @relation(name: "ClassStudentToUserDetails", fields: [student_id], references: [user_id])
 }
 
 model ClassSchedule {
-  id                   Int @id @default(autoincrement())
-  class_subject_id     Int
-  date_schedule        String 
-  time_start           String
-  time_end             String  
-  status               String //Open; Upcoming; Closed; Canceled
-  remarks              String
-  subject              ClassSubject @relation(name: "ClassSubjectToClassSchedule", fields: [class_subject_id], references: [id])
-  lesson_plan          ClassLessonPlan? @relation(name: "ClassScheduleToClassLessonPlan")
-  attendance           ClassAttendance[] @relation(name: "ClassScheduleToClassAttendance")
-  student_fer          ClassStudentFER[] @relation(name: "ClassScheduleToClassStudentFer")
+  id               Int                  @id @default(autoincrement())
+  class_subject_id Int
+  date_schedule    String
+  time_start       String
+  time_end         String
+  status           String //Open; Upcoming; Closed; Canceled
+  topic_title      String
+  remarks          String
+  subject          ClassSubject         @relation(name: "ClassSubjectToClassSchedule", fields: [class_subject_id], references: [id])
+  course_contents  ClassCourseContent[] @relation(name: "ClassScheduleToClassCourseConent")
+  student_fer      ClassStudentsFER[]   @relation(name: "ClassScheduleToClassStudentFer")
 }
 
-model ClassLessonPlan {
-  id                    Int @id @default(autoincrement())   
-  class_subject_id      Int
-  class_schedule_id     Int @unique
-  start_time            String
-  title                 String  
-  description           String
-  status                String //Upcoming; Completed
-  schedule              ClassSchedule @relation(name: "ClassScheduleToClassLessonPlan", fields: [class_schedule_id], references: [id])
+model ClassCourseContent {
+  id                Int           @id @default(autoincrement())
+  class_schedule_id Int
+  time_start        String
+  title             String
+  description       String
+  status            String //upcoming; ongoing; finished
+  schedule          ClassSchedule @relation(name: "ClassScheduleToClassCourseConent", fields: [class_schedule_id], references: [id])
 }
 
-model ClassAttendance {  
-  id                    Int @id @default(autoincrement())   
-  class_subject_id      Int 
-  class_schedule_id     Int 
-  student_id            Int
-  time_in               DateTime
-  time_out              DateTime
-  status                String //attended; absent
-  schedule              ClassSchedule @relation(name: "ClassScheduleToClassAttendance", fields: [class_schedule_id], references: [id])
-}
-
-model ClassStudentFER {  
-  id                    Int @id @default(autoincrement())   
-  class_subject_id      Int  
-  class_schedule_id     Int  
-  student_id            Int  //user_id from UserDetails Table
-  surprised             Decimal
-  happy                 Decimal
-  neutral               Decimal
-  sad                   Decimal
-  angry                 Decimal
-  disgusted             Decimal
-  fearful               Decimal
-  result                String // surprised; happy; neutral; sad; angry; disgusted; fearful;
-  remarks               String // Face_Expression_Detected; No_Face_Expression_Detected;
-  datetime_stamp        DateTime @default(now())  
-  schedule              ClassSchedule @relation(name: "ClassScheduleToClassStudentFer", fields: [class_schedule_id], references: [id])
+model ClassStudentsFER {
+  id                Int           @id @default(autoincrement())
+  class_subject_id  Int
+  class_schedule_id Int
+  student_user_id   Int //user_id from UserDetails Table
+  surprised         Decimal       @db.Decimal(10, 2)
+  happy             Decimal       @db.Decimal(10, 2)
+  neutral           Decimal       @db.Decimal(10, 2)
+  sad               Decimal       @db.Decimal(10, 2)
+  angry             Decimal       @db.Decimal(10, 2)
+  disgusted         Decimal       @db.Decimal(10, 2)
+  fearful           Decimal       @db.Decimal(10, 2)
+  datetime_stamp    DateTime      @default(now())
+  schedule          ClassSchedule @relation(name: "ClassScheduleToClassStudentFer", fields: [class_schedule_id], references: [id])
 }
 
 model Notification {
-  id                  Int @id @default(autoincrement())
-  datetime_stamp      DateTime @default(now())
-  title               String
-  message             String
-  user_id             Int @default(0)
-  color_code          String // 0 Green = Good; 1 Yellow = Warning; 2 Red = Critical;
-  status              Int @default(0) //0 - Unread; 1 - Read 
-  for_admin           String // Y; N;
+  id             Int      @id @default(autoincrement())
+  datetime_stamp DateTime @default(now())
+  title          String
+  message        String
+  user_id        Int      @default(0)
+  color_code     String // 0 Green = Good; 1 Yellow = Warning; 2 Red = Critical;
+  status         Int      @default(0) //0 - Unread; 1 - Read 
+  for_admin      String // Y; N;
 }
 
 model SystemLogs {
-  id                  Int @id @default(autoincrement())
-  timestamp           DateTime @default(now())
-  level               String
-  message             String
-  exception           String
-  entity_name         String
-  user_id             Int @default(0)
-  for_admin           String // Y; N;
+  id          Int      @id @default(autoincrement())
+  timestamp   DateTime @default(now())
+  level       String
+  message     String
+  exception   String
+  entity_name String
+  user_id     Int      @default(0)
+  for_admin   String // Y; N;
 }

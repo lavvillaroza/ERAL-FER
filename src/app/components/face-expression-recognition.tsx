@@ -130,6 +130,13 @@ const FacialExpressionRecognition: React.FC<FacialExpressionRecognitionProps> = 
     if (isModelLoaded) {
       analyzeVideo();
     }
+
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+    
   }, [isModelLoaded, onExpressionsDetected]);
 
   return (

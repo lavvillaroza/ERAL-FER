@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
                 course: validatedData.course ?? null,
                 online_status: validatedData.online_status ?? OnlineStatus.OFFLINE,
                 profile_image: profileImageBuffer,
-                thresh_hold: 0,
+                thresh_hold: validatedData.role === "teacher" ? 50 : 0,
             }
         };
          // 🔍 Check if email already exists
@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
         });
 
         if (existingUser) {
-            throw new Error("Email is already in use. Please use a different email.");
+            throw new Error("Email is already in use, please use a different email.");
         }
 
         const hashedPassword = await bcrypt.hash(userData.password, 10);
@@ -62,30 +62,29 @@ export async function POST(req: NextRequest) {
                             course: userData.userDetails.course,
                             online_status: userData.userDetails.online_status,
                             profile_image: userData.userDetails.profile_image, // ✅ Buffer for Blob storage
+                            thresh_hold: userData.userDetails.thresh_hold
                         },
                     },
                 },
                 include: { userDetails: true }, // ✅ Include user details in response
-            });
-            console.log("createdUser: " + createdUser);
+            });            
             return createdUser;
         });
 
-        if (!newUser) throw new Error("User registration failed.");
-
-        console.log("newUser: " + newUser);
+        if (!newUser) throw new Error("User registration failed.");        
         
         // ✅ Convert Buffer to Base64 when returning JSON response
         return NextResponse.json(
             {   
+                success: true,
                 message: "Registration has been successfully, please wait for the approval of the admin!",
                 data: newUser
             },
             { status: 201 }
         );
   
-    } catch (error) {
-        
+    } catch (error) {     
+        console.error("Registration Error:", error);   
         return handleApiError(error);
     }
   }

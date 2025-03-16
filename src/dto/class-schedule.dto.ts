@@ -11,6 +11,7 @@ export const classScheduleDto = z.object({
   time_start: z.string().regex(timeFormat12Hr, "Invalid time format (HH:MMAM or HH:MMPM)"),
   time_end: z.string().regex(timeFormat12Hr, "Invalid time format (HH:MMAM or HH:MMPM)"),
   status: z.enum(["upcoming", "canceled", "finished"]),
+  topic_title: z.string().min(2, "Topic Title is required"),
   remarks: z.string().max(500, "Remarks should not exceed 500 characters").default(""),
 }).refine((data) => {
   const startTime = convertTo24Hour(data.time_start);
@@ -31,5 +32,3 @@ const convertTo24Hour = (time: string) => {
 
   return hourNum * 60 + parseInt(minutes, 10); // Convert to total minutes for comparison
 };
-
-export type ClassScheduleModel = z.infer<typeof classScheduleDto>;
