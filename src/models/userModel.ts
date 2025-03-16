@@ -6,5 +6,7 @@ export interface UserModel {
     password: string;
     role: string;
     account_status: string;    
+    created_date: Date;
+    updated_date: Date;
     userDetails: UserDetailsModel;
   }

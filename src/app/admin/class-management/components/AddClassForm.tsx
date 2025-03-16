@@ -9,39 +9,14 @@ import { DatePicker } from '@/components/ui/date-picker'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { ClassSubjectModel } from '@/models/classSubjectModel'
 import { getUsersByRole } from '@/services/userAppService'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { createClassSubject } from '@/services/classSubjectAppService'
 import { toast, Toaster } from "sonner"
-import { AlertDestructive } from '@/components/alert-destructive'
 import { ClassStatus } from '@/types/classStatus'
+import { UserModel } from '@/models/userModel'
 
-interface Teacher {
-  user_id: number;
-  email: string;
-  role: string;  
-  account_status: "activated" | "disabled" | "new";
-  created_date: Date;
-  userDetails: {
-    first_name: string;
-    middle_name: string | null;
-    last_name: string;
-    course: string;
-    online_status: "online" | "offline";
-    profile_image: string;
-    thresh_hold: number;
-  };
-}
-
-export default function AddClassForm() {  
-  const [error, setError] = useState<string | null>(null);
-  const [teachers, setTeachers] = useState<Teacher[]>([]);
+export default function AddClassForm() {    
+  const [teachers, setTeachers] = useState<UserModel[]>([]);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [classSubject, setClassSubject] =  useState<ClassSubjectModel>({
         id: 0,        
@@ -53,20 +28,24 @@ export default function AddClassForm() {
         days: '',
         teacher_user_id: 0,
         status: ClassStatus.CURRENT
-  });
-  
+  });  
   const [startTime, setStartTime] = useState<string | null>(null);
   const [endTime, setEndTime] = useState<string | null>(null);
-  const [teacher, setTeacher] = useState<string | null>(null);
-
+  const [teacher, setTeacher] = useState<string | null>(null);  
   useEffect(() => {
     const fetchTeachers = async () => {
       try {
-        const response = await getUsersByRole("teacher");
-        setTeachers(response);        
+        const response = await getUsersByRole("teacher");        
+        if (!response.success) {
+          throw new Error(response.message);
+        }        
+        setTeachers(response.data);
+
       } catch (error) {
         console.log(error);
-        setError("Failed to fetch teachers!");        
+        toast.error("Failed to fetch teachers!", {
+          description: error instanceof Error ? error.message : JSON.stringify(error),
+        });        
       } 
     };
     fetchTeachers();
@@ -124,41 +103,42 @@ export default function AddClassForm() {
   // Final confirmation to create class
   const handleConfirmCreateClass = async () => {
     try {      
-
       const response = await createClassSubject(classSubject);
-      
-      if (response) {        
-        setClassSubject({
-          id: 0,
-          name: "",
-          description: "",
-          start_date: null,
-          end_date: null,
-          time_schedule: "",
-          days: "",
-          teacher_user_id: 0,
-          status: ClassStatus.CURRENT,
-        });
-        
-        setSelectedDays([]); // Clear selected checkboxes
-        setStartTime(null);  // ✅ Reset start time select
-        setEndTime(null);    // ✅ Reset end time select
-        setError(null); // Clear errors if any        
-        setTeacher(null);
-
-        setConfirmDialogOpen(false);
-        toast.success(
-          "Class successfully created!",
-          {
-            description: `${response.data.name + " is created."}`,
-            className: "text-white bg-green-500" // Default color            
-          }           
-        );       
+      if (!response.success) {     
+        throw new Error(response.message);
       }
+      setClassSubject({
+        id: 0,
+        name: "",
+        description: "",
+        start_date: null,
+        end_date: null,
+        time_schedule: "",
+        days: "",
+        teacher_user_id: 0,
+        status: ClassStatus.CURRENT,
+      });
+      
+      setSelectedDays([]); // Clear selected checkboxes
+      setStartTime(null);  // ✅ Reset start time select
+      setEndTime(null);    // ✅ Reset end time select        
+      setTeacher(null);
+
+      setConfirmDialogOpen(false);
+      toast.success(
+        "Class successfully created!",
+        {
+          description: `${response.data.name + " is created."}`,
+          className: "text-white bg-green-500" // Default color            
+        }           
+      );       
+      
     } catch (error) {
       console.log(error);
       setConfirmDialogOpen(false);
-      setError("Failed to create class! " + error);             
+      toast.error("Failed to create class!", {
+        description: error instanceof Error ? error.message : JSON.stringify(error),
+      });        
     }
   };
   
@@ -190,7 +170,9 @@ export default function AddClassForm() {
   
       // Ensure time_schedule exists before updating
       if (!prev.time_schedule && type === "end") {
-        setError("Please select start time first!");
+        toast.error("Invalid input.", {
+          description: "Please select start time first!",
+        });          
         return prev;
       }
   
@@ -213,11 +195,11 @@ export default function AddClassForm() {
       const endMinutes = convertTo24Hour(formattedTime.trim());
   
       if (startMinutes !== null && endMinutes !== null && startMinutes >= endMinutes) {
-        setError("Start time must be earlier than end time.");
+        toast.error("Invalid start time.", {
+          description: "Start time must be earlier than end time.",
+        });                  
         return prev;
-      }
-  
-      setError(null);
+      }      
       return { ...prev, time_schedule: newSchedule.trim() };
     });
   };
@@ -293,7 +275,7 @@ export default function AddClassForm() {
           <SelectContent>
             <SelectGroup>
               <SelectLabel>Teachers</SelectLabel>
-              {teachers.map((teacher) => (
+              {teachers.length > 0 && teachers.map((teacher) => (
                 <SelectItem key={teacher.user_id} value={teacher.user_id.toString()}>
                   {`${teacher.userDetails.first_name} ${teacher.userDetails.middle_name} ${teacher.userDetails.last_name}`}
                 </SelectItem>
@@ -301,10 +283,7 @@ export default function AddClassForm() {
             </SelectGroup>
           </SelectContent>
         </Select>        
-      </div>
-      <div>
-        {error && <AlertDestructive message={error} />}   
-      </div>     
+      </div>   
       <Button type="submit">Create Class</Button> 
     </form>     
       <Dialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>

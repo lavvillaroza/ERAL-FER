@@ -51,7 +51,7 @@ const ViewStudents = () => {
 
         setClassSubject(responseSubject.data);  
         setClassstudents(responseStudents.data);         
-        setAvailableStudents(responseStudentList.data);
+        setAvailableStudents(responseStudentList.data.userDetails);
         
       } catch (error) {
         console.log("Error fetching class subject:", error);

@@ -65,18 +65,21 @@ export function AdminTable() {
 
   
     useEffect(() => {
-        const fetchStudents = async () => {
+        const fetchAdmins = async () => {
           try {
             const response = await getUsersByRole("admin");
-            setAdmins(response);        
-          } catch (err) {
-            setError(`Failed to fetch admins: ${err}`);
+            if (!response.success) {
+              throw new Error(response.message);
+            }    
+            setAdmins(response.data);        
+          } catch (error) {
+            setError(`Failed to fetch admins: ${error}`);
           } finally {
             setLoading(false);
           }
         };
     
-        fetchStudents();
+        fetchAdmins();
       }, []);
 
       const filteredAdmins = status === "all"

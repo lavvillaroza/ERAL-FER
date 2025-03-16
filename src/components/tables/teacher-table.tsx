@@ -36,28 +36,11 @@ import {
 import { getUsersByRole } from "@/services/userAppService";
 import Loading from "@/components/loading";
 import { format } from "date-fns";
-
-// Define interface for the student type
-interface Teacher {
-  user_id: number;
-  email: string;
-  role: string;  
-  account_status: "activated" | "disabled" | "new";
-  created_date: Date;
-  userDetails: {
-    first_name: string;
-    middle_name: string | null;
-    last_name: string;
-    course: string;
-    online_status: "online" | "offline";
-    profile_image: string;
-    thresh_hold: number;
-  };
-}
+import { UserModel } from "@/models/userModel";
 
 export function TeacherTable() {
     const [status, setStatus] = useState("all");
-    const [teachers, setTeachers] = useState<Teacher[]>([]);
+    const [teachers, setTeachers] = useState<UserModel[]>([]);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [teacherToDelete, setTeacherToDelete] = useState<number | null>(null);
     const [loading, setLoading] = useState(true);
@@ -68,9 +51,12 @@ export function TeacherTable() {
         const fetchTeachers = async () => {
           try {
             const response = await getUsersByRole("teacher");
-            setTeachers(response);        
-          } catch (err) {
-            setError(`Failed to fetch students: ${err}`);
+            if (!response.success) {
+              throw new Error(response.message);
+            }      
+            setTeachers(response.data);        
+          } catch (error) {
+            setError(`Failed to fetch students: ${error}`);
           } finally {
             setLoading(false);
           }
