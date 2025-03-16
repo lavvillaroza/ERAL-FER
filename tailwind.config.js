@@ -1,7 +1,7 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
     darkMode: ["class"],
-    content: [
+    content: [		
 		'./src/app/**/*.{js,ts,jsx,tsx}', // Adjust paths to match your project
 		'./src/components/**/*.{js,ts,jsx,tsx}',
 		'./node_modules/@shadcn/ui/dist/**/*.{js,ts,jsx,tsx}',
