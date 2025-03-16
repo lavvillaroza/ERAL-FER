@@ -11,7 +11,7 @@ import { toast, Toaster } from "sonner";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { AppSidebarStudent } from "@/app/components/app-sidebar-student";
+import { AppSidebarStudent } from "@/components/app-sidebar-student";
 import { ExpressionCharts } from "@/components/expression-charts";
 import { getClassScheduleById } from "@/services/classScheduleAppService";
 import { ClassScheduleModel } from "@/models/classScheduleModel";
@@ -25,7 +25,9 @@ import { getDecodedAuthToken, refreshAuthToken } from "@/services/authAppService
 import { roundToTwoDecimals } from "@/lib/utils";
 import dynamic from "next/dynamic";
 
-const FacialExpressionRecognition = dynamic(() => import("@/app/components/face-expression-recognition"), { ssr: false });
+const FacialExpressionRecognition = dynamic(
+    () => import("@/components/face-expression-recognition"), { ssr: false }
+  );
 
 const ScheduleSession = () => {
   const router = useRouter();

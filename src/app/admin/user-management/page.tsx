@@ -1,7 +1,7 @@
 "use client";
 
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { AppSidebarAdmin } from "@/app/components/app-sidebar-admin";
+import { AppSidebarAdmin } from "@/components/app-sidebar-admin";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";

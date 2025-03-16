@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react";
-import { AppSidebarTeacher } from "@/app/components/app-sidebar-teacher";
+import { AppSidebarTeacher } from "@/components/app-sidebar-teacher";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";

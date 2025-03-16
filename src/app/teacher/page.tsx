@@ -1,6 +1,6 @@
 "use client";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { AppSidebarTeacher } from "@/app/components/app-sidebar-teacher"
+import { AppSidebarTeacher } from "@/components/app-sidebar-teacher"
 
 import { Bell } from "lucide-react";
 import { useEffect, useState } from "react";

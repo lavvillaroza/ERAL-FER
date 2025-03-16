@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Camera, User } from "lucide-react";
-import { AppSidebarStudent } from '@/app/components/app-sidebar-student';
+import { AppSidebarStudent } from '@/components/app-sidebar-student';
 import { SidebarProvider } from '@/components/ui/sidebar';
 
 const StudentProfile = () => {

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { AppSidebarAdmin } from "@/app/components/app-sidebar-admin";
+import { AppSidebarAdmin } from "@/components/app-sidebar-admin";
 import { Card, CardContent } from "@/components/ui/card";
 import { Bell } from "lucide-react";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList } from "@/components/ui/breadcrumb";

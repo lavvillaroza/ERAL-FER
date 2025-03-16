@@ -7,7 +7,7 @@ import { SubjectCard } from "@/components/subject-card-current"
 import { ClassSubjectModel } from "@/models/classSubjectModel";
 import { toast, Toaster } from "sonner"
 import { Bell } from "lucide-react";
-import { AppSidebarStudent } from "@/app/components/app-sidebar-student";
+import { AppSidebarStudent } from "@/components/app-sidebar-student";
 import { getClassSubjectsByStudentId } from "@/services/classSubjectAppService";
 import { useRouter } from "next/navigation";
 import { getDecodedAuthToken, refreshAuthToken } from "@/services/authAppService";

@@ -1,6 +1,6 @@
 "use client";
 
-import { AppSidebarTeacher } from "@/app/components/app-sidebar-teacher"
+import { AppSidebarTeacher } from "@/components/app-sidebar-teacher"
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@/components/ui/breadcrumb"
 import { Separator } from "@/components/ui/separator"
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"

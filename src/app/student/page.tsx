@@ -2,7 +2,7 @@
 "use client";
 
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { AppSidebarStudent } from "@/app/components/app-sidebar-student";
+import { AppSidebarStudent } from "@/components/app-sidebar-student";
 import { Bell } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList } from "@/components/ui/breadcrumb";

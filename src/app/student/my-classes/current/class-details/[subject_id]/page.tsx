@@ -17,7 +17,7 @@ import { getClassSchedules, } from "@/services/classScheduleAppService";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useParams, useRouter } from "next/navigation";
 import { Separator } from "@radix-ui/react-separator";
-import { AppSidebarStudent } from "@/app/components/app-sidebar-student";
+import { AppSidebarStudent } from "@/components/app-sidebar-student";
 import CourseContentModal from "@/components/course-content-modal";
 import Loading from "@/components/loading";
 import { ClassStudentFERModel } from "@/models/classStudentFERModel";

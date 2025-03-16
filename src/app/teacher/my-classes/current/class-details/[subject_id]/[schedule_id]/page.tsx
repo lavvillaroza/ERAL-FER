@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { AppSidebarTeacher } from "@/app/components/app-sidebar-teacher";
+import { AppSidebarTeacher } from "@/components/app-sidebar-teacher";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { ChevronRight, Bell} from "lucide-react";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
