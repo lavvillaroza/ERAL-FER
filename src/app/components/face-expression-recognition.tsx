@@ -1,3 +1,5 @@
+"use client"; // Ensure it's a client-side component
+
 import * as faceapi from "face-api.js";
 import { useRef, useEffect, useState } from "react";
 

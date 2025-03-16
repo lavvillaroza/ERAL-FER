@@ -12,7 +12,6 @@ import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { AppSidebarStudent } from "@/app/components/app-sidebar-student";
-import FaceExpressionRecognition from "@/app/components/face-expression-recognition";
 import { ExpressionCharts } from "@/components/expression-charts";
 import { getClassScheduleById } from "@/services/classScheduleAppService";
 import { ClassScheduleModel } from "@/models/classScheduleModel";
@@ -24,6 +23,9 @@ import { ClassStudentFERModel } from "@/models/classStudentFERModel";
 import { addClassStudentFERData } from "@/services/classStudentFerAppService";
 import { getDecodedAuthToken, refreshAuthToken } from "@/services/authAppService";
 import { roundToTwoDecimals } from "@/lib/utils";
+import dynamic from "next/dynamic";
+
+const FacialExpressionRecognition = dynamic(() => import("@/app/components/face-expression-recognition"), { ssr: false });
 
 const ScheduleSession = () => {
   const router = useRouter();
@@ -264,7 +266,7 @@ const ScheduleSession = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
                     <Card className="col-span-1 shadow-lg">
                       <CardContent className="flex items-center justify-center p-2 min-h-[300px] sm:min-h-[400px] md:min-h-[500px] lg:min-h-[570px]">
-                        <FaceExpressionRecognition onExpressionsDetected={handleExpressionsDetected} />                      
+                        <FacialExpressionRecognition onExpressionsDetected={handleExpressionsDetected} />                      
                       </CardContent>
                     </Card>              
                     <CourceContents items={classCourseContents} className="col-span-1" />
