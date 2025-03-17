@@ -11,6 +11,9 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { TopClassesCard } from "@/components/top-classes-card";
 import { ExpressionChartsDummy } from '@/components/expression-charts-dummy';
+import { toast, Toaster } from "sonner"
+import { useRouter } from 'next/navigation';
+import { getDecodedAuthToken, refreshAuthToken } from '@/services/authAppService';
 
 export default function Page() {
   // Previous state definitions remain the same until topClasses
@@ -92,10 +95,42 @@ export default function Page() {
     return () => clearInterval(interval);
   }, []);
 
+  const router = useRouter(); 
+  const [userId, setUserId] = useState<number>(0);  
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const token = await getDecodedAuthToken();
+        if (!token) {
+          console.log("No auth token found.");
+          toast.error("Failed to fetch class subjects!", {
+            description: "No auth token found.",
+          });
+          router.push("/login");
+          return; // Stop execution
+        }
+        const decodedToken = token.data;
+        if (!decodedToken) {
+          const refreshToken = await refreshAuthToken();
+          if (!refreshToken || refreshToken.success === false) {
+            router.push("/login");
+          }
+          setUserId(refreshToken.data.id);
+        } else {
+          setUserId(decodedToken.id);
+        }
+      } catch (error) {
+        console.error("Error checking session:", error);
+        router.push("/login");
+      }
+    };
+    checkSession();
+  }, [router]);
+
   // Rest of the component remains the same until the topClasses mapping
   return (    
     <SidebarProvider>
-      <AppSidebarAdmin />
+      <AppSidebarAdmin userId={userId} />
       <SidebarInset>
         {/* Header section remains the same */}
         <header className="flex h-16 shrink-0 items-center justify-between gap-2 border-b">
@@ -105,7 +140,7 @@ export default function Page() {
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem className="hidden md:block">
-                  <BreadcrumbLink href="#">Dashboard</BreadcrumbLink>
+                  <BreadcrumbLink href="/admin">Dashboard</BreadcrumbLink>
                 </BreadcrumbItem>                
               </BreadcrumbList>              
             </Breadcrumb>            
@@ -153,7 +188,6 @@ export default function Page() {
                     </ScrollArea>
                   </CardContent>
                 </Card>
-
                 {/* For Top Classes Card */}
                 <TopClassesCard 
                   title="Top Classes with Positive Expressions"
@@ -163,6 +197,7 @@ export default function Page() {
             </div>
           </div>          
         </div>
+        <Toaster />
       </SidebarInset>
     </SidebarProvider>    
   );

@@ -10,7 +10,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ClassSubjectModel } from "@/models/classSubjectModel";
-import { getUsersByRole, getUsersByUserId } from "@/services/userAppService";
+import { getUsersByRole, getUserByUserId } from "@/services/userAppService";
 import { GetFullName } from "@/lib/fullName";
 import { UserModel } from "@/models/userModel";
 import { addClassStudents, getClassStudents } from "@/services/classStudentAppService";
@@ -32,7 +32,7 @@ export const SubjectCard = ({ subject, user_id, variant }: SubjectCardProps) => 
   useEffect(() => {                
       const fetchTeacher = async () => {
         try {
-          const response = await getUsersByUserId(subject.teacher_user_id);
+          const response = await getUserByUserId(subject.teacher_user_id);
           setTeacher(response.data);
         } catch(error) {
           console.log(error);
@@ -88,6 +88,7 @@ export const SubjectCard = ({ subject, user_id, variant }: SubjectCardProps) => 
             priority={false}
             width={400}
             height={192}
+            loading="lazy"
             className="w-full h-48 rounded-2xl object-cover"/>
           <button 
             onClick={handleJoin}
@@ -113,6 +114,7 @@ export const SubjectCard = ({ subject, user_id, variant }: SubjectCardProps) => 
               alt="title"
               width={32}
               height={32}
+              loading="lazy"              
               className="w-8 h-8 rounded-full mr-2"
             />
             <span className="text-sm text-gray-600">{GetFullName(teacher?.userDetails)}</span>

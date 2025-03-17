@@ -24,6 +24,7 @@ import { addClassStudentFERData } from "@/services/classStudentFerAppService";
 import { getDecodedAuthToken, refreshAuthToken } from "@/services/authAppService";
 import { roundToTwoDecimals } from "@/lib/utils";
 import dynamic from "next/dynamic";
+import { Badge } from "@/components/ui/badge";
 
 const FacialExpressionRecognition = dynamic(
     () => import("@/components/face-expression-recognition"), { ssr: false }
@@ -195,22 +196,22 @@ const ScheduleSession = () => {
 
   return (
     <SidebarProvider>
-      <AppSidebarStudent />
+      <AppSidebarStudent userId={studentUserId}/>
       <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center justify-between gap-2 sticky top-0 bg-white z-10 px-2 sm:px-4">
+        <header className="flex h-16 shrink-0 items-center justify-between gap-2 sticky top-0 bg-white z-10 px-2 sm:px-4 border-b">
             <div className="flex items-center gap-2">
                 <SidebarTrigger className="-ml-1" />
                 <Separator orientation="vertical" className="mr-2 h-4" />
                 <Breadcrumb>
                   <BreadcrumbList>
                       <BreadcrumbItem className="hidden md:block">
-                          <BreadcrumbLink href="/teacher">Dashboard</BreadcrumbLink>
+                          <BreadcrumbLink href="#">My Classes</BreadcrumbLink>
                       </BreadcrumbItem> 
                       <BreadcrumbSeparator>
                           <ChevronRight className="h-4 w-4" />
                       </BreadcrumbSeparator> 
                       <BreadcrumbItem>
-                          <BreadcrumbLink href="/teacher/my-classes/current">
+                          <BreadcrumbLink href="/student/my-classes/current">
                             Current
                           </BreadcrumbLink>
                       </BreadcrumbItem>                                             
@@ -218,7 +219,7 @@ const ScheduleSession = () => {
                           <ChevronRight className="h-4 w-4" />
                       </BreadcrumbSeparator>   
                       <BreadcrumbItem>
-                          <BreadcrumbLink href={"/teacher/my-classes/current/class-details/" + classSubject.id}>
+                          <BreadcrumbLink href={`/student/my-classes/current/class-details/${params.subject_id}`}>
                             Details
                           </BreadcrumbLink>
                       </BreadcrumbItem>    
@@ -226,7 +227,7 @@ const ScheduleSession = () => {
                           <ChevronRight className="h-4 w-4" />
                       </BreadcrumbSeparator>   
                       <BreadcrumbItem>
-                          <BreadcrumbLink href={`/teacher/my-classes/current/class-details/${classSubject.id}/${params.schedule_id}`}>
+                          <BreadcrumbLink href={`/teacher/my-classes/current/class-details/${params.subject_id}/${params.schedule_id}`}>
                             Schedule
                           </BreadcrumbLink>
                       </BreadcrumbItem> 
@@ -237,6 +238,7 @@ const ScheduleSession = () => {
                 <div className="relative">
                     <button aria-label='bell' className="p-2 rounded-full hover:bg-gray-100">
                         <Bell className="w-6 h-6 text-gray-600" />
+                        <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0">3</Badge>
                     </button>
                 </div>
             </div>

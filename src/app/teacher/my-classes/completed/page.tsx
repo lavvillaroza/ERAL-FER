@@ -1,6 +1,5 @@
 "use client"
 
-import { AppSidebarTeacher } from "@/components/app-sidebar-teacher";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator} from "@/components/ui/breadcrumb";
 import { Separator } from "@/components/ui/separator";
 import { SidebarInset, SidebarProvider, SidebarTrigger} from "@/components/ui/sidebar";
@@ -14,6 +13,7 @@ import { ClassStatus } from "@/types/classStatus";
 import { Bell } from "lucide-react";
 import Loading from "@/components/loading";
 import { useRouter } from "next/navigation";
+import { AppSidebarTeacher } from "@/components/app-sidebar-teacher";
 
 export default function Page() {
   const router = useRouter();
@@ -51,32 +51,10 @@ export default function Page() {
   }, [router]);
 
   useEffect(() => {
-    const fetchClassSubjects = async () => {                       
-      const token = await getDecodedAuthToken();        
-      if (!token) {
-        console.log("No auth token found.");
-        toast.error("Failed to fetch class subjects!", {
-          description: "No auth token found.",
-        });
-        router.push("/login");
-      }
-
-      const decodedToken = token.data;
-      let userId;
-      if (!decodedToken) {
-        const refreshToken = await refreshAuthToken();
-        if (!refreshToken) router.push("/login");
-        if (refreshToken.success === false) router.push("/login");
-        userId = refreshToken.data.id;
-      }
-      else {
-        userId = decodedToken.id;
-      }
-      
-      try {                  
-          setTeacherUserId(userId);
-          
-          const response = await getClassSubjectsByTeacherId(userId, ClassStatus.COMPLETED);        
+    const fetchClassSubjects = async () => {                                   
+      try {       
+          if (teacherUserId === 0) return;                     
+          const response = await getClassSubjectsByTeacherId(teacherUserId, ClassStatus.COMPLETED);        
           if (response.success === true) {
             setClassSubjects(response.data);  
           }
@@ -107,7 +85,7 @@ export default function Page() {
   return (
     <>
       <SidebarProvider>
-        <AppSidebarTeacher />
+        <AppSidebarTeacher userId={teacherUserId}/>
         <SidebarInset>
           <header className="flex h-16 shrink-0 items-center justify-between gap-2 sticky top-0 bg-white z-10 px-2 sm:px-4">
             <div className="flex items-center gap-2">

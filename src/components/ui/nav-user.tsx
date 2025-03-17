@@ -1,49 +1,23 @@
 "use client";
 
-import {
-  BadgeCheck,
-  Bell,
-  ChevronsUpDown,
-  LogOut,
-} from "lucide-react"
-
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import {
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  useSidebar,
-} from "@/components/ui/sidebar"
+import { BookUserIcon, ChevronsUpDown, LogOut } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger} from "@/components/ui/dropdown-menu"
+import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar"
 import { logoutUser } from "@/services/authAppService"
 import { useRouter } from "next/navigation";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-export function NavUser({
-  user,
-}: {
-  user: {
-    name: string
-    email: string
-    avatar: string
-  }
-}) {
+import { UserModel } from "@/models/userModel";
+import { GetFullName, GetIntialName } from "@/lib/fullName";
+import  ManageAccount from "@/components/manage-account";
+
+export function NavUser({ user }: { user: UserModel }) {  
   const { isMobile } = useSidebar()
   const router = useRouter();
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);    
+  const [isManageAccountOpen, setIsManageAccountOpen] = useState(false);
    // ✅ Handle logout
    const handleLogout = async () => {
     try {
@@ -56,6 +30,11 @@ export function NavUser({
       setIsCancelDialogOpen(false);
     }
   };
+
+  if (!user) {
+    return <div>Loading...</div>; // Or a spinner
+  }
+
   return (
     <>
     <SidebarMenu>
@@ -64,14 +43,13 @@ export function NavUser({
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-            >
+              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground">
               <Avatar className="h-8 w-8 rounded-lg">
-                <AvatarImage src={user.avatar} alt={user.name} />
-                <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+                <AvatarImage src={user.userDetails?.profile_image?.toString() ?? "/images/user.png"} alt={GetFullName(user.userDetails)} />
+                <AvatarFallback className="rounded-lg">{GetIntialName(user.userDetails)}</AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold">{user.name}</span>
+                <span className="truncate font-semibold">{GetFullName(user.userDetails)}</span>
                 <span className="truncate text-xs">{user.email}</span>
               </div>
               <ChevronsUpDown className="ml-auto size-4" />
@@ -85,24 +63,20 @@ export function NavUser({
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
-                  <AvatarImage src={user.avatar} alt={user.name} />
-                  <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+                  <AvatarImage src={user.userDetails?.profile_image?.toString() ?? "/images/user.png"} alt={GetFullName(user.userDetails)} />
+                  <AvatarFallback className="rounded-lg">{GetIntialName(user.userDetails)}</AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">{user.name}</span>
-                  <span className="truncate text-xs">{user.email}</span>
+                  <span className="truncate font-semibold">{GetFullName(user.userDetails)}</span>
+                  <span className="truncate text-xs">{user.email}</span>                  
                 </div>
               </div>
             </DropdownMenuLabel>                        
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <BadgeCheck />
+              <DropdownMenuItem onClick={() => setIsManageAccountOpen(true)}>
+                <BookUserIcon />
                 Manage Account
-              </DropdownMenuItem>              
-              <DropdownMenuItem>
-                <Bell />
-                Notifications
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
@@ -114,6 +88,11 @@ export function NavUser({
         </DropdownMenu>        
       </SidebarMenuItem>
     </SidebarMenu>
+    <ManageAccount
+        isOpen={isManageAccountOpen}
+        onClose={() => setIsManageAccountOpen(false)}
+        user={user}
+      />
     <Dialog open={isCancelDialogOpen} onOpenChange={setIsCancelDialogOpen}>          
       <DialogContent className="max-w-sm sm:max-w-md">
         <DialogHeader>

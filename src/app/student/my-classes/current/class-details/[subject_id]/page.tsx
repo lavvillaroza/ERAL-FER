@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { CalendarDays, ChevronRight, MoreHorizontal, Bell } from "lucide-react";
+import { CalendarDays, ChevronRight, MoreHorizontal, Bell, MergeIcon, ViewIcon } from "lucide-react";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { ExpressionCharts } from "@/components/expression-charts";
 import { ClassSubjectModel } from "@/models/classSubjectModel";
@@ -22,6 +22,8 @@ import CourseContentModal from "@/components/course-content-modal";
 import Loading from "@/components/loading";
 import { ClassStudentFERModel } from "@/models/classStudentFERModel";
 import { getFERStudentsDataBySubjectId } from "@/services/classStudentFerAppService";
+import { JSX } from "react/jsx-runtime";
+import { getDecodedAuthToken, refreshAuthToken } from "@/services/authAppService";
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -56,6 +58,35 @@ const SubjectDetails = () => {
           na: 0,
           datetime_stamp: new Date(),
     });
+  const [studentUserId, setStudentUserId] = useState<number>(0);  
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const token = await getDecodedAuthToken();
+        if (!token) {
+          console.log("No auth token found.");
+          toast.error("Failed to fetch class subjects!", {
+            description: "No auth token found.",
+          });
+          router.push("/login");
+          return; // Stop execution
+        }
+        const decodedToken = token.data; 
+        if (!decodedToken) {
+          const refreshToken = await refreshAuthToken();
+          if (!refreshToken || refreshToken.success === false) {
+            router.push("/login");
+          }
+          setStudentUserId(refreshToken.data.id);
+        }
+        setStudentUserId(decodedToken.id);
+      } catch (error) {
+        console.error("Error checking session:", error);
+        router.push("/login");
+      }
+    };
+    checkSession();
+  }, [router]);
   
   useEffect(() => {
     const fetchData = async () => {      
@@ -110,7 +141,7 @@ const SubjectDetails = () => {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">              
               <DropdownMenuItem onClick={() => joinScheduleSession(schedule.id)}>
-                join
+                <MergeIcon/>Join
               </DropdownMenuItem>                        
           </DropdownMenuContent>
         </DropdownMenu>    
@@ -126,7 +157,7 @@ const SubjectDetails = () => {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">              
                 <DropdownMenuItem onClick={() => {}}>
-                  View
+                  <ViewIcon /> View
                 </DropdownMenuItem>                        
             </DropdownMenuContent>
         </DropdownMenu>    
@@ -136,16 +167,16 @@ const SubjectDetails = () => {
   
   return (
     <SidebarProvider>
-      <AppSidebarStudent />
+      <AppSidebarStudent userId={studentUserId} />
       <SidebarInset>
-      <header className="flex h-16 shrink-0 items-center justify-between gap-2 sticky top-0 bg-white z-10 px-2 sm:px-4">
+      <header className="flex h-16 shrink-0 items-center justify-between gap-2 sticky top-0 bg-white z-10 px-2 sm:px-4 border-b">
             <div className="flex items-center gap-2">
                 <SidebarTrigger className="-ml-1" />
                 <Separator orientation="vertical" className="mr-2 h-4" />
                 <Breadcrumb>
                     <BreadcrumbList>
                         <BreadcrumbItem className="hidden md:block">
-                            <BreadcrumbLink href="/student">Dashboard</BreadcrumbLink>
+                            <BreadcrumbLink href="#">My Classes</BreadcrumbLink>
                         </BreadcrumbItem> 
                         <BreadcrumbSeparator>
                             <ChevronRight className="h-4 w-4" />
@@ -170,6 +201,7 @@ const SubjectDetails = () => {
                 <div className="relative">
                     <button aria-label='bell' className="p-2 rounded-full hover:bg-gray-100">
                         <Bell className="w-6 h-6 text-gray-600" />
+                        <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0">3</Badge>
                     </button>
                 </div>
             </div>

@@ -14,6 +14,7 @@ import { Bell } from "lucide-react";
 import { ClassStatus } from "@/types/classStatus";
 import Loading from "@/components/loading";
 import { useRouter } from "next/navigation"; 
+import { Badge } from "@/components/ui/badge";
 
 export default function Page() {
   const router = useRouter();
@@ -66,7 +67,10 @@ export default function Page() {
         toast.error("Failed to fetch class subjects!", {
           description: error instanceof Error ? error.message : JSON.stringify(error),
         });
-      }     
+      }
+      finally {
+        setIsLoading(false);
+      }
     };
 
     fetchClassSubjects();
@@ -77,19 +81,12 @@ export default function Page() {
     return () => clearInterval(intervalId);
   }, [teacherUserId]);
 
-  // ✅ Separate effect to set isLoading after classSubjects updates
-  useEffect(() => {
-    if (classSubjects.length > 0 || teacherUserId !== 0) {
-      setIsLoading(false);
-    }
-  }, [classSubjects, teacherUserId]);
-
   return (
     <>
     <SidebarProvider>
-      <AppSidebarTeacher />
+      <AppSidebarTeacher userId={teacherUserId}/>
       <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center justify-between gap-2 sticky top-0 bg-white z-10 px-2 sm:px-4">
+        <header className="flex h-16 shrink-0 items-center justify-between gap-2 sticky top-0 bg-white z-10 px-2 sm:px-4 border-b">
           <div className="flex items-center gap-2">
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="mr-2 h-4" />
@@ -109,6 +106,7 @@ export default function Page() {
               <div className="relative">
                   <button aria-label='bell' className="p-2 rounded-full hover:bg-gray-100">
                       <Bell className="w-6 h-6 text-gray-600" />
+                      <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0">3</Badge>
                   </button>
               </div>
           </div>                   

@@ -17,7 +17,7 @@ export const registerUser = async (userData: any) => {
         return result;
     }
     catch (error) {
-        throw new Error("AuthAppService @ registerUser API error:" + error);
+        throw new Error("AuthAppService @ registerUser API:" + error);
     }       
 };
 
@@ -38,7 +38,7 @@ export const loginUser = async (credentials: { email: string; password: string }
         return result;
     }
     catch (error) {
-        throw new Error("AuthAppService @ loginUser API error:" + error);
+        throw new Error("AuthAppService @ loginUser API:" + error);
     }      
 };
 
@@ -59,7 +59,7 @@ export const refreshAuthToken = async () => {
         return result;
     }
     catch (error) {
-        throw new Error("AuthAppService @ refreshToken API error:" + error);
+        throw new Error("AuthAppService @ refreshToken API:" + error);
     } 
 }
 
@@ -81,7 +81,7 @@ export const logoutUser = async () => {
         return result;
     }
     catch (error) {
-        throw new Error("AuthAppService @ logoutUser API error:" + error);
+        throw new Error("AuthAppService @ logoutUser API:" + error);
     } 
 };
 
@@ -100,7 +100,7 @@ export const getDecodedAuthToken = async () => {
         return result;
     }
     catch (error) {
-        throw new Error("AuthAppService @ getDecodedAuthToken API error:" + error);
+        throw new Error("AuthAppService @ getDecodedAuthToken API:" + error);
     } 
 };
 

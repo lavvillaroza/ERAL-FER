@@ -129,7 +129,7 @@ const [chartData, setChartData] = useState<{
     
   return (
     <Card className="xl:col-span-2">
-      <CardHeader>
+      <CardHeader className="items-center pb-0">
         <CardTitle>Dominant Emotion Over Time</CardTitle>
         <CardDescription>Tracking the most dominant emotion per minute</CardDescription>
       </CardHeader>
@@ -186,7 +186,7 @@ const [chartData, setChartData] = useState<{
           </ChartContainer>
         </ResponsiveContainer>
       </CardContent>
-      <CardFooter className="flex-col items-start gap-2 text-sm">
+      <CardFooter className="flex-col items-center gap-2 text-sm">
         <div className="flex gap-2 font-medium leading-none">
           Emotional trends for the session <TrendingUp className="h-4 w-4" />
         </div>        

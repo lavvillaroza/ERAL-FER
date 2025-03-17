@@ -1,62 +1,66 @@
 "use client";
 
-import * as React from "react"
-import {  
-  BookCopy ,  
-  LayoutDashboard ,
-  School,  
-} from "lucide-react"
+import { BookCopy, LayoutDashboard, School} from "lucide-react"
 import { NavMain } from "@/components/ui/nav-main"
 import { NavUser } from "@/components/ui/nav-user"
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-} from "@/components/ui/sidebar"
-import { useRouter } from "next/navigation";
+import { Sidebar, SidebarContent, SidebarFooter,SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem} from "@/components/ui/sidebar"
 import Link from "next/link";
-const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
-  navMain: [
-    {
-      title: "Dashboard",
-      url: "/student",
-      icon: LayoutDashboard,
-      isActive: true,
-      items: [],
-    },
-    {
-      title: "My Classes",
-      url: "#",
-      icon: School,
-      items: [
-        {
-          title: "Completed",
-          url: "/student/my-classes/completed",
-        },
-        {
-          title: "Current",
-          url: "/student/my-classes/current",
-        }
-      ],
-    }
-  ]
-}
-export function AppSidebarStudent({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const router = useRouter();
+import { UserModel } from "@/models/userModel";
+import { getUserByUserId } from "@/services/userAppService";
+import { useEffect, useState } from "react";
 
-  const handleProfileClick = (event: React.MouseEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    router.push('student/profile');
-  };
+interface AppSidebarStudentProps extends React.ComponentProps<typeof Sidebar> {
+  userId: number;
+}
+
+export function AppSidebarStudent({ userId, ...props }: AppSidebarStudentProps) {  
+  const [user, setUser] = useState<UserModel>({} as UserModel);
+  const data = {    
+    navMain: [
+      {
+        title: "Dashboard",
+        url: "/student",
+        icon: LayoutDashboard,
+        isActive: true,
+        items: [],
+      },
+      {
+        title: "My Classes",
+        url: "#",
+        icon: School,
+        items: [
+          {
+            title: "Completed",
+            url: "/student/my-classes/completed",
+          },
+          {
+            title: "Current",
+            url: "/student/my-classes/current",
+          }
+        ],
+      }
+    ]
+  }
+  useEffect(() => {
+      const fetchData = async () => {
+        try {     
+          console.log("UserId:", userId);    
+          if (userId === 0)  return;    
+  
+          const response = await getUserByUserId(userId);
+  
+          if (!response.success) {
+            throw new Error(response.message);
+          }
+
+          setUser(response.data);          
+        } catch (error) {
+          console.log("Error fetching User:", error);       
+        }         
+      }
+      fetchData();
+    }, [userId]);
+    
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
@@ -79,13 +83,8 @@ export function AppSidebarStudent({ ...props }: React.ComponentProps<typeof Side
       <SidebarContent>
         <NavMain items={data.navMain} />             
       </SidebarContent>
-      <SidebarFooter>
-        <div
-          onClick={handleProfileClick}
-          className="cursor-pointer hover:bg-gray-100 transition-colors duration-200 rounded-lg p-2"
-        >
-          <NavUser user={data.user} />
-        </div>
+      <SidebarFooter>        
+          <NavUser user={user} />        
       </SidebarFooter>
     </Sidebar>
   )

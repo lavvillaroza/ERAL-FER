@@ -13,7 +13,7 @@ export const getClassSubjects = async (): Promise<ClassSubjectModel[]> => {
         return result;
     }
     catch (error) {
-        throw new Error("ClassSubjectAppService @ getUsersByUserId API error:" + error);
+        throw new Error("ClassSubjectAppService @ getUsersByUserId API:" + error);
     }         
 };
 
@@ -33,7 +33,7 @@ export const getClassSubjectById = async (subject_id: number) => {
         return result;
     }
     catch (error) {
-        throw new Error("ClassSubjectAppService @ getClassSubjectsById API error:" + error);
+        throw new Error("ClassSubjectAppService @ getClassSubjectsById API:" + error);
     }    
 };
 
@@ -55,7 +55,7 @@ export const getClassSubjectsByTeacherId = async (teacher_user_id: number, statu
         return result;
     }
     catch (error) {
-        throw new Error("ClassSubjectAppService @ ClassSubjects by TeacherUserId API error:" + error);
+        throw new Error("ClassSubjectAppService @ ClassSubjects by TeacherUserId API:" + error);
     }    
 };
 
@@ -76,7 +76,7 @@ export const getClassSubjectsByStudentId = async (student_user_id: number, statu
         return result;
     }
     catch (error) {
-        throw new Error("ClassSubjectAppService @ ClassSubjects by TeacherUserId API error:" + error);
+        throw new Error("ClassSubjectAppService @ ClassSubjects by TeacherUserId API:" + error);
     }    
 };
 
@@ -100,7 +100,7 @@ export const createClassSubject = async (
         return result;
     }
     catch (error) {
-        throw new Error("ClassSubjectAppService @ createClassSubject API error:" + error);
+        throw new Error("ClassSubjectAppService @ createClassSubject API:" + error);
     }      
 };
 
@@ -120,6 +120,6 @@ export const updateClassSubjectStatus = async (subject_id: number,  status: stri
         return result;
     }
     catch (error) {
-        throw new Error("ClassSubjectAppService @ updateClassSubjectStatus API error:" + error);
+        throw new Error("ClassSubjectAppService @ updateClassSubjectStatus API:" + error);
     }        
 }

@@ -16,7 +16,7 @@ export const getClassSchedules = async (class_subject_id: number) => {
         return result;
     }
     catch (error) {
-        throw new Error("ClassScheduleAppService @ getClassSchedules API error:" + error);
+        throw new Error("ClassScheduleAppService @ getClassSchedules API:" + error);
     }           
 };
 
@@ -36,7 +36,7 @@ export const getClassScheduleById = async (class_subject_id: number, class_sched
         return result;
     }
     catch (error) {
-        throw new Error("ClassScheduleAppService @ getClassScheduleById API error:" + error);
+        throw new Error("ClassScheduleAppService @ getClassScheduleById API:" + error);
     }           
 };
 
@@ -60,7 +60,7 @@ export const createClassSchedule = async (
         return result;
     }
     catch (error) {
-        throw new Error("ClassScheduleAppService @ createClassSchedule API error:" + error);
+        throw new Error("ClassScheduleAppService @ createClassSchedule API:" + error);
     }        
 };
 
@@ -80,7 +80,7 @@ export const updateClassScheduleStatus = async (subject_id: number, schedule_id:
         return result;
     }
     catch (error) {
-        throw new Error("ClassScheduleAppService @ updateClassScheduleStatus API error:" + error);
+        throw new Error("ClassScheduleAppService @ updateClassScheduleStatus API:" + error);
     }        
 }
 
@@ -100,7 +100,7 @@ export const updateClassSchedule = async (schedule_id: number, OPENED: ClassSche
         return result;
     }
     catch (error) {
-        throw new Error("ClassScheduleAppService @ updateClassSchedule API error:" + error);
+        throw new Error("ClassScheduleAppService @ updateClassSchedule API:" + error);
     }             
 }
 
@@ -120,7 +120,7 @@ export const getClassCourseContentByScheduleId  = async (class_schedule_id: numb
         return result;
     }
     catch (error) {
-        throw new Error("ClassScheduleAppService @ getClassCourseContentByScheduleId API error:" + error);
+        throw new Error("ClassScheduleAppService @ getClassCourseContentByScheduleId API:" + error);
     }    
 }
 
@@ -142,7 +142,7 @@ export const updateClassCourseContentsByScheduleId = async (
         return result;
     }
     catch (error) {
-        throw new Error("ClassScheduleAppService @ updateClassCourseContentsByScheduleId API error:" + error);
+        throw new Error("ClassScheduleAppService @ updateClassCourseContentsByScheduleId API:" + error);
     }         
 }
 
@@ -164,7 +164,7 @@ export const updateClassCourseContentsStatusByScheduleIdAndId = async (status: s
         return result;
     }
     catch (error) {
-        throw new Error("ClassScheduleAppService @ updateClassCourseContentsByScheduleId API error:" + error);
+        throw new Error("ClassScheduleAppService @ updateClassCourseContentsByScheduleId API:" + error);
     }        
 
 }

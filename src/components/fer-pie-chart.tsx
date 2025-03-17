@@ -64,17 +64,59 @@ export function FERPieChart({ data }: FERPieChartProps) {
       <Card className="flex flex-col">
         <CardHeader className="items-center pb-0">
           <CardTitle>Pie Chart - Facial Expression Recognition</CardTitle>
-          <CardDescription>No data available</CardDescription>
+          <CardDescription>Tracking the most dominant emotion per schedule.</CardDescription>
         </CardHeader>
+        <CardContent className="h-[400px]">
+          <svg viewBox="0 0 100 100" className="mx-auto aspect-square max-h-[300px]">
+            <circle cx="50" cy="50" r="40" fill="hsl(0, 0%, 90%)" />
+            <text
+              x="50%"
+              y="50%"
+              textAnchor="middle"
+              dominantBaseline="middle"
+              fill="hsl(0, 0%, 50%)"
+              fontSize="8">
+              No data available
+            </text>
+          </svg>
+        </CardContent>
       </Card>
     );
   }
-  const chartData = Object.keys(data).map((key) => ({
-    //expression: key,
+
+  const chartData = Object.keys(data).map((key) => ({    
     emotion: chartConfig[key as keyof typeof chartConfig]?.label.toLowerCase() || key,
     average: Number(data[key as keyof ClassStudentFERAggChartModel]), // Convert to number
     fill: chartConfig[key as keyof typeof chartConfig]?.color || "hsl(0, 0%, 50%)",
   }));  
+
+  // Check if all values are zero
+  const allValuesZero = chartData.every((item) => item.average === 0);
+
+  if (allValuesZero) {
+    return (
+      <Card className="flex flex-col">
+        <CardHeader className="items-center pb-0">
+          <CardTitle>Pie Chart - Facial Expression Recognition</CardTitle>
+          <CardDescription>Tracking the most dominant emotion per schedule.</CardDescription>
+        </CardHeader>
+        <CardContent className="h-[400px]">
+          <svg viewBox="0 0 100 100" className="mx-auto aspect-square max-h-[300px]">
+            <circle cx="50" cy="50" r="40" fill="hsl(0, 0%, 90%)" />
+            <text
+              x="50%"
+              y="50%"
+              textAnchor="middle"
+              dominantBaseline="middle"
+              fill="hsl(0, 0%, 50%)"
+              fontSize="8">
+              No data available
+            </text>
+          </svg>
+        </CardContent>
+      </Card>
+    );
+  }
   return (
     <Card className="flex flex-col">
       <CardHeader className="items-center pb-0">
@@ -97,28 +139,37 @@ export function FERPieChart({ data }: FERPieChartProps) {
                   cy="50%" 
                   outerRadius={120}/>
                 <ChartLegend
-                  content={<ChartLegendContent nameKey="emotion" />}
+                  content={
+                    <ChartLegendContent
+                      nameKey="emotion"
+                      payload={chartData.map((entry) => ({
+                        value: entry.emotion,
+                        color: entry.fill,
+                        key: entry.emotion, // Ensure a unique key
+                      }))}
+                    />
+                  }
                   className="-translate-y-2 flex-wrap gap-2 [&>*]:basis-1/4 [&>*]:justify-center"
                 />
               </PieChart>                
             ) : (
                 <svg viewBox="0 0 100 100" className="mx-auto aspect-square max-h-[300px]">
-                <circle cx="50" cy="50" r="40" fill="hsl(0, 0%, 90%)" />
-                <text
-                  x="50%"
-                  y="50%"
-                  textAnchor="middle"
-                  dominantBaseline="middle"
-                  fill="hsl(0, 0%, 50%)"
-                  fontSize="10">
-                  No Data
-                </text>
+                  <circle cx="50" cy="50" r="40" fill="hsl(0, 0%, 90%)" />
+                  <text
+                    x="50%"
+                    y="50%"
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                    fill="hsl(0, 0%, 50%)"
+                    fontSize="8">
+                    No data available
+                  </text>
                 </svg>
             )}
           </ChartContainer>
         </ResponsiveContainer>        
       </CardContent>
-      <CardFooter className="flex-col items-start gap-2 text-sm">
+      <CardFooter className="flex-col items-center gap-2 text-sm">
         <div className="flex gap-2 font-medium leading-none">
           Average expression trends for each schedule <ChartPie className="h-4 w-4" />
         </div>        

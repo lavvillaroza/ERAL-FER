@@ -213,7 +213,7 @@ export default function AddClassForm() {
   };
   
   return (
-    <div>
+    <>
     <form className="space-y-6" onSubmit={handleSubmit}>
       <div>
         <label className="block mb-2">Name of Class</label>
@@ -312,6 +312,6 @@ export default function AddClassForm() {
         </DialogContent>
       </Dialog>      
       <Toaster />
-    </div>       
+    </>       
   )
 }

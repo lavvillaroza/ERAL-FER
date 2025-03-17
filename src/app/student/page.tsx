@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation";
 import { getDecodedAuthToken, refreshAuthToken } from "@/services/authAppService";
 import { toast, Toaster } from "sonner"
 import { ExpressionChartsDummy } from "@/components/expression-charts-dummy";
+import { Badge } from "@/components/ui/badge";
 
 export default function Page() {
     // Set initial moods state
@@ -158,16 +159,16 @@ export default function Page() {
   return (   
     <> 
     <SidebarProvider>
-      <AppSidebarStudent />
+      <AppSidebarStudent userId={studentUserId}/>
       <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center justify-between gap-2">
+        <header className="flex h-16 shrink-0 items-center justify-between gap-2 sticky top-0 bg-white z-10 px-2 sm:px-4 border-b">
           <div className="flex items-center gap-2 px-4">
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="mr-2 h-4" />
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem className="hidden md:block">
-                  <BreadcrumbLink href="#">
+                  <BreadcrumbLink href="/student">
                     Dashboard
                   </BreadcrumbLink>
                 </BreadcrumbItem>                
@@ -179,8 +180,9 @@ export default function Page() {
              {/* Notification Bell with Counter */}
               <div className="relative">
                 {/* Bell Icon */}
-                <button aria-label='botton' className="p-2 rounded-full hover:bg-gray-100">
-                  <Bell className="w-6 h-6 text-gray-600" />
+                <button className="p-2 rounded-full hover:bg-gray-100 relative">
+                    <Bell className="w-6 h-6 text-gray-600" />
+                    <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0">3</Badge>
                 </button>
               </div>
           </div>

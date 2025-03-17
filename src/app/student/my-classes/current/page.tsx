@@ -5,7 +5,7 @@ import { SidebarInset, SidebarProvider, SidebarTrigger,} from "@/components/ui/s
 import { useEffect, useState } from "react"
 import { SubjectCard } from "@/components/subject-card-current"
 import { ClassSubjectModel } from "@/models/classSubjectModel";
-import { toast, Toaster } from "sonner"
+import { toast, Toaster } from "sonner";
 import { Bell } from "lucide-react";
 import { AppSidebarStudent } from "@/components/app-sidebar-student";
 import { getClassSubjectsByStudentId } from "@/services/classSubjectAppService";
@@ -13,6 +13,7 @@ import { useRouter } from "next/navigation";
 import { getDecodedAuthToken, refreshAuthToken } from "@/services/authAppService";
 import { ClassStatus } from "@/types/classStatus";
 import Loading from "@/components/loading";
+import { Badge } from "@/components/ui/badge";
 
 export default function Page() {
   const router = useRouter();
@@ -105,16 +106,16 @@ export default function Page() {
   return (
     <>
     <SidebarProvider>
-      <AppSidebarStudent />
+      <AppSidebarStudent userId={studentUserId}/>
       <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center justify-between gap-2 sticky top-0 bg-white z-10 px-2 sm:px-4">
+        <header className="flex h-16 shrink-0 items-center justify-between gap-2 sticky top-0 bg-white z-10 px-2 sm:px-4 border-b">
           <div className="flex items-center gap-2">
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="mr-2 h-4" />
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem className="hidden md:block">
-                  <BreadcrumbLink href='/student'>My Classes</BreadcrumbLink>
+                  <BreadcrumbLink href='#'>My Classes</BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator className="hidden md:block" />
                 <BreadcrumbItem>
@@ -127,6 +128,7 @@ export default function Page() {
               <div className="relative">
                   <button aria-label='bell' className="p-2 rounded-full hover:bg-gray-100">
                       <Bell className="w-6 h-6 text-gray-600" />
+                      <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0">3</Badge>
                   </button>
               </div>
           </div>                   

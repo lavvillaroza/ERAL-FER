@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { handleApiError } from "@/app/utils/errorHandler";
 import { RegisterUserDto } from "@/dto/user.dto";
-import { UserModel } from "@/models/userModel";
 import { OnlineStatus } from "@/types/onlineStatus";
 import { Buffer } from "buffer"; // ✅ Import Buffer
 import prisma from "@/lib/prisma";
@@ -18,51 +17,35 @@ export async function POST(req: NextRequest) {
          const profileImageBuffer = validatedData.profile_image
          ? Buffer.from(validatedData.profile_image, "base64") // Ensure it's a string
          : null;
-         
-        const userData: Omit<UserModel, "user_id"> = {
-            email: validatedData.email,
-            password: validatedData.password,
-            role: validatedData.role,
-            account_status: validatedData.account_status,
-            userDetails: {
-                user_id: 0,
-                first_name: validatedData.first_name,
-                middle_name: validatedData.middle_name,
-                last_name: validatedData.last_name,
-                course: validatedData.course ?? null,
-                online_status: validatedData.online_status ?? OnlineStatus.OFFLINE,
-                profile_image: profileImageBuffer,
-                thresh_hold: validatedData.role === "teacher" ? 50 : 0,
-            }
-        };
+    
          // 🔍 Check if email already exists
         const existingUser = await prisma.user.findUnique({
-            where: { email: userData.email },
+            where: { email: validatedData.email },
         });
 
         if (existingUser) {
             throw new Error("Email is already in use, please use a different email.");
         }
 
-        const hashedPassword = await bcrypt.hash(userData.password, 10);
+        const hashedPassword = await bcrypt.hash(validatedData.password, 10);
 
        // ✅ Transaction to create both user and user details
         const newUser = await prisma.$transaction(async (tx) => {
             const createdUser = await tx.user.create({
                 data: {
-                    email: userData.email,
+                    email: validatedData.email,
                     password: hashedPassword,
-                    role: userData.role,
-                    account_status: userData.account_status,
+                    role: validatedData.role,
+                    account_status: validatedData.account_status,
                     userDetails: {
                         create: {
-                            first_name: userData.userDetails.first_name,
-                            middle_name: userData.userDetails.middle_name,
-                            last_name: userData.userDetails.last_name,
-                            course: userData.userDetails.course,
-                            online_status: userData.userDetails.online_status,
-                            profile_image: userData.userDetails.profile_image, // ✅ Buffer for Blob storage
-                            thresh_hold: userData.userDetails.thresh_hold
+                            first_name: validatedData.first_name,
+                            middle_name: validatedData.middle_name,
+                            last_name: validatedData.last_name,
+                            course: validatedData.course,
+                            online_status: validatedData.online_status ?? OnlineStatus.OFFLINE,
+                            profile_image: profileImageBuffer, // ✅ Buffer for Blob storage
+                            thresh_hold: validatedData.thresh_hold
                         },
                     },
                 },

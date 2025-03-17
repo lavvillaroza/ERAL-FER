@@ -22,7 +22,7 @@ export const addClassStudentFERData = async (
         return result;
     }
     catch (error) {
-        throw new Error("ClassStudentFerAppService @ addClassStudentFERData API error:" + error);
+        throw new Error("ClassStudentFerAppService @ addClassStudentFERData API:" + error);
     }        
 }
 
@@ -43,7 +43,7 @@ export const getFERChartDataBySubjectId = async (subject_id: number) => {
         return result;
     }
     catch (error) {
-        throw new Error("ClassStudentFerAppService @ getFERChartDataBySubjectId API error:" + error);
+        throw new Error("ClassStudentFerAppService @ getFERChartDataBySubjectId API:" + error);
     }        
 }
 
@@ -64,7 +64,7 @@ export const getFERChartDataBySubjectSchedIds = async (subject_id: number, sched
         return result;
     }
     catch (error) {
-        throw new Error("ClassStudentFerAppService @ getFERChartDataBySubjectSchedIds API error:" + error);
+        throw new Error("ClassStudentFerAppService @ getFERChartDataBySubjectSchedIds API:" + error);
     }        
 }
 
@@ -85,7 +85,7 @@ export const getFERTimelineDataBySubjectSchedIds = async (subject_id: number, sc
         return result;
     }
     catch (error) {
-        throw new Error("ClassStudentFerAppService @ getFERTimelineDataBySubjectSchedIds API error:" + error);
+        throw new Error("ClassStudentFerAppService @ getFERTimelineDataBySubjectSchedIds API:" + error);
     }        
 }
 
@@ -106,7 +106,7 @@ export const getFERTimelineDataBySubjectSchedStudentUserIds = async (subject_id:
         return result;
     }
     catch (error) {
-        throw new Error("ClassStudentFerAppService @ getFERTimelineDataBySubjectSchedStudentUserIds API error:" + error);
+        throw new Error("ClassStudentFerAppService @ getFERTimelineDataBySubjectSchedStudentUserIds API:" + error);
     }        
 }
 
@@ -127,7 +127,7 @@ export const getFERChartDataBySubjectSchedStudentUserIds = async (subject_id: nu
         return result;
     }
     catch (error) {
-        throw new Error("ClassStudentFerAppService @ getFERChartDataBySubjectSchedStudentUserIds API error:" + error);
+        throw new Error("ClassStudentFerAppService @ getFERChartDataBySubjectSchedStudentUserIds API:" + error);
     }        
 }
 
@@ -148,7 +148,7 @@ export const getFERChartDataBySubjectStudentUserIds = async (subject_id: number,
         return result;
     }
     catch (error) {
-        throw new Error("ClassStudentFerAppService @ getFERChartDataBySubjectStudentUserIds API error:" + error);
+        throw new Error("ClassStudentFerAppService @ getFERChartDataBySubjectStudentUserIds API:" + error);
     }        
 }
 
@@ -169,7 +169,7 @@ export const getFERStudentsDataBySubjectId = async (subject_id: number) => {
         return result;
     }
     catch (error) {
-        throw new Error("ClassStudentFerAppService @ getFERStudentsDataBySubjectId API error:" + error);
+        throw new Error("ClassStudentFerAppService @ getFERStudentsDataBySubjectId API:" + error);
     }        
 }
 
@@ -190,7 +190,7 @@ export const getFERStudentsDataBySubjectStudentUserIds = async (subject_id: numb
         return result;
     }
     catch (error) {
-        throw new Error("ClassStudentFerAppService @ getFERStudentsDataBySubjectId API error:" + error);
+        throw new Error("ClassStudentFerAppService @ getFERStudentsDataBySubjectId API:" + error);
     }        
 }
 
@@ -212,7 +212,7 @@ export const getFERStudentsDataBySubjectScheduleStudentUserIds = async (subject_
         return result;
     }
     catch (error) {
-        throw new Error("ClassStudentFerAppService @ getFERStudentsDataBySubjectScheduleId API error:" + error);
+        throw new Error("ClassStudentFerAppService @ getFERStudentsDataBySubjectScheduleId API:" + error);
     }        
 }
 
@@ -233,6 +233,6 @@ export const getFERStudentsDataBySubjectScheduleIds = async (subject_id: number,
         return result;
     }
     catch (error) {
-        throw new Error("ClassStudentFerAppService @ getFERStudentsDataBySubjectScheduleId API error:" + error);
+        throw new Error("ClassStudentFerAppService @ getFERStudentsDataBySubjectScheduleId API:" + error);
     }        
 }

@@ -1,42 +1,67 @@
 "use client";
 
-import * as React from "react";
-import { BookCopy, LayoutDashboard, Users } from "lucide-react";
-import { NavMain } from "@/components/ui/nav-main";
-import { NavUser } from "@/components/ui/nav-user";
-import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem} from "@/components/ui/sidebar";
+
+import { BookCopy, LayoutDashboard, Users} from "lucide-react"
+import { NavMain } from "@/components/ui/nav-main"
+import { NavUser } from "@/components/ui/nav-user"
+import { Sidebar, SidebarContent, SidebarFooter,SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem} from "@/components/ui/sidebar"
 import Link from "next/link";
-const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "",
-  },
-  navMain: [
-    {
-      title: "Dashboard",
-      url: "/admin",
-      icon: LayoutDashboard,
-      isActive: true,
-      items: [],
-    },
-    {
-      title: "Class Management",
-      url: "/admin/class-management",
-      icon: BookCopy,
-      isActive: true,
-      items: [],
-    },
-    {
-        title: "User Management",
-        url: "/admin/user-management",
-        icon: Users,
+import { useEffect, useState } from "react";
+import { getUserByUserId } from "@/services/userAppService";
+import { UserModel } from "@/models/userModel";
+
+interface AppSidebarAdminProps extends React.ComponentProps<typeof Sidebar> {
+  userId: number;
+}
+
+export function AppSidebarAdmin({ userId, ...props }: AppSidebarAdminProps) {  
+  const [user, setUser] = useState<UserModel>({} as UserModel);
+  const data = {    
+    navMain: [
+      {
+        title: "Dashboard",
+        url: "/admin",
+        icon: LayoutDashboard,
         isActive: true,
         items: [],
-      }
-  ]
-}
-export function AppSidebarAdmin({ ...props }: React.ComponentProps<typeof Sidebar>) {
+      },
+      {
+        title: "Class Management",
+        url: "/admin/class-management",
+        icon: BookCopy,
+        isActive: true,
+        items: [],
+      },
+      {
+          title: "User Management",
+          url: "/admin/user-management",
+          icon: Users,
+          isActive: true,
+          items: [],
+        }
+    ]
+  }
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {             
+        if (userId === 0)  return;    
+        const response = await getUserByUserId(userId);
+        if (!response.success) {
+          throw new Error(response.message);
+        }        
+        setUser(response.data);          
+      } catch (error) {
+        console.log("Error fetching User:", error);       
+      }         
+    }
+    fetchData();
+  }, [userId]);
+
+  if (!user) {
+    return <div>Loading...</div>; // Or a spinner
+  }
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
@@ -60,7 +85,7 @@ export function AppSidebarAdmin({ ...props }: React.ComponentProps<typeof Sideba
         <NavMain items={data.navMain} />             
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser user={user} />
       </SidebarFooter>
     </Sidebar>
   )

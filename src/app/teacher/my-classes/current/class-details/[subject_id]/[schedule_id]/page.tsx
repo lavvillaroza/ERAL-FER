@@ -31,6 +31,7 @@ import { UserDetails } from "@prisma/client";
 import { getUserDetailsByUserId } from "@/services/userAppService";
 import { AlertDestructive } from "@/components/alert-destructive";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 
 const ScheduleSession = () => {  
   const params = useParams();   
@@ -224,16 +225,19 @@ const ScheduleSession = () => {
         if (responseFERStudentData.success === false) {
           throw new Error(responseFERStudentData.message);
         }
+        
         setClassStudentFERTimelineData(responseFERTimelineData.data);
+        // ✅ Ensure responseFERChartData.data is not null or undefined
+        const chartData = responseFERChartData.data || {};
         setClassStudentFERChartData({
-          surprised: responseFERChartData.data.surprised,
-          happy: responseFERChartData.data.happy,
-          neutral: responseFERChartData.data.neutral,
-          sad: responseFERChartData.data.sad,
-          angry: responseFERChartData.data.angry,
-          disgusted: responseFERChartData.data.disgusted,
-          fearful: responseFERChartData.data.fearful,
-          na: responseFERChartData.data.na,
+          surprised: chartData.surprised || 0,
+          happy: chartData.happy || 0,
+          neutral: chartData.neutral || 0,
+          sad: chartData.sad || 0,
+          angry: chartData.angry || 0,
+          disgusted: chartData.disgusted || 0,
+          fearful: chartData.fearful || 0,
+          na: chartData.na || 0,
         });
         setclassStudentFERStudentData(responseFERStudentData.data);              
       } catch (error) {
@@ -300,9 +304,9 @@ const ScheduleSession = () => {
   return (
     <>
     <SidebarProvider>
-      <AppSidebarTeacher />
+      <AppSidebarTeacher userId={teacherUserId} />
       <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center justify-between gap-2 sticky top-0 bg-white z-10 px-2 sm:px-4">
+        <header className="flex h-16 shrink-0 items-center justify-between gap-2 sticky top-0 bg-white z-10 px-2 sm:px-4 border-b">
             <div className="flex items-center gap-2">
                 <SidebarTrigger className="-ml-1" />
                 <Separator orientation="vertical" className="mr-2 h-4" />
@@ -323,7 +327,7 @@ const ScheduleSession = () => {
                             <ChevronRight className="h-4 w-4" />
                         </BreadcrumbSeparator>   
                         <BreadcrumbItem>
-                            <BreadcrumbLink href={"/teacher/my-classes/current/class-details/" + classSubject.id}>
+                            <BreadcrumbLink href={`/teacher/my-classes/current/class-details/${params.subject_id}`}>
                               Details
                             </BreadcrumbLink>
                         </BreadcrumbItem>    
@@ -331,11 +335,10 @@ const ScheduleSession = () => {
                             <ChevronRight className="h-4 w-4" />
                         </BreadcrumbSeparator>   
                         <BreadcrumbItem>
-                            <BreadcrumbLink href={`/teacher/my-classes/current/class-details/${classSubject.id}/${params.schedule_id}`}>
+                            <BreadcrumbLink href={`/teacher/my-classes/current/class-details/${params.subject_id}/${params.schedule_id}`}>
                               Schedule
                             </BreadcrumbLink>
                         </BreadcrumbItem> 
-
                     </BreadcrumbList>            
                 </Breadcrumb>            
             </div>          
@@ -343,6 +346,7 @@ const ScheduleSession = () => {
                 <div className="relative">
                     <button aria-label='bell' className="p-2 rounded-full hover:bg-gray-100">
                         <Bell className="w-6 h-6 text-gray-600" />
+                        <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0">3</Badge>
                     </button>
                 </div>
             </div>

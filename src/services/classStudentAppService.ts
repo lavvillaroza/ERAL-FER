@@ -14,7 +14,7 @@ export const getClassStudents = async (class_subject_id: number) => {
         return result;
     }
     catch (error) {
-        throw new Error("ClassStudentAppService @ getClassStudents API error:" + error);
+        throw new Error("ClassStudentAppService @ getClassStudents API:" + error);
     }    
 };
 
@@ -32,7 +32,7 @@ export const getClassSubjectsByStudentId = async (id: number, student_user_id: n
         return result;        
     }
     catch (error) {
-        throw new Error("ClassStudentAppService @ classSubject by StudentUserId API error:" + error);
+        throw new Error("ClassStudentAppService @ classSubject by StudentUserId API:" + error);
     }    
 };
 
@@ -59,6 +59,6 @@ export const addClassStudents = async (id: number,
         return result;
     }
     catch (error) {
-        throw new Error("ClassStudentAppService @ classStudents API error:" + error);
+        throw new Error("ClassStudentAppService @ classStudents API:" + error);
     }          
   };

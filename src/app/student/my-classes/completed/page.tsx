@@ -1,6 +1,5 @@
 "use client"
 
-import { AppSidebarTeacher } from "@/components/app-sidebar-teacher";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator} from "@/components/ui/breadcrumb";
 import { Separator } from "@/components/ui/separator";
 import { SidebarInset, SidebarProvider, SidebarTrigger} from "@/components/ui/sidebar";
@@ -14,14 +13,14 @@ import { ClassStatus } from "@/types/classStatus";
 import { Bell } from "lucide-react";
 import Loading from "@/components/loading";
 import { useRouter } from "next/navigation";
+import { Badge } from "@/components/ui/badge";
+import { AppSidebarStudent } from "@/components/app-sidebar-student";
 
 export default function Page() {
   const router = useRouter();
   const [classSubjects, setClassSubjects] = useState<ClassSubjectModel[]>([]);
   const [studentUserId, setStudentUserId] = useState<number>(0);  
   const [isLoading, setIsLoading] = useState(true);
-
-  
   useEffect(() => {
     const checkSession = async () => {
       try {
@@ -51,33 +50,12 @@ export default function Page() {
     checkSession();
   }, [router]);
 
-  useEffect(() => {
-    const fetchClassSubjects = async () => {                       
-      const token = await getDecodedAuthToken();        
-      if (!token) {
-        console.log("No auth token found.");
-        toast.error("Failed to fetch class subjects!", {
-          description: "No auth token found.",
-        });
-        router.push("/login");
-      }
-
-      const decodedToken = token.data;
-      let userId;
-      if (!decodedToken) {
-        const refreshToken = await refreshAuthToken();
-        if (!refreshToken) router.push("/login");
-        if (refreshToken.success === false) router.push("/login");
-        userId = refreshToken.data.id;
-      }
-      else {
-        userId = decodedToken.id;
-      }
-      
-      try {                  
-        setStudentUserId(userId);
-          
-          const response = await getClassSubjectsByTeacherId(userId, ClassStatus.COMPLETED);        
+  useEffect(() => {    
+    const fetchClassSubjects = async () => {                             
+      try {        
+          console.log(studentUserId);
+          if (studentUserId === 0) return;
+          const response = await getClassSubjectsByTeacherId(studentUserId, ClassStatus.COMPLETED);        
           if (response.success === true) {
             setClassSubjects(response.data);  
           }
@@ -96,32 +74,29 @@ export default function Page() {
       }
     };
     fetchClassSubjects();
-
     // Set interval to run fetchClassSubjects every 5 seconds
     const intervalId = setInterval(fetchClassSubjects, 5000); // 5 seconds
-
     // Cleanup function to clear interval when component unmounts
     return () => clearInterval(intervalId);
     
   }, []);
-
   return (
     <>
       <SidebarProvider>
-        <AppSidebarTeacher />
+        <AppSidebarStudent userId={studentUserId}/>
         <SidebarInset>
-          <header className="flex h-16 shrink-0 items-center justify-between gap-2 sticky top-0 bg-white z-10 px-2 sm:px-4">
+          <header className="flex h-16 shrink-0 items-center justify-between gap-2 sticky top-0 bg-white z-10 px-2 sm:px-4 border-b">
             <div className="flex items-center gap-2">
               <SidebarTrigger className="-ml-1" />
               <Separator orientation="vertical" className="mr-2 h-4" />
               <Breadcrumb>
                 <BreadcrumbList>
                   <BreadcrumbItem className="hidden md:block">
-                    <BreadcrumbLink href='/teacher'>My Classes</BreadcrumbLink>
+                    <BreadcrumbLink href='/student'>My Classes</BreadcrumbLink>
                   </BreadcrumbItem>
                   <BreadcrumbSeparator className="hidden md:block" />
                   <BreadcrumbItem>
-                    <BreadcrumbLink href='/teacher/my-classes/completed'>Completed</BreadcrumbLink>
+                    <BreadcrumbLink href='/student/my-classes/completed'>Completed</BreadcrumbLink>
                   </BreadcrumbItem>
                 </BreadcrumbList>
               </Breadcrumb>
@@ -130,6 +105,7 @@ export default function Page() {
               <div className="relative">
                   <button aria-label='bell' className="p-2 rounded-full hover:bg-gray-100">
                       <Bell className="w-6 h-6 text-gray-600" />
+                      <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0">3</Badge>
                   </button>
               </div>
             </div>        

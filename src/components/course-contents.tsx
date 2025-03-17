@@ -11,12 +11,12 @@ interface CourceContentsProps {
 export function CourceContents({ items, title = "Course Content", className = "" }: CourceContentsProps) {
   return (
     <Card className={`shadow-lg ${className}`}>
-      <CardHeader className="items-center pb-4">
+      <CardHeader className="items-center pb-2">
         <CardTitle>{title}</CardTitle>
         <CardDescription></CardDescription>
       </CardHeader>
       <CardContent className="p-4 sm:p-4 lg:p-6">        
-        <ScrollArea className="h-[350px] pr-4">
+        <ScrollArea className="h-[450px] pr-4">
           <div className="space-y-6">
             {items.map((item, index) => (
               <div key={index} className="relative pl-8 pb-6">

@@ -10,7 +10,7 @@ import { GetFullName } from "@/lib/fullName";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import { UserModel } from "@/models/userModel";
-import { getUsersByUserId } from "@/services/userAppService";
+import { getUserByUserId } from "@/services/userAppService";
 
 export interface Subject {
   id: number;
@@ -39,7 +39,7 @@ export function SubjectCard({ subject, user_id, variant }: SubjectCardProps) {
   useEffect(() => {           
         const fetchTeacher = async () => {
           try {
-            const response = await getUsersByUserId(user_id);          
+            const response = await getUserByUserId(user_id);          
             setTeacher(response);
   
           } catch(error) {
@@ -77,6 +77,9 @@ export function SubjectCard({ subject, user_id, variant }: SubjectCardProps) {
             <Image 
                 src="/images/user.png"
                 alt="title"
+                width={32}
+                height={32}
+                loading="lazy"
                 className="w-8 h-8 rounded-full mr-2"
               />
             <span className="text-sm text-gray-600">{GetFullName(teacher?.userDetails)}</span>

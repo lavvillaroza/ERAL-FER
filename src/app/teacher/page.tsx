@@ -3,12 +3,16 @@ import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/s
 import { AppSidebarTeacher } from "@/components/app-sidebar-teacher"
 
 import { Bell } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { useEffect, useState } from "react";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList } from "@/components/ui/breadcrumb";
 import { Separator } from "@radix-ui/react-separator";
 import { TopTenCard } from "@/components/top-ten-card";
 import { TopStudents } from "@/components/top-students";
 import { ExpressionChartsDummy } from "@/components/expression-charts-dummy";
+import { useRouter } from "next/navigation";
+import { getDecodedAuthToken, refreshAuthToken } from "@/services/authAppService";
+import { toast } from "sonner";
 
 export default function Page() {
     const [moods] = useState([
@@ -34,20 +38,43 @@ export default function Page() {
         { name: "Physical Education", happiness: "69", students: 33 },
     ];
 
-    const [, setCurrentTime] = useState(new Date());  
-  
+    const router = useRouter(); 
+    const [userId, setUserId] = useState<number>(0);  
     useEffect(() => {
-        const interval = setInterval(() => {
-            setCurrentTime(new Date());
-        }, 1000);
-        return () => clearInterval(interval);
-    }, []);
+        const checkSession = async () => {
+        try {
+            const token = await getDecodedAuthToken();
+            if (!token) {
+            console.log("No auth token found.");
+            toast.error("Failed to fetch class subjects!", {
+                description: "No auth token found.",
+            });
+            router.push("/login");
+            return; // Stop execution
+            }
+            const decodedToken = token.data;
+            if (!decodedToken) {
+            const refreshToken = await refreshAuthToken();
+            if (!refreshToken || refreshToken.success === false) {
+                router.push("/login");
+            }
+            setUserId(refreshToken.data.id);
+            } else {
+            setUserId(decodedToken.id);
+            }
+        } catch (error) {
+            console.error("Error checking session:", error);
+            router.push("/login");
+        }
+        };
+        checkSession();
+    }, [router]);
 
     return (    
         <SidebarProvider>
-            <AppSidebarTeacher />
+            <AppSidebarTeacher userId={userId}/>
             <SidebarInset className="h-screen flex flex-col overflow-y-auto overflow-x-hidden">
-                <header className="flex h-16 shrink-0 items-center justify-between gap-2 sticky top-0 bg-white z-10 px-2 sm:px-4">
+                <header className="flex h-16 shrink-0 items-center justify-between gap-2 sticky top-0 bg-white z-10 px-2 sm:px-4 border-b">
                     <div className="flex items-center gap-2">
                         <SidebarTrigger className="-ml-1" />
                         <Separator orientation="vertical" className="mr-2 h-4" />
@@ -59,10 +86,11 @@ export default function Page() {
                             </BreadcrumbList>              
                         </Breadcrumb>            
                     </div>          
-                    <div className="flex items-center">
+                    <div className="flex items-center space-x-4 px-4">
                         <div className="relative">
-                            <button aria-label='bell' className="p-2 rounded-full hover:bg-gray-100">
+                            <button className="p-2 rounded-full hover:bg-gray-100 relative">
                                 <Bell className="w-6 h-6 text-gray-600" />
+                                <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0">3</Badge>
                             </button>
                         </div>
                     </div>

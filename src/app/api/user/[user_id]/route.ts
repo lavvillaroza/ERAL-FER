@@ -23,10 +23,23 @@ export async function GET(req: NextRequest, { params }: { params: { user_id: str
       throw new Error("User not found!")
     }
 
+    // Convert Uint8Array to Base64 string
+    let profileImageBase64 = null;
+    if (user.userDetails?.profile_image) {
+        profileImageBase64 = `data:image/png;base64,${Buffer.from(user.userDetails.profile_image).toString("base64")}`;
+        
+    }
+
     return NextResponse.json({
       success: true,
       message: "User fetched successfully",
-      data: user}, 
+      data: {
+          ...user,
+          userDetails: {
+              ...user.userDetails,
+              profile_image: profileImageBase64, // ✅ Send as Base64
+          },
+      }}, 
       { status: 200 });
 
   } catch (error) {    
@@ -36,13 +49,25 @@ export async function GET(req: NextRequest, { params }: { params: { user_id: str
 
 export async function PUT(req: NextRequest, { params }: { params: { user_id: string } }) {
   try {
-    const user_id = parseInt(params.user_id);
-    if (isNaN(user_id)) return NextResponse.json({ message: "Invalid user ID" }, { status: 400 });
+    const { user_id } = await params;
+    // Validate ID
+    const userId = Number(user_id);
+    if (Number.isNaN(userId)) {
+        return NextResponse.json(
+            { success: false, message: "Invalid User Id!" },
+            { status: 400 });
+    }    
 
     const { email, password, role, account_status, userDetails } = await req.json();
+    
+    let profileImageBytes: Uint8Array | null = null;
+    if (userDetails?.profile_image) {        
+        const buffer = Buffer.from(userDetails.profile_image, "base64"); // Convert Base64 to Buffer
+        profileImageBytes = new Uint8Array(buffer); // Convert Buffer to Uint8Array
+    }
 
     const updatedUser = await prisma.user.update({
-      where: { user_id },
+      where: { user_id: userId },
       data: {
         email,
         password,
@@ -50,13 +75,27 @@ export async function PUT(req: NextRequest, { params }: { params: { user_id: str
         account_status,
         updated_date: new Date(),
         userDetails: userDetails
-          ? { update: { ...userDetails, updated_date: new Date() } }
-          : undefined,
+        ? { update: { 
+            first_name: userDetails.first_name,
+            middle_name: userDetails.middle_name,
+            last_name: userDetails.last_name,
+            course: userDetails.course,
+            online_status: userDetails.online_status,
+            profile_image: profileImageBytes,
+            thresh_hold: userDetails.thresh_hold,
+            updated_date: new Date(),
+          }}
+        : undefined,
       },
       include: { userDetails: true },
     });
 
-    return NextResponse.json(updatedUser, { status: 200 });
+    return NextResponse.json({ 
+      success: true,
+      message: "User updated successfully", 
+      data: updatedUser },       
+      { status: 200 });
+
   } catch (error) {
     return handleApiError(error);
   }
@@ -70,11 +109,16 @@ export async function DELETE(req: NextRequest, { params }: { params: { user_id: 
     const user_id = parseInt(params.user_id);
     if (isNaN(user_id)) return NextResponse.json({ message: "Invalid user ID" }, { status: 400 });
 
-    await prisma.user.delete({
+    const deletedUser = await prisma.user.delete({
       where: { user_id },
     });
 
-    return NextResponse.json({ message: "User deleted successfully" }, { status: 200 });
+    return NextResponse.json({ 
+      success: true,
+      message: "User deleted successfully", 
+      data: deletedUser },       
+      { status: 200 });
+    
   } catch (error) {
     console.error("DELETE User Error:", error);
     return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });

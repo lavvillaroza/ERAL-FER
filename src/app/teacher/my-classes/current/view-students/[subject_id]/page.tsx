@@ -41,33 +41,38 @@ const ViewStudents = () => {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [isSaving, setIsSaving] = useState(false);  
   const [isLoading, setIsLoading] = useState(true);  
+  const [teacherUserId, setTeacherUserId] = useState<number>(0);
 
   useEffect(() => {
-      const checkSession = async () => {
-        try {
-          const token = await getDecodedAuthToken();
-          if (!token) {
-            console.log("No auth token found.");
-            toast.error("Failed to fetch class subjects!", {
-              description: "No auth token found.",
-            });
-            router.push("/login");
-            return; // Stop execution
-          }
-          const decodedToken = token.data; 
-          if (!decodedToken) {
-            const refreshToken = await refreshAuthToken();
-            if (!refreshToken || refreshToken.success === false) {
-              router.push("/login");
-            }
-          }
-        } catch (error) {
-          console.error("Error checking session:", error);
+    const checkSession = async () => {
+      try {
+        const token = await getDecodedAuthToken();
+        if (!token) {
+          console.log("No auth token found.");
+          toast.error("Failed to fetch class subjects!", {
+            description: "No auth token found.",
+          });
           router.push("/login");
+          return; // Stop execution
         }
-      };
-      checkSession();
-    }, [router]);
+        const decodedToken = token.data; 
+        if (!decodedToken) {
+          const refreshToken = await refreshAuthToken();
+          if (!refreshToken || refreshToken.success === false) {
+            router.push("/login");
+          }
+          setTeacherUserId(refreshToken.data.id);
+        }
+        else {
+          setTeacherUserId(decodedToken.id);
+        }
+      } catch (error) {
+        console.error("Error checking session:", error);
+        router.push("/login");
+      }
+    };
+    checkSession();
+  }, [router]);
 
   useEffect(() => {        
     const fetchData = async () => {
@@ -137,12 +142,9 @@ const ViewStudents = () => {
           });
       }
 
-    }
-    console.log("CurrentStudents", currentStudents);
-
+    }    
     setIsModalOpen(open);
   };
-
 
   const handleSaveStudents = async () => {
     setIsSaving(true);    
@@ -238,7 +240,7 @@ const ViewStudents = () => {
 
   return (
     <SidebarProvider>
-        <AppSidebarTeacher />
+        <AppSidebarTeacher userId={teacherUserId}/>
             <SidebarInset>
                 <header className="flex h-16 shrink-0 items-center justify-between gap-2 sticky top-0 bg-white z-10 px-2 sm:px-4">
                     <div className="flex items-center gap-2">
