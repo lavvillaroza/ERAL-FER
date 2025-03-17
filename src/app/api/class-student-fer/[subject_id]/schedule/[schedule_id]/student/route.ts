@@ -19,7 +19,7 @@ export async function GET(req: NextRequest, { params }: { params: { subject_id: 
         return NextResponse.json({ message: "Invalid Class Schedule Id" }, { status: 400 });
     }    
 
-    const result = await prisma.$queryRaw`
+    const result = await prisma.$queryRaw`       
         WITH AvgValues AS (
             SELECT  
                 A.class_subject_id,
@@ -28,22 +28,23 @@ export async function GET(req: NextRequest, { params }: { params: { subject_id: 
                 CONCAT_WS(' ', B.first_name, B.middle_name, B.last_name) AS full_name,
                 B.course,
                 ROUND(AVG(A.highest_avg_value),2) AS avg_highest_value,
-                A.dominant_expression
+                A.dominant_expression,
+                ROW_NUMBER() OVER (PARTITION BY A.student_user_id ORDER BY AVG(A.highest_avg_value) DESC) AS rn
             FROM dberal.view_classStudentFERAggsWithStudentUserId A
             LEFT JOIN UserDetails B ON B.user_id = A.student_user_id
             WHERE A.class_subject_id = ${classSubjectId}
-                AND A.class_schedule_id = ${classScheduleId}                
+                AND A.class_schedule_id = ${classScheduleId}              
             GROUP BY 
                 A.class_subject_id,
                 A.class_schedule_id,
                 A.student_user_id,
-                full_name,
+                B.first_name, B.middle_name, B.last_name,
                 B.course,
                 A.dominant_expression
         )
-        SELECT student_user_id as id, full_name, course, avg_highest_value as average, dominant_expression as dominantExpression
+        SELECT student_user_id AS id, full_name, course, avg_highest_value AS average, dominant_expression AS dominantExpression
         FROM AvgValues
-        WHERE avg_highest_value = (SELECT MAX(avg_highest_value) FROM AvgValues)
+        WHERE rn = 1
     `;
 
     return NextResponse.json({

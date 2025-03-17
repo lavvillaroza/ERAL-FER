@@ -239,6 +239,7 @@ const ScheduleSession = () => {
           fearful: chartData.fearful || 0,
           na: chartData.na || 0,
         });
+        console.log(responseFERStudentData.data);
         setclassStudentFERStudentData(responseFERStudentData.data);              
       } catch (error) {
         console.error("Error fetching student FER data:", error);
