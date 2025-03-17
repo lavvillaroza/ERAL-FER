@@ -5,6 +5,7 @@ const nextConfig: NextConfig = {
   reactStrictMode: false,
   webpack: (config) => {
     config.cache = false;
+    config.resolve.fallback = { fs: false };
     return config;
   },
   eslint: {
