@@ -23,12 +23,8 @@ import { ClassStudentFERModel } from "@/models/classStudentFERModel";
 import { addClassStudentFERData } from "@/services/classStudentFerAppService";
 import { getDecodedAuthToken, refreshAuthToken } from "@/services/authAppService";
 import { roundToTwoDecimals } from "@/lib/utils";
-import dynamic from "next/dynamic";
 import { Badge } from "@/components/ui/badge";
-
-const FacialExpressionRecognition = dynamic(
-    () => import("@/components/face-expression-recognition"), { ssr: false }
-  );
+import FacialExpressionRecognition from "@/components/face-expression-recognition";
 
 const ScheduleSession = () => {
   const router = useRouter();
