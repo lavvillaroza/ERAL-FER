@@ -82,7 +82,14 @@ export async function POST(req: NextRequest) {
   );
 
   } catch (error) {    
-    console.error("Get Class subject by Id");
+    console.error("Get Class subject by Id", error);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if (error instanceof Error && Array.isArray((error as any).errors)) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (error as any).errors.forEach((err: { path: any; message: any; }) => {
+        console.log(err.path, err.message);
+      });
+    }
     return handleApiError(error);
   }
 }

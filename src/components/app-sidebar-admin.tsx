@@ -1,23 +1,10 @@
 "use client";
 
-import * as React from "react"
-import {  
-    BookCopy,  
-    LayoutDashboard,
-    Users, // Import User Management Icon
-    FileText // Import Reports Icon
-  } from "lucide-react";
-import { NavMain } from "@/components/ui/nav-main"
-import { NavUser } from "@/components/ui/nav-user"
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-} from "@/components/ui/sidebar"
+import * as React from "react";
+import { BookCopy, LayoutDashboard, Users } from "lucide-react";
+import { NavMain } from "@/components/ui/nav-main";
+import { NavUser } from "@/components/ui/nav-user";
+import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem} from "@/components/ui/sidebar";
 import Link from "next/link";
 const data = {
   user: {
@@ -44,13 +31,6 @@ const data = {
         title: "User Management",
         url: "/admin/user-management",
         icon: Users,
-        isActive: true,
-        items: [],
-      },
-      {
-        title: "Reports",
-        url: "/admin/reports",
-        icon: FileText,
         isActive: true,
         items: [],
       }

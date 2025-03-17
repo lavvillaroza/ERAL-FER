@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogDescription,  DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Users, ChevronRight, Bell, Search, Save } from "lucide-react";
+import { Users, ChevronRight, Bell, Search, Save, BadgePlus, BadgeX } from "lucide-react";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { Input } from "@/components/ui/input";
 import { ClassSubjectModel } from "@/models/classSubjectModel";
@@ -16,16 +16,18 @@ import { getClassSubjectById } from "@/services/classSubjectAppService";
 import { ClassStudentModel } from "@/models/classStudentModel";
 import { toast, Toaster } from "sonner";
 import { addClassStudents, getClassStudents } from "@/services/classStudentAppService";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { Separator } from "@radix-ui/react-separator";
-import { getUsersByRole } from "@/services/userAppService";
+import { getUsersDetailsByRole } from "@/services/userAppService";
 import { GetFullName } from "@/lib/fullName";
 import { UserRole } from "@/types/userRole";
 import { UserDetailsModel } from "@/models/userDetailsModel";
 import Loading from "@/components/loading";
 import { ExpressionChartsDummy } from "@/components/expression-charts-dummy";
+import { getDecodedAuthToken, refreshAuthToken } from "@/services/authAppService";
 
 const ViewStudents = () => {  
+  const router = useRouter();
   const params = useParams();  
   const [classSubject, setClassSubject] = useState<ClassSubjectModel>({} as ClassSubjectModel);    
   const [isModalOpen, setIsModalOpen] = useState(false);  
@@ -40,19 +42,46 @@ const ViewStudents = () => {
   const [isSaving, setIsSaving] = useState(false);  
   const [isLoading, setIsLoading] = useState(true);  
 
+  useEffect(() => {
+      const checkSession = async () => {
+        try {
+          const token = await getDecodedAuthToken();
+          if (!token) {
+            console.log("No auth token found.");
+            toast.error("Failed to fetch class subjects!", {
+              description: "No auth token found.",
+            });
+            router.push("/login");
+            return; // Stop execution
+          }
+          const decodedToken = token.data; 
+          if (!decodedToken) {
+            const refreshToken = await refreshAuthToken();
+            if (!refreshToken || refreshToken.success === false) {
+              router.push("/login");
+            }
+          }
+        } catch (error) {
+          console.error("Error checking session:", error);
+          router.push("/login");
+        }
+      };
+      checkSession();
+    }, [router]);
+
   useEffect(() => {        
     const fetchData = async () => {
       try {                                    
         const [responseSubject, responseStudents, responseStudentList] = await Promise.all([
           getClassSubjectById(Number(params.subject_id)),
           getClassStudents(Number(params.subject_id)),          
-          getUsersByRole(UserRole.STUDENT),
+          getUsersDetailsByRole(UserRole.STUDENT),
         ]);
 
         setClassSubject(responseSubject.data);  
-        setClassstudents(responseStudents.data);         
-        setAvailableStudents(responseStudentList.data.userDetails);
-        
+        setClassstudents(responseStudents.data);                 
+        setAvailableStudents(responseStudentList.data);
+
       } catch (error) {
         console.log("Error fetching class subject:", error);
         toast.error("Failed to fetch class subject!", {
@@ -68,55 +97,13 @@ const ViewStudents = () => {
   
 
   const [moods] = useState([
-    {
-      icon: "😲",
-      percentage: "0.00",
-      label: "Surprised",
-      bgClass: "bg-gray-100/50",
-      color: "text-orange-500",
-    },
-    {
-      icon: "😊",
-      percentage: "0.00",
-      label: "Happy",
-      bgClass: "bg-gray-100/50",
-      color: "text-green-500",
-    },
-    {
-      icon: "😐",
-      percentage: "0.00",
-      label: "Neutral",
-      bgClass: "bg-gray-100/50",
-      color: "text-blue-500",
-    },
-    {
-      icon: "😢",
-      percentage: "0.00",
-      label: "Sad",
-      bgClass: "bg-gray-100/50",
-      color: "text-purple-500",
-    },
-    {
-      icon: "🤢",
-      percentage: "0.00",
-      label: "Disgusted",
-      bgClass: "bg-gray-100/50",
-      color: "text-zinc-700",
-    },
-    {
-      icon: "😡",
-      percentage: "0.00",
-      label: "Angry",
-      bgClass: "bg-gray-100/50",
-      color: "text-red-500",
-    },
-    {
-      icon: "😨",
-      percentage: "0.00",
-      label: "Fearful",
-      bgClass: "bg-gray-100/50",
-      color: "text-slate-500",
-    },
+    { icon: "😲", percentage: "0.00", label: "Surprised", bgClass: "bg-gray-100/50", color: "text-orange-500" },
+    { icon: "😊", percentage: "0.00", label: "Happy", bgClass: "bg-gray-100/50", color: "text-green-500" },
+    { icon: "😐", percentage: "0.00", label: "Neutral", bgClass: "bg-gray-100/50", color: "text-blue-500" },
+    { icon: "😢", percentage: "0.00", label: "Sad", bgClass: "bg-gray-100/50", color: "text-purple-500" },
+    { icon: "🤢", percentage: "0.00", label: "Disgusted", bgClass: "bg-gray-100/50", color: "text-zinc-700" },
+    { icon: "😡", percentage: "0.00", label: "Angry", bgClass: "bg-gray-100/50", color: "text-red-500" },
+    { icon: "😨", percentage: "0.00", label: "Fearful", bgClass: "bg-gray-100/50", color: "text-slate-500" },
   ]);
 
   const fetchUpdatedClassStudents = async () => {
@@ -338,11 +325,12 @@ const ViewStudents = () => {
                                                 <td className="px-4 py-3">{GetFullName(student)}</td>
                                                 <td className="px-4 py-3">{student.course}</td>                                  
                                                 <td className="px-4 py-3">
-                                                    <button 
-                                                    onClick={() => handleRemoveInitiate(student)}
-                                                    className="text-red-500 hover:text-red-700 font-medium">
-                                                      Remove
-                                                    </button>
+                                                    <Button 
+                                                      onClick={() => handleRemoveInitiate(student)}
+                                                      variant="outline" size="icon"
+                                                      className="text-red-500 hover:text-red-700 font-medium">
+                                                      <BadgeX />
+                                                    </Button>
                                                 </td>
                                                 </tr>
                                             ))}
@@ -386,11 +374,11 @@ const ViewStudents = () => {
                                                   <td className="px-4 py-3">{GetFullName(student)}</td>
                                                   <td className="px-4 py-3">{student.course}</td>     
                                                   <td className="px-4 py-3">
-                                                      <button 
+                                                      <Button 
                                                         onClick={() => handleAddStudent(student)}
-                                                        className="text-green-500 hover:text-green-700 font-medium">
-                                                        Add
-                                                      </button>
+                                                        variant="outline" size="icon">
+                                                          <BadgePlus />                                                        
+                                                      </Button>
                                                   </td>
                                                 </tr>
                                             ))}

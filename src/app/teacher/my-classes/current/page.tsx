@@ -20,6 +20,7 @@ export default function Page() {
   const [classSubjects, setClassSubjects] = useState<ClassSubjectModel[]>([]);
   const [teacherUserId, setTeacherUserId] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(true);  
+  
   useEffect(() => {
     const checkSession = async () => {
       try {
@@ -65,18 +66,23 @@ export default function Page() {
         toast.error("Failed to fetch class subjects!", {
           description: error instanceof Error ? error.message : JSON.stringify(error),
         });
-      } finally {
-        setIsLoading(false);
-      }
+      }     
     };
 
     fetchClassSubjects();
     // Set interval to run fetchClassSubjects every 5 seconds
-    const intervalId = setInterval(fetchClassSubjects, 5000); // 5 seconds
-
+    const intervalId = setInterval(fetchClassSubjects, 5000); // 5 seconds    
+    
     // Cleanup function to clear interval when component unmounts
     return () => clearInterval(intervalId);
   }, [teacherUserId]);
+
+  // ✅ Separate effect to set isLoading after classSubjects updates
+  useEffect(() => {
+    if (classSubjects.length > 0 || teacherUserId !== 0) {
+      setIsLoading(false);
+    }
+  }, [classSubjects, teacherUserId]);
 
   return (
     <>

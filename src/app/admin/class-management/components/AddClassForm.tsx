@@ -102,6 +102,7 @@ export default function AddClassForm() {
 
   // Final confirmation to create class
   const handleConfirmCreateClass = async () => {
+    console.log(classSubject.time_schedule);
     try {      
       const response = await createClassSubject(classSubject);
       if (!response.success) {     
@@ -172,7 +173,7 @@ export default function AddClassForm() {
       if (!prev.time_schedule && type === "end") {
         toast.error("Invalid input.", {
           description: "Please select start time first!",
-        });          
+        });
         return prev;
       }
   
@@ -183,28 +184,34 @@ export default function AddClassForm() {
         setEndTime(value);
       }
   
-      // Construct new schedule correctly
-      const [start, end] = prev.time_schedule.split(" - ");
+      // Extract start and end times safely
+      let [start, end] = prev.time_schedule ? prev.time_schedule.split(" - ") : ["", ""];
+  
+      // Ensure there's no undefined value in the schedule
+      start = start?.trim() || "";
+      end = end?.trim() || "";
+  
+      // Construct the updated schedule
       const newSchedule =
         type === "start"
-          ? `${formattedTime} - ${end || ""}`
-          : `${start || ""} - ${formattedTime}`;
+          ? `${formattedTime} ${end ? `- ${end}` : ""}`.trim()
+          : `${start ? `${start} -` : ""} ${formattedTime}`.trim();
   
-      // Validate start and end time
-      const startMinutes = convertTo24Hour(start?.trim() || "");
-      const endMinutes = convertTo24Hour(formattedTime.trim());
+      // Convert times to minutes for validation
+      const startMinutes = convertTo24Hour(start);
+      const endMinutes = convertTo24Hour(formattedTime);
   
       if (startMinutes !== null && endMinutes !== null && startMinutes >= endMinutes) {
         toast.error("Invalid start time.", {
           description: "Start time must be earlier than end time.",
-        });                  
+        });
         return prev;
-      }      
-      return { ...prev, time_schedule: newSchedule.trim() };
+      }
+  
+      return { ...prev, time_schedule: newSchedule };
     });
   };
   
-
   return (
     <div>
     <form className="space-y-6" onSubmit={handleSubmit}>

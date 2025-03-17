@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MoreHorizontal } from "lucide-react";
+import { MoreHorizontal, UserRoundCheckIcon, UserRoundMinusIcon } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -33,74 +33,96 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { getUsersByRole } from "@/services/userAppService";
+import { getUsersByRole, updateUserStatusByUserId } from "@/services/userAppService";
 import Loading from "@/components/loading";
 import { format } from "date-fns";
 import { UserModel } from "@/models/userModel";
+import { AccountStatus } from "@/types/accountStatus";
+import { toast, Toaster } from "sonner";
 
 export function TeacherTable() {
-    const [status, setStatus] = useState("all");
-    const [teachers, setTeachers] = useState<UserModel[]>([]);
-    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-    const [teacherToDelete, setTeacherToDelete] = useState<number | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+  const [status, setStatus] = useState("all");
+  const [teachers, setTeachers] = useState<UserModel[]>([]);  
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [disableDialogOpen, setDisableDialogOpen] = useState(false);
+  const [activateDialogOpen, setActivateDialogOpen] = useState(false);
+  const [teacherToDisable, setTeacherToDisable] = useState<number | null>(null);
+  const [teacherToActivate, setTeacherToActivate]= useState<number | null>(null);
 
+  const fetchTeachers = async () => {
+    try {
+      const response = await getUsersByRole("teacher");
+      if (!response.success) {
+        throw new Error(response.message);
+      }      
+      setTeachers(response.data);        
+    } catch (error) {
+      setError(`Failed to fetch teachers: ${error}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {      
+      fetchTeachers();
+    }, []);
+
+  const filteredTeachers = status === "all"
+    ? teachers
+    : teachers.filter(teacher => teacher.account_status.toLowerCase() === status.toLowerCase());
+      
+  const handleActivate = (studentId: number) => {
+    setTeacherToActivate(studentId);    
+    setActivateDialogOpen(true);
+  };
   
-    useEffect(() => {
-        const fetchTeachers = async () => {
-          try {
-            const response = await getUsersByRole("teacher");
-            if (!response.success) {
-              throw new Error(response.message);
-            }      
-            setTeachers(response.data);        
-          } catch (error) {
-            setError(`Failed to fetch students: ${error}`);
-          } finally {
-            setLoading(false);
-          }
-        };
-    
-        fetchTeachers();
-      }, []);
+  const handleDisable = (studentId: number) => {
+    setTeacherToDisable(studentId);
+    setDisableDialogOpen(true);
+  };
 
-      const filteredTeachers = status === "all"
-        ? teachers
-        : teachers.filter(teacher => teacher.account_status.toLowerCase() === status.toLowerCase());
-          
+  const ActivateTeacher = async () => {
+    if (!teacherToActivate) return;
+    try {
+      const response = await updateUserStatusByUserId(teacherToActivate, AccountStatus.ACTIVATED);
+      if(!response.success) {
+        throw new Error(response.message)
+      }
+      await fetchTeachers();
+      toast.error("Activating Teacher With UserId: " + teacherToActivate, {
+        description: "Successfully activated.",
+      });
+    }
+    catch (error) {
+      setError(`Failed to activate teacher: ${error}`);
+    }
+    finally {
+      setActivateDialogOpen(false);
+    }
+  }  
+  const DisableTeacher = async () => {
+    if (!teacherToDisable) return;
+    try {
+      const response = await updateUserStatusByUserId(teacherToDisable, AccountStatus.DISABLED);
+      if(!response.success) {
+        throw new Error(response.message)
+      }
+      await fetchTeachers();
+      toast.error("Disabling Teacher With UserId: " + teacherToDisable, {
+        description: "Successfully disabled.",
+      });
+    }
+    catch (error) {
+      setError(`Failed to disable teacher: ${error}`);
+    }
+    finally {
+      setDisableDialogOpen(false);
+    }
+  }  
     
-      const handleActivate = (studentId: number) => {
-        setTeachers(teachers.map(teacher => 
-          teacher.user_id === studentId 
-            ? { ...teacher, status: "activated" }
-            : teacher
-        ));
-      };
-    
-      const handleDisable = (studentId: number) => {
-        setTeachers(teachers.map(teacher => 
-          teacher.user_id === studentId 
-            ? { ...teacher, status: "disabled" }
-            : teacher
-        ));
-      };
-    
-      const handleDeleteClick = (studentId: number) => {
-        setTeacherToDelete(studentId);
-        setDeleteDialogOpen(true);
-      };
-    
-      const handleDelete = () => {
-        if (teacherToDelete) {
-          setTeachers(teachers.filter(teacher => teacher.user_id !== teacherToDelete));
-          setDeleteDialogOpen(false);
-          setTeacherToDelete(null);
-        }
-      };
-    
-      if (loading) return <Loading />;
-      if (error) return <p className="text-red-500">{error}</p>;
+  if (loading) return <Loading />;
+  if (error) return <p className="text-red-500">{error}</p>;
     
 
   return (
@@ -161,23 +183,17 @@ export function TeacherTable() {
                         <MoreHorizontal className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
+                    <DropdownMenuContent align="start">
                       {teacher.account_status !== "activated" && (
                         <DropdownMenuItem onClick={() => handleActivate(teacher.user_id)}>
-                          Activate
+                          <UserRoundCheckIcon/> Activate
                         </DropdownMenuItem>
                       )}
                       {teacher.account_status !== "disabled" && (
                         <DropdownMenuItem onClick={() => handleDisable(teacher.user_id)}>
-                          Disable
+                          <UserRoundMinusIcon/> Disable
                         </DropdownMenuItem>
-                      )}
-                      <DropdownMenuItem 
-                        onClick={() => handleDeleteClick(teacher.user_id)}
-                        className="text-destructive"
-                      >
-                        Delete
-                      </DropdownMenuItem>
+                      )}                      
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>
@@ -186,31 +202,51 @@ export function TeacherTable() {
           )}
         </TableBody>
       </Table>
-
-      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+      <Dialog open={disableDialogOpen} onOpenChange={setDisableDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Confirm Deletion</DialogTitle>
+            <DialogTitle>Confirm Disable</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this teacher? This action cannot be undone.
+              Are you sure you want to disable this student?
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setDeleteDialogOpen(false)}
-            >
+              onClick={() => setDisableDialogOpen(false)}>
               Cancel
             </Button>
             <Button
-              variant="destructive"
-              onClick={handleDelete}
-            >
-              Delete
+              variant="default"
+              onClick={DisableTeacher}>
+              Disable
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <Dialog open={activateDialogOpen} onOpenChange={setActivateDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Activation</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to Activate this student?.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setActivateDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="default"
+              onClick={ActivateTeacher}>
+              Activate
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Toaster />
     </div>
   );
 }

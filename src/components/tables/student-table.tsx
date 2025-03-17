@@ -6,61 +6,53 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
+  TableRow
 } from "@/components/ui/table";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from "@/components/ui/select";
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { MoreHorizontal } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { getUsersByRole } from "@/services/userAppService";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { MoreHorizontal, UserRoundCheckIcon, UserRoundMinusIcon } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { getUsersByRole, updateUserStatusByUserId } from "@/services/userAppService";
 import Loading from "@/components/loading";
 import { format } from "date-fns";
 import { UserModel } from "@/models/userModel";
+import { AccountStatus } from "@/types/accountStatus";
+import { toast, Toaster } from "sonner";
 
 export function StudentTable() {
   const [status, setStatus] = useState("all");
-  const [students, setStudents] = useState<UserModel[]>([]);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [studentToDelete, setStudentToDelete] = useState<number | null>(null);
+  const [students, setStudents] = useState<UserModel[]>([]);  
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [disableDialogOpen, setDisableDialogOpen] = useState(false);
+  const [activateDialogOpen, setActivateDialogOpen] = useState(false);
+  const [studentToDisable, setStudentToDisable] = useState<number | null>(null);
+  const [studentToActivate, setStudentToActivate]= useState<number | null>(null);
 
-  useEffect(() => {
-    const fetchStudents = async () => {
-      try {
-        const response = await getUsersByRole("student");
-        if (!response.success) {
-          throw new Error(response.message);
-        }                
-        setStudents(response.data);        
-      } catch (error) {        
-        setError(`Failed to fetch students: ${error}`);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchStudents = async () => {
+    try {
+      const response = await getUsersByRole("student");
+      if (!response.success) {
+        throw new Error(response.message);
+      }                
+      setStudents(response.data);        
+    } catch (error) {        
+      setError(`Failed to fetch students: ${error}`);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {    
     fetchStudents();
   }, []);
 
@@ -69,37 +61,57 @@ export function StudentTable() {
     : students.filter(student => student.account_status.toLowerCase() === status.toLowerCase());
 
   const handleActivate = (studentId: number) => {
-    setStudents(students.map(student => 
-      student.user_id === studentId 
-        ? { ...student, status: "activated" }
-        : student
-    ));
+    setStudentToActivate(studentId);    
+    setActivateDialogOpen(true);
   };
-
+  
   const handleDisable = (studentId: number) => {
-    setStudents(students.map(student => 
-      student.user_id === studentId 
-        ? { ...student, status: "disabled" }
-        : student
-    ));
+    setStudentToDisable(studentId);
+    setDisableDialogOpen(true);
   };
 
-  const handleDeleteClick = (studentId: number) => {
-    setStudentToDelete(studentId);
-    setDeleteDialogOpen(true);
-  };
-
-  const handleDelete = () => {
-    if (studentToDelete) {
-      setStudents(students.filter(student => student.user_id !== studentToDelete));
-      setDeleteDialogOpen(false);
-      setStudentToDelete(null);
+  const ActivateStudent = async () => {
+    if (!studentToActivate) return;
+    try {
+      const response = await updateUserStatusByUserId(studentToActivate, AccountStatus.ACTIVATED);
+      if(!response.success) {
+        throw new Error(response.message)
+      }
+      await fetchStudents();
+      toast.error("Activating Student With UserId:" + studentToActivate, {
+        description: "Successfully activated.",
+      });
     }
-  };
+    catch (error) {
+      setError(`Failed to activate student: ${error}`);
+    }
+    finally {
+      setActivateDialogOpen(false);
+    }
+  }
+
+  const DisableStudent = async () => {
+    if (!studentToDisable) return;
+    try {
+      const response = await updateUserStatusByUserId(studentToDisable, AccountStatus.DISABLED);
+      if(!response.success) {
+        throw new Error(response.message)
+      }
+      await fetchStudents();
+      toast.error("Disabling Student With UserId:" + studentToActivate, {
+        description: "Successfully disabled.",
+      });
+    }
+    catch (error) {
+      setError(`Failed to disable student: ${error}`);
+    }
+    finally {
+      setDisableDialogOpen(false);
+    }
+  }
 
   if (loading) return <Loading />;
   if (error) return <p className="text-red-500">{error}</p>;
-
 
   return (
     <div>
@@ -159,23 +171,17 @@ export function StudentTable() {
                         <MoreHorizontal className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
+                    <DropdownMenuContent align="start">
                       {student.account_status !== "activated" && (
                         <DropdownMenuItem onClick={() => handleActivate(student.user_id)}>
-                          Activate
+                          <UserRoundCheckIcon/> Activate
                         </DropdownMenuItem>
                       )}
                       {student.account_status !== "disabled" && (
                         <DropdownMenuItem onClick={() => handleDisable(student.user_id)}>
-                          Disable
+                          <UserRoundMinusIcon/> Disable
                         </DropdownMenuItem>
-                      )}
-                      <DropdownMenuItem 
-                        onClick={() => handleDeleteClick(student.user_id)}
-                        className="text-destructive"
-                      >
-                        Delete
-                      </DropdownMenuItem>
+                      )}                      
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>
@@ -185,30 +191,51 @@ export function StudentTable() {
         </TableBody>
       </Table>
 
-      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+      <Dialog open={disableDialogOpen} onOpenChange={setDisableDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Confirm Deletion</DialogTitle>
+            <DialogTitle>Confirm Disable</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this student? This action cannot be undone.
+              Are you sure you want to disable this student?
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setDeleteDialogOpen(false)}
-            >
+              onClick={() => setDisableDialogOpen(false)}>
               Cancel
             </Button>
             <Button
-              variant="destructive"
-              onClick={handleDelete}
-            >
-              Delete
+              variant="default"
+              onClick={DisableStudent}>
+              Disable
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <Dialog open={activateDialogOpen} onOpenChange={setActivateDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Activation</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to Activate this student?.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setActivateDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="default"
+              onClick={ActivateStudent}>
+              Activate
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Toaster />
     </div>
   );
 }
