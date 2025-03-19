@@ -31,40 +31,40 @@ export async function GET(req: NextRequest, { params }: { params: { subject_id: 
         fearful: number;
         na: number;
     }>>`
-      WITH AggregatedExpressions AS (
-          SELECT  
-              DATE_FORMAT(DATE_ADD(datetime_stamp, INTERVAL 8 HOUR), '%Y-%m-%d') AS date_group, 
+    WITH AggregatedData AS (
+          SELECT 
+			        DATE_FORMAT(DATE_ADD(datetime_stamp, INTERVAL 8 HOUR), '%Y-%m-%d') AS date_group, 
               class_subject_id,
               class_schedule_id,
-              ROUND(AVG(surprised), 2) AS avg_surprised,
-              ROUND(AVG(happy), 2) AS avg_happy,
-              ROUND(AVG(neutral), 2) AS avg_neutral,
-              ROUND(AVG(sad), 2) AS avg_sad,
-              ROUND(AVG(angry), 2) AS avg_angry,
-              ROUND(AVG(disgusted), 2) AS avg_disgusted,
-              ROUND(AVG(fearful), 2) AS avg_fearful
-          FROM dberal.ClassStudentsFER    
+              COUNT(CASE WHEN dominant_fer = 'surprised' THEN 1 END) AS surprised_count,
+              COUNT(CASE WHEN dominant_fer = 'happy' THEN 1 END) AS happy_count,
+              COUNT(CASE WHEN dominant_fer = 'neutral' THEN 1 END) AS neutral_count,
+              COUNT(CASE WHEN dominant_fer = 'sad' THEN 1 END) AS sad_count,
+              COUNT(CASE WHEN dominant_fer = 'angry' THEN 1 END) AS angry_count,
+              COUNT(CASE WHEN dominant_fer = 'disgusted' THEN 1 END) AS disgusted_count,
+              COUNT(CASE WHEN dominant_fer = 'fearful' THEN 1 END) AS fearful_count,  
+              COUNT(CASE WHEN dominant_fer = 'na' THEN 1 END) AS na_count,  
+              COUNT(*) AS total_count -- Total number of records per minute
+          FROM ClassStudentsFER
           WHERE class_subject_id = ${classSubjectId}
-            AND class_schedule_id = ${classScheduleId}      
+            AND class_schedule_id = ${classScheduleId}          
           GROUP BY date_group, class_subject_id, class_schedule_id
       )
       SELECT 
-          date_group,
+		  date_group,
           class_subject_id,
-          class_schedule_id,
-          avg_surprised as surprised,
-          avg_happy as happy,
-          avg_neutral as neutral,
-          avg_sad as sad,
-          avg_angry as angry,
-          avg_disgusted as disgusted,
-          avg_fearful as fearful,
-          CASE 
-              WHEN ROUND(avg_surprised + avg_happy + avg_neutral + avg_sad + 
-                    avg_angry + avg_disgusted + avg_fearful, 2) = 0 THEN 1 
-              ELSE 0
-          END AS na
-      FROM AggregatedExpressions                  
+          class_schedule_id,          
+          ROUND((surprised_count / total_count) * 100, 2) AS surprised,
+          ROUND((happy_count / total_count) * 100, 2) AS happy,
+          ROUND((neutral_count / total_count) * 100, 2) AS neutral,
+          ROUND((sad_count / total_count) * 100, 2) AS sad,
+          ROUND((angry_count / total_count) * 100, 2) AS angry,
+          ROUND((disgusted_count / total_count) * 100, 2) AS disgusted,
+          ROUND((fearful_count / total_count) * 100, 2) AS fearful,
+          ROUND((na_count / total_count) * 100, 2) AS na
+      FROM AggregatedData
+      WHERE total_count > 0
+      ORDER BY class_subject_id, class_schedule_id                  
       `;    
     const fixedResult = result.map(row => ({
         ...row,
