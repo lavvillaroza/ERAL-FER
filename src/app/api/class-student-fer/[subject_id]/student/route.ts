@@ -15,27 +15,39 @@ export async function GET(req: NextRequest, { params }: { params: { subject_id: 
     }      
 
     const result = await prisma.$queryRaw`
-        WITH AvgValues AS (
-            SELECT  
-                A.class_subject_id,                
-                A.student_user_id,
-                CONCAT_WS(' ', B.first_name, B.middle_name, B.last_name) AS full_name,
-                B.course,
-                ROUND(AVG(A.highest_avg_value),2) AS avg_highest_value,
-                A.dominant_expression
-            FROM dberal.view_classStudentFERAggsWithStudentUserId A
-            LEFT JOIN UserDetails B ON B.user_id = A.student_user_id
-            WHERE A.class_subject_id = ${classSubjectId}                                
-            GROUP BY 
-                A.class_subject_id,                
-                A.student_user_id,
-                full_name,
-                B.course,
-                A.dominant_expression
-        )
-        SELECT * 
-        FROM AvgValues
-        WHERE avg_highest_value = (SELECT MAX(avg_highest_value) FROM AvgValues)
+        WITH AggregatedData AS (
+          SELECT 
+              class_subject_id,
+              class_schedule_id,
+              student_user_id,
+              DATE_FORMAT(datetime_stamp, '%Y-%m-%d %H:%i') AS time_per_minute,
+              COUNT(CASE WHEN dominant_fer = 'surprised' THEN 1 END) AS surprised_count,
+              COUNT(CASE WHEN dominant_fer = 'happy' THEN 1 END) AS happy_count,
+              COUNT(CASE WHEN dominant_fer = 'neutral' THEN 1 END) AS neutral_count,
+              COUNT(CASE WHEN dominant_fer = 'sad' THEN 1 END) AS sad_count,
+              COUNT(CASE WHEN dominant_fer = 'angry' THEN 1 END) AS angry_count,
+              COUNT(CASE WHEN dominant_fer = 'disgusted' THEN 1 END) AS disgusted_count,
+              COUNT(CASE WHEN dominant_fer = 'fearful' THEN 1 END) AS fearful_count,              
+              COUNT(*) AS total_count -- Total number of records per minute
+          FROM ClassStudentsFER
+          WHERE class_subject_id = ${classSubjectId}
+          GROUP BY class_subject_id, class_schedule_id, student_user_id, time_per_minute
+      )
+      SELECT 
+          class_subject_id,
+          class_schedule_id,
+          student_user_id,
+          time_per_minute,
+          ROUND((surprised_count / total_count) * 100, 2) AS surprised,
+          ROUND((happy_count / total_count) * 100, 2) AS happy,
+          ROUND((neutral_count / total_count) * 100, 2) AS neutral,
+          ROUND((sad_count / total_count) * 100, 2) AS sad,
+          ROUND((angry_count / total_count) * 100, 2) AS angry,
+          ROUND((disgusted_count / total_count) * 100, 2) AS disgusted,
+          ROUND((fearful_count / total_count) * 100, 2) AS fearful       
+      FROM AggregatedData
+      WHERE total_count > 0
+      ORDER BY class_subject_id, class_schedule_id, student_user_id, time_per_minute;
     `;
 
     return NextResponse.json({

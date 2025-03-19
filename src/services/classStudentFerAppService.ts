@@ -82,6 +82,7 @@ export const getFERTimelineDataBySubjectSchedIds = async (subject_id: number, sc
         if (result.success === false) {
             throw new Error(result.message);
         }
+        console.log(result.data);
         return result;
     }
     catch (error) {

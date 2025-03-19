@@ -5,6 +5,5 @@ export interface UserDetailsModel {
     last_name: string;
     course: string | null;
     online_status: string;
-    profile_image: Buffer | null;
-    thresh_hold: number | 0;
+    profile_image: Buffer | null;    
 }

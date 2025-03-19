@@ -224,8 +224,8 @@ const ScheduleSession = () => {
         }
         if (responseFERStudentData.success === false) {
           throw new Error(responseFERStudentData.message);
-        }
-        
+        }                
+                
         setClassStudentFERTimelineData(responseFERTimelineData.data);
         // ✅ Ensure responseFERChartData.data is not null or undefined
         const chartData = responseFERChartData.data || {};
@@ -238,8 +238,7 @@ const ScheduleSession = () => {
           disgusted: chartData.disgusted || 0,
           fearful: chartData.fearful || 0,
           na: chartData.na || 0,
-        });
-        console.log(responseFERStudentData.data);
+        });        
         setclassStudentFERStudentData(responseFERStudentData.data);              
       } catch (error) {
         console.error("Error fetching student FER data:", error);
@@ -257,33 +256,32 @@ const ScheduleSession = () => {
     return () => clearInterval(interval);
   }, [serverTime, params.subject_id, params.schedule_id]);
 
-  useEffect(() => {
-    if (classSchedule.status === ClassScheduleStatus.OPENED) {
-      const interval = setInterval(() => {
-        const negativeThresholdTrigger = classStudentFERChartData.angry + classStudentFERChartData.disgusted + 
-                                        classStudentFERChartData.fearful + classStudentFERChartData.sad +
-                                        classStudentFERChartData.na;
+  // useEffect(() => {
+  //   if (classSchedule.status === ClassScheduleStatus.OPENED) {
+  //     const interval = setInterval(() => {
+  //       const negativeThresholdTrigger = classStudentFERChartData.angry + classStudentFERChartData.disgusted + 
+  //                                       classStudentFERChartData.fearful + classStudentFERChartData.sad +
+  //                                       classStudentFERChartData.na;
 
-        console.log("ThreshHold:",negativeThresholdTrigger);
+  //       console.log("ThreshHold:",negativeThresholdTrigger);
 
-        if (negativeThresholdTrigger >= Number(teacherUserDetails.thresh_hold)) {
-          setShowNotification(true);
-          setNotificationMessage(
-            `Negative Expression: ${Number(negativeThresholdTrigger).toFixed(2)}%              
-            threshold exceeded!`
-          );          
-        }
-        // Auto-dismiss notification after 3 seconds
-        // setTimeout(() => {
-        //   setShowNotification(false);
-        // }, 3000);
-      }, 3000);      
-      return () => clearInterval(interval);
-    }
-  }, [classSchedule.status, classStudentFERChartData.angry, 
-    classStudentFERChartData.disgusted, classStudentFERChartData.fearful, 
-    classStudentFERChartData.na, classStudentFERChartData.sad, 
-    teacherUserDetails.thresh_hold]);
+  //       // if (negativeThresholdTrigger >= Number(teacherUserDetails.thresh_hold)) {
+  //       //   setShowNotification(true);
+  //       //   setNotificationMessage(
+  //       //     `Negative Expression: ${Number(negativeThresholdTrigger).toFixed(2)}%              
+  //       //     threshold exceeded!`
+  //       //   );          
+  //       // }
+  //       // Auto-dismiss notification after 3 seconds
+  //       // setTimeout(() => {
+  //       //   setShowNotification(false);
+  //       // }, 3000);
+  //     }, 3000);      
+  //     return () => clearInterval(interval);
+  //   }
+  // }, [classSchedule.status, classStudentFERChartData.angry, 
+  //   classStudentFERChartData.disgusted, classStudentFERChartData.fearful, 
+  //   classStudentFERChartData.na, classStudentFERChartData.sad]);
 
   const handleEndSession = async () => { 
     if (isEndSessionLoading) return; // Prevent duplicate requests

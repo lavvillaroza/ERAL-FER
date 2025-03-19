@@ -11,6 +11,8 @@ export const classStudentFERDto = z.object({
   angry: z.number().min(0, { message: "angry cannot be negative" }),
   disgusted: z.number().min(0, { message: "disgusted cannot be negative" }),
   fearful: z.number().min(0, { message: "fearful cannot be negative" }),  
+  highest_value: z.number().min(0, { message: "highest_value cannot be negative" }),  
+  dominant_fer: z.string().min(2,"no dominant fer provided"),
   datetime_stamp: z.union([
     z.date(),
     z.string().transform((str) => new Date(str)) // Convert string to Date

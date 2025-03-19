@@ -64,9 +64,6 @@ export async function POST(req: NextRequest, { params }: { params: { id: string,
 
     const body = await req.json();
     const validatedData = classStudentFERDto.parse(body);
-
-    console.log(validatedData);
-
     const studentsFer = await prisma.classStudentsFER.create({
         data: {          
             class_subject_id: classSubjectId,
@@ -78,10 +75,14 @@ export async function POST(req: NextRequest, { params }: { params: { id: string,
             sad: validatedData.sad,
             angry: validatedData.angry,
             disgusted: validatedData.disgusted,
-            fearful: validatedData.fearful,            
-            datetime_stamp: validatedData.datetime_stamp            
+            fearful: validatedData.fearful, 
+            highest_value: validatedData.highest_value,
+            dominant_fer: validatedData.dominant_fer, 
+            datetime_stamp: validatedData.datetime_stamp,
         }
     });
+
+    console.log("studentsFer:", studentsFer);
 
     return NextResponse.json({
       success: true,

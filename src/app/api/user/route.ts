@@ -20,8 +20,7 @@ export async function GET() {
             last_name: true,
             course: true,
             online_status: true,
-            profile_image: true,
-            thresh_hold: true,
+            profile_image: true,            
           }
         }
       }

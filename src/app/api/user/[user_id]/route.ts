@@ -22,6 +22,7 @@ export async function GET(req: NextRequest, { params }: { params: { user_id: str
     if (!user) {
       throw new Error("User not found!")
     }
+    console.log(user)
 
     // Convert Uint8Array to Base64 string
     let profileImageBase64 = null;
@@ -29,6 +30,7 @@ export async function GET(req: NextRequest, { params }: { params: { user_id: str
         profileImageBase64 = `data:image/png;base64,${Buffer.from(user.userDetails.profile_image).toString("base64")}`;
         
     }
+    console.log(user.userDetails?.profile_image)
 
     return NextResponse.json({
       success: true,
@@ -81,8 +83,7 @@ export async function PUT(req: NextRequest, { params }: { params: { user_id: str
             last_name: userDetails.last_name,
             course: userDetails.course,
             online_status: userDetails.online_status,
-            profile_image: profileImageBytes,
-            thresh_hold: userDetails.thresh_hold,
+            profile_image: profileImageBytes,            
             updated_date: new Date(),
           }}
         : undefined,

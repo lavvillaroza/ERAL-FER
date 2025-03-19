@@ -1,4 +1,5 @@
 import { UserModel } from "@/models/userModel";
+import { UserTeacherThresholdModel } from "@/models/userTeacherThresholdModel";
 
 // ✅ Fetch User and User Details
 export const getUserRole = async () => {
@@ -171,4 +172,43 @@ export const updateUserPasswordByUserId = async (user_id: number, cur_password: 
 
 }
 
+export const getUserThresholdByUserId = async (user_id: number) => {        
+    try {
+        const response = await fetch(`/api/user/${user_id}/threshold`, {
+            method: 'GET',
+            credentials: 'include', // ✅ Ensure cookies are sent if needed
+            headers: {
+                'Content-Type': 'application/json'
+            }        
+        });   
+        const result = await response.json();
+        if (result.success === false) {
+            throw new Error(result.message);
+        }
+        return result;
+    }
+    catch (error) {
+        throw new Error("UserAppService @ getUserThresholdByUserId API:" + error);
+    }  
+};
 
+export const updateUserThresholdByUserId = async (user_id: number, user_teacher_thresholds: UserTeacherThresholdModel) => {        
+    try {
+        const response = await fetch(`/api/user/${user_id}/threshold`, {
+            method: 'PUT',
+            credentials: 'include', // ✅ Ensure cookies are sent if needed
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(user_teacher_thresholds),        
+        });   
+        const result = await response.json();
+        if (result.success === false) {
+            throw new Error(result.message);
+        }
+        return result;
+    }
+    catch (error) {
+        throw new Error("UserAppService @ getUserThresholdByUserId API:" + error);
+    }  
+};

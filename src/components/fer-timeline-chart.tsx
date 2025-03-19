@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/chart"
 import { useState, useEffect } from "react";
 import { ClassStduentFERAggTimelineModel } from "@/models/classStudentFERAggTimelineModel"
+import { classStudentFERAggTimelineSummaryModel } from "@/models/classStudentFERAggTimelineSummaryModel"
 
 // Emotion categories in specific order
 const emotions = [
@@ -87,6 +88,29 @@ interface FERTimeLineChartProps {
 
 export function FERTimeLineChart({ data }: FERTimeLineChartProps) {
 
+  const transformData = (data: ClassStduentFERAggTimelineModel[]): classStudentFERAggTimelineSummaryModel[] => {
+    return data.map(({ time_per_minute, ...emotions }) => {
+        // Convert `time_per_minute` from string to Date
+        const minute_group = new Date(time_per_minute);
+
+        // Extract emotion values (excluding class_subject_id & class_schedule_id)
+        const emotionEntries = Object.entries(emotions).filter(
+            ([key]) => key !== 'class_subject_id' && key !== 'class_schedule_id'
+        );
+
+        // Find the dominant expression with the highest average value
+        const [dominant_expression, highest_avg_value] = emotionEntries.reduce(
+            (max, [emotion, value]) => (value as number > max[1] ? [emotion, value as number] : max),
+            ["neutral", 0] // Default to neutral if all values are 0
+        );
+
+        return {
+            minute_group,
+            highest_avg_value,
+            dominant_expression
+        };
+    });
+};
 const [chartData, setChartData] = useState<{
     time: string;
     emotion: string;
@@ -97,7 +121,9 @@ const [chartData, setChartData] = useState<{
     useEffect(() => {
       const processChartData = () => {
         const groupedData: { [key: string]: { emotion: string; percentage: number } } = {};              
-        data.forEach((item) => {          
+        const transformDataResult = transformData(data);
+
+        transformDataResult.forEach((item) => {          
           const formattedTime = new Date(item.minute_group).toLocaleTimeString([], {
             hour: "2-digit",
             minute: "2-digit",

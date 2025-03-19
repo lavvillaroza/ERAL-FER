@@ -44,8 +44,7 @@ export async function POST(req: NextRequest) {
                             last_name: validatedData.last_name,
                             course: validatedData.course,
                             online_status: validatedData.online_status ?? OnlineStatus.OFFLINE,
-                            profile_image: profileImageBuffer, // ✅ Buffer for Blob storage
-                            thresh_hold: validatedData.thresh_hold
+                            profile_image: profileImageBuffer, // ✅ Buffer for Blob storage                            
                         },
                     },
                 },

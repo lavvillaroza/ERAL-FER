@@ -53,7 +53,7 @@ export function AppSidebarTeacher({ userId, ...props }: AppSidebarTeacherProps) 
         if (!response.success) {
           throw new Error(response.message);
         }
-                
+        console.log(response.data);
         setUser(response.data);          
       } catch (error) {
         console.log("Error fetching User:", error);       

@@ -20,11 +20,12 @@ import { formatDate } from "@/lib/formatTime";
 import { ClassCourseContentModel } from "@/models/classCourseContentModel";
 import { getServerTime } from "@/services/timeAppService";
 import { ClassStudentFERModel } from "@/models/classStudentFERModel";
-import { addClassStudentFERData } from "@/services/classStudentFerAppService";
+//import { addClassStudentFERData } from "@/services/classStudentFerAppService";
 import { getDecodedAuthToken, refreshAuthToken } from "@/services/authAppService";
 import { roundToTwoDecimals } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import FacialExpressionRecognition from "@/components/face-expression-recognition";
+import { addClassStudentFERData } from "@/services/classStudentFerAppService";
 
 const ScheduleSession = () => {
   const router = useRouter();
@@ -56,8 +57,9 @@ const ScheduleSession = () => {
         sad: 0,
         angry: 0,
         disgusted: 0,
-        fearful: 0,        
-        na: 0,
+        fearful: 0,      
+        highest_value: 0,
+        dominant_fer: "",         
         datetime_stamp: new Date(),
   });
 
@@ -150,7 +152,7 @@ const ScheduleSession = () => {
       // eslint-disable-next-line prefer-const
       tickInterval = setInterval(() => {
         setServerTime((prevTime) => (prevTime ? new Date(prevTime.getTime() + 1000) : new Date()));
-      }, 1000);
+      }, 3000);
     
       return () => {
         clearInterval(syncInterval);
@@ -158,36 +160,64 @@ const ScheduleSession = () => {
       };
     }, []);
   
-  const handleExpressionsDetected = async (expressions: { [key: string]: number } | null) => {                                 
-    // Create ClassStudentFERModel
+  const handleExpressionsDetected = async (expressions: { [key: string]: number } | null) => {         
+    // Create ClassStudentFERModel    
+    const expressionsData = {
+      surprised: expressions?.surprised ?? 0,
+      happy: expressions?.happy ?? 0,
+      neutral: expressions?.neutral ?? 0,
+      sad: expressions?.sad ?? 0,
+      angry: expressions?.angry ?? 0,
+      disgusted: expressions?.disgusted ?? 0,
+      fearful: expressions?.fearful ?? 0,
+    };
+    
+    // Check if all expressions are 0
+    const allZero = Object.values(expressionsData).every(value => value === 0);
+    
+    // If all expressions are 0, set `na` to 100 and dominant_fer to "na"
+    let dominantFER = "na";
+    let highestValue = 100;
+    
+    if (!allZero) {
+      // Find the highest expression value and its corresponding emotion
+      [dominantFER, highestValue] = Object.entries(expressionsData).reduce(
+        (acc, [key, value]) => (value > acc[1] ? [key, value] : acc),
+        ["na", 0]
+      );
+    }
+    
     const classStudentFERData: ClassStudentFERModel = {
       id: 0, // Assuming id is auto-generated
       classsched_id: classSchedule.id,
       student_user_id: studentUserId, // Assuming student_user_id is available
-      surprised: roundToTwoDecimals(expressions?.surprised ?? 0),
-      happy: roundToTwoDecimals(expressions?.happy ?? 0),
-      neutral: roundToTwoDecimals(expressions?.neutral ?? 0),
-      sad: roundToTwoDecimals(expressions?.sad ?? 0),
-      angry: roundToTwoDecimals(expressions?.angry ?? 0),
-      disgusted: roundToTwoDecimals(expressions?.disgusted ?? 0),
-      fearful: roundToTwoDecimals(expressions?.fearful ?? 0),      
-      na: roundToTwoDecimals(expressions?.na ?? 0),      
+      surprised: roundToTwoDecimals(expressionsData.surprised),
+      happy: roundToTwoDecimals(expressionsData.happy),
+      neutral: roundToTwoDecimals(expressionsData.neutral),
+      sad: roundToTwoDecimals(expressionsData.sad),
+      angry: roundToTwoDecimals(expressionsData.angry),
+      disgusted: roundToTwoDecimals(expressionsData.disgusted),
+      fearful: roundToTwoDecimals(expressionsData.fearful),      
+      highest_value: roundToTwoDecimals(highestValue),
+      dominant_fer: dominantFER,
       datetime_stamp: new Date(),
     };
-
-    // Update the state only if data is different
-    setClassStudentFer(prevData => 
-      JSON.stringify(prevData) !== JSON.stringify(classStudentFERData) ? classStudentFERData : prevData
-    );
-
-    //Uncomment if needed
-    const response = await addClassStudentFERData(classSubject.id, classSchedule.id, studentUserId, classStudentFERData);
-    if (!response.success) { 
-      console.error("Failed to save averageFER data:", response.message);
-      toast.error("Failed to save averageFER data!", {
-        description: response.message,
-      });        
-    }
+     
+    if (JSON.stringify(classStudentFer) !== JSON.stringify(classStudentFERData)) {         
+        // Update the state only if data is different
+        // setClassStudentFer(prevData => 
+        //   JSON.stringify(prevData) !== JSON.stringify(classStudentFERData) ? classStudentFERData : prevData
+        // );
+        setClassStudentFer(classStudentFERData);        
+        //Uncomment if needed
+        const response = await addClassStudentFERData(classSubject.id, classSchedule.id, studentUserId, classStudentFERData);
+        if (!response.success) { 
+          console.error("Failed to save averageFER data:", response.message);
+          toast.error("Failed to save averageFER data!", {
+            description: response.message,
+          });        
+        }
+    }        
   };
 
   return (
@@ -266,7 +296,7 @@ const ScheduleSession = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
                     <Card className="col-span-1 shadow-lg">
                       <CardContent className="flex items-center justify-center p-2 min-h-[300px] sm:min-h-[400px] md:min-h-[500px] lg:min-h-[570px]">
-                        <FacialExpressionRecognition onExpressionsDetected={handleExpressionsDetected} />                      
+                        <FacialExpressionRecognition onExpressionsDetected={handleExpressionsDetected} /> 
                       </CardContent>
                     </Card>              
                     <CourceContents items={classCourseContents} className="col-span-1" />

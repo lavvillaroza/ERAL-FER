@@ -12,12 +12,14 @@ import { useState } from "react";
 import { UserModel } from "@/models/userModel";
 import { GetFullName, GetIntialName } from "@/lib/fullName";
 import  ManageAccount from "@/components/manage-account";
+import ManageThreshold from "../manage-threshold";
 
 export function NavUser({ user }: { user: UserModel }) {  
   const { isMobile } = useSidebar()
   const router = useRouter();
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);    
   const [isManageAccountOpen, setIsManageAccountOpen] = useState(false);
+  const [isManageThresholdOpen, setIsManageThresholdOpen] = useState(false);
    // ✅ Handle logout
    const handleLogout = async () => {
     try {
@@ -79,6 +81,14 @@ export function NavUser({ user }: { user: UserModel }) {
                 Manage Account
               </DropdownMenuItem>
             </DropdownMenuGroup>
+            {user.role === "teacher" && (
+              <DropdownMenuGroup>
+              <DropdownMenuItem onClick={() => setIsManageThresholdOpen(true)}>
+                <BookUserIcon />
+                Manage Threshold
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+            )}
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => setIsCancelDialogOpen(true)}>
               <LogOut />
@@ -93,6 +103,13 @@ export function NavUser({ user }: { user: UserModel }) {
         onClose={() => setIsManageAccountOpen(false)}
         user={user}
       />
+      
+    <ManageThreshold
+        isOpen={isManageThresholdOpen}
+        onClose={() => setIsManageThresholdOpen(false)}
+        user={user}
+      />
+
     <Dialog open={isCancelDialogOpen} onOpenChange={setIsCancelDialogOpen}>          
       <DialogContent className="max-w-sm sm:max-w-md">
         <DialogHeader>

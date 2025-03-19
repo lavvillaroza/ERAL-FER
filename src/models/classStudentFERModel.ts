@@ -9,6 +9,7 @@ export interface ClassStudentFERModel {
     angry: number;
     disgusted: number;
     fearful: number;
-    na: number;
+    highest_value: number;
+    dominant_fer: string;
     datetime_stamp: Date;    
   }

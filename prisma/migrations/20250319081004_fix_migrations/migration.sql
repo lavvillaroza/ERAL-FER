@@ -21,10 +21,21 @@ CREATE TABLE `UserDetails` (
     `course` VARCHAR(191) NULL,
     `online_status` VARCHAR(191) NOT NULL,
     `profile_image` LONGBLOB NULL,
-    `thresh_hold` DECIMAL(65, 30) NOT NULL DEFAULT 0,
     `updated_date` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
     UNIQUE INDEX `UserDetails_user_id_key`(`user_id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `UserTeacherThreshold` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `user_id` INTEGER NOT NULL,
+    `expression_type` VARCHAR(191) NOT NULL,
+    `message` VARCHAR(191) NOT NULL,
+    `threshold` DECIMAL(10, 2) NOT NULL DEFAULT 0,
+    `updated_date` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
@@ -72,7 +83,6 @@ CREATE TABLE `ClassCourseContent` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `class_schedule_id` INTEGER NOT NULL,
     `time_start` VARCHAR(191) NOT NULL,
-    `time_end` VARCHAR(191) NOT NULL,
     `title` VARCHAR(191) NOT NULL,
     `description` VARCHAR(191) NOT NULL,
     `status` VARCHAR(191) NOT NULL,
@@ -81,33 +91,20 @@ CREATE TABLE `ClassCourseContent` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `ClassAttendance` (
+CREATE TABLE `ClassStudentsFER` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `class_subject_id` INTEGER NOT NULL,
     `class_schedule_id` INTEGER NOT NULL,
     `student_user_id` INTEGER NOT NULL,
-    `time_in` VARCHAR(191) NOT NULL,
-    `time_out` VARCHAR(191) NULL,
-    `status` VARCHAR(191) NOT NULL,
-
-    PRIMARY KEY (`id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- CreateTable
-CREATE TABLE `ClassStudentFER` (
-    `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `class_subject_id` INTEGER NOT NULL,
-    `class_schedule_id` INTEGER NOT NULL,
-    `student_id` INTEGER NOT NULL,
-    `surprised` DECIMAL(65, 30) NOT NULL,
-    `happy` DECIMAL(65, 30) NOT NULL,
-    `neutral` DECIMAL(65, 30) NOT NULL,
-    `sad` DECIMAL(65, 30) NOT NULL,
-    `angry` DECIMAL(65, 30) NOT NULL,
-    `disgusted` DECIMAL(65, 30) NOT NULL,
-    `fearful` DECIMAL(65, 30) NOT NULL,
-    `result` VARCHAR(191) NOT NULL,
-    `remarks` VARCHAR(191) NOT NULL,
+    `surprised` DECIMAL(10, 2) NOT NULL,
+    `happy` DECIMAL(10, 2) NOT NULL,
+    `neutral` DECIMAL(10, 2) NOT NULL,
+    `sad` DECIMAL(10, 2) NOT NULL,
+    `angry` DECIMAL(10, 2) NOT NULL,
+    `disgusted` DECIMAL(10, 2) NOT NULL,
+    `fearful` DECIMAL(10, 2) NOT NULL,
+    `highest_value` DECIMAL(10, 2) NOT NULL,
+    `dominant_fer` VARCHAR(191) NOT NULL,
     `datetime_stamp` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
     PRIMARY KEY (`id`)
@@ -145,6 +142,9 @@ CREATE TABLE `SystemLogs` (
 ALTER TABLE `UserDetails` ADD CONSTRAINT `UserDetails_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `User`(`user_id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `UserTeacherThreshold` ADD CONSTRAINT `UserTeacherThreshold_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `UserDetails`(`user_id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE `ClassStudents` ADD CONSTRAINT `ClassStudents_class_subject_id_fkey` FOREIGN KEY (`class_subject_id`) REFERENCES `ClassSubject`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -157,7 +157,4 @@ ALTER TABLE `ClassSchedule` ADD CONSTRAINT `ClassSchedule_class_subject_id_fkey`
 ALTER TABLE `ClassCourseContent` ADD CONSTRAINT `ClassCourseContent_class_schedule_id_fkey` FOREIGN KEY (`class_schedule_id`) REFERENCES `ClassSchedule`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `ClassAttendance` ADD CONSTRAINT `ClassAttendance_class_schedule_id_fkey` FOREIGN KEY (`class_schedule_id`) REFERENCES `ClassSchedule`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE `ClassStudentFER` ADD CONSTRAINT `ClassStudentFER_class_schedule_id_fkey` FOREIGN KEY (`class_schedule_id`) REFERENCES `ClassSchedule`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `ClassStudentsFER` ADD CONSTRAINT `ClassStudentsFER_class_schedule_id_fkey` FOREIGN KEY (`class_schedule_id`) REFERENCES `ClassSchedule`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;

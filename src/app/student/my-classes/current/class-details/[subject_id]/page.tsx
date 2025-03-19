@@ -55,7 +55,8 @@ const SubjectDetails = () => {
           angry: 0,
           disgusted: 0,
           fearful: 0,        
-          na: 0,
+          highest_value: 0,
+          dominant_fer: '',
           datetime_stamp: new Date(),
     });
   const [studentUserId, setStudentUserId] = useState<number>(0);  

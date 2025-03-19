@@ -21,8 +21,7 @@ export const RegisterUserDto = z.object({
       profile_image: z.string().optional().nullable().refine((val) => {
           if (!val) return true; // Allow null or undefined
           return /^[A-Za-z0-9+/=]+$/.test(val); // Simple Base64 validation
-      }, "Invalid Base64 format for profile image"),
-      thresh_hold: z.number().default(0),
+      }, "Invalid Base64 format for profile image"),      
   }).refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",
     path: ["confirmPassword"],
@@ -46,8 +45,7 @@ export const CreateUserDto = z.object({
       profile_image: z.string().optional().nullable().refine((val) => {
           if (!val) return true; // Allow null or undefined
           return /^[A-Za-z0-9+/=]+$/.test(val); // Simple Base64 validation
-      }, "Invalid Base64 format for profile image"),
-      thresh_hold: z.number().default(0),
+      }, "Invalid Base64 format for profile image"),      
     }).refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",
     path: ["confirmPassword"],
