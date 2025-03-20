@@ -9,28 +9,22 @@ import { ClassSubjectModel } from "@/models/classSubjectModel";
 import { getClassSubjectById } from "@/services/classSubjectAppService";
 import { toast, Toaster } from "sonner";
 import { useParams, useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ClassCourseContentModel } from "@/models/classCourseContentModel";
-import { getServerTime } from "@/services/timeAppService";
 import { formatDate } from "@/lib/formatTime";
 import { ClassScheduleModel } from "@/models/classScheduleModel";
-import { getClassScheduleById, updateClassCourseContentsStatusByScheduleIdAndId, updateClassScheduleStatus } from "@/services/classScheduleAppService";
+import { getClassScheduleById } from "@/services/classScheduleAppService";
 import Loading from "@/components/loading";
-import { ClassCourseContentStatus } from "@/types/classCourseContentStatus";
 import { FERTimeLineChart } from "@/components/fer-timeline-chart";
-import { ClassScheduleStatus } from "@/types/classScheduleStatus";
 import { FERPieChart } from "@/components/fer-pie-chart";
 import { ClassStudentFERAggChartModel } from "@/models/classStudentFERAggChartModel";
 import { ClassStduentFERAggTimelineModel } from "@/models/classStudentFERAggTimelineModel";
-import { getFERChartDataBySubjectSchedIds, getFERLast5MinutesDataBySubjectSchedIds, getFERStudentsDataBySubjectScheduleIds, getFERTimelineDataBySubjectSchedIds } from "@/services/classStudentFerAppService";
+import { getFERChartDataBySubjectSchedIds, getFERStudentsDataBySubjectScheduleIds, getFERTimelineDataBySubjectSchedIds } from "@/services/classStudentFerAppService";
 import { StudentsFERList } from "@/components/student-fer-list";
 import { ClassStudentFERAggStudentModel } from "@/models/classStudentFERAggStudentModel";
 import { getDecodedAuthToken, refreshAuthToken } from "@/services/authAppService";
 import { getUserThresholdByUserId } from "@/services/userAppService";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { UserTeacherThresholdModel } from "@/models/userTeacherThresholdModel";
 
 const ScheduleSession = () => {  
   const params = useParams();   
@@ -47,16 +41,12 @@ const ScheduleSession = () => {
       remarks: ""
     });
   const [classCourseContents, setClassCourseContents] = useState<ClassCourseContentModel[]>([]);     
-  const [isLoading, setIsLoading] = useState(true);            
-  const [serverTime, setServerTime] = useState(new Date());  
+  const [isLoading, setIsLoading] = useState(true);              
   const [classStudentFERChartData, setClassStudentFERChartData] = useState<ClassStudentFERAggChartModel>({} as ClassStudentFERAggChartModel);
   const [classStudentFERTimelineData, setClassStudentFERTimelineData] = useState<ClassStduentFERAggTimelineModel[]>([]); 
   const [classStudentFERStudentData, setclassStudentFERStudentData] = useState<ClassStudentFERAggStudentModel[]>([]);
-  const [teacherUserId, setTeacherUserId] = useState<number>(0);
-  const [teacherThresholds, setTeacherThresholds] = useState<UserTeacherThresholdModel[]>([]);
-  const [isEndSessionDialogOpen, setIsEndSessionDialogOpen] = useState(false);    
-  const [isEndSessionLoading, setIsEndSessionLoading] = useState(false);
-
+  const [teacherUserId, setTeacherUserId] = useState<number>(0);  
+  
   useEffect(() => {
       const checkSession = async () => {
         try {
@@ -89,7 +79,8 @@ const ScheduleSession = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      try {              
+      try {     
+        console.log("teacherUserId:", teacherUserId);    
         if (teacherUserId === 0)  return;    
 
         const [resSubject, resUserThreshold, resSchedule] = await Promise.all([
@@ -108,15 +99,9 @@ const ScheduleSession = () => {
         if (!resSchedule.success) {
           throw new Error(resSchedule.message);
         }  
-
-        if (resSchedule.data.status === ClassScheduleStatus.FiNISHED) {
-          await router.push(`/teacher/my-classes/current/class-details/${Number(params.subject_id)}`)          
-        }
-
         setClassSubject(resSubject.data);          
         setClassSchedule(resSchedule.data);    
-        setClassCourseContents(resSchedule.data.course_contents);                        
-        setTeacherThresholds(resUserThreshold.data);
+        setClassCourseContents(resSchedule.data.course_contents);                                
 
       } catch (error) {
         console.log("Error fetching class subject:", error);
@@ -130,81 +115,7 @@ const ScheduleSession = () => {
     }
     fetchData();
   }, [params.schedule_id, params.subject_id, teacherUserId]);
-
   
-  useEffect(() => {
-    let syncInterval: NodeJS.Timeout;
-    let tickInterval: NodeJS.Timeout;
-  
-    const fetchServerTime = async () => {
-      try {
-        const response = await getServerTime();
-        const serverDate = new Date(response.data);
-        setServerTime(serverDate);
-      } catch (error) {
-        console.error("Error fetching server time:", error);
-      }
-    };
-    fetchServerTime(); // Initial fetch
-    // Sync with the server every 5 minutes (300,000 ms)
-    // eslint-disable-next-line prefer-const
-    syncInterval = setInterval(fetchServerTime, 300000);
-  
-    // Increment local time every second
-    // eslint-disable-next-line prefer-const
-    tickInterval = setInterval(() => {
-      setServerTime((prevTime) => (prevTime ? new Date(prevTime.getTime() + 1000) : new Date()));
-    }, 1000);
-  
-    return () => {
-      clearInterval(syncInterval);
-      clearInterval(tickInterval);
-    };
-  }, []); 
-
-  useEffect(() => {
-    const updateCourseContents = async () => {      
-      const allFinished = classCourseContents.every(content => content.status === ClassCourseContentStatus.FINISHED);
-      if (allFinished) {
-        return;
-      }
-      const currentTime = serverTime.getTime();
-      const scheduleEndTime = new Date(`${classSchedule.date_schedule}T${classSchedule.time_end}`).getTime();      
-      const updatedContents = await Promise.all(classCourseContents.map(async (content) => {
-      const contentStartTime = new Date(`${classSchedule.date_schedule}T${content.time_start}`).getTime();
-
-      if (currentTime < contentStartTime) {                      
-        const response = await updateClassCourseContentsStatusByScheduleIdAndId(ClassCourseContentStatus.UPCOMING, content.id, classSchedule.id);
-        if (response.success === false) {
-          toast.error("Failed to fetch class subject!", {
-            description: response.message,
-          });
-        }          
-        return { ...content, status: "upcoming" };
-      } else if (currentTime >= contentStartTime && currentTime <= scheduleEndTime) {
-        const response = await updateClassCourseContentsStatusByScheduleIdAndId(ClassCourseContentStatus.ONGOING, content.id, classSchedule.id);
-        if (response.success === false) {
-          toast.error("Failed to fetch class subject!", {
-            description: response.message,
-          });
-        }
-        return { ...content, status: "ongoing" };
-      } else {
-        const response = await updateClassCourseContentsStatusByScheduleIdAndId(ClassCourseContentStatus.FINISHED, content.id, classSchedule.id);
-        if (response.success === false) {
-          toast.error("Failed to fetch class subject!", {
-            description: response.message,
-          });
-        }
-        return { ...content, status: "finished" };
-      }
-      }));        
-        setClassCourseContents(updatedContents);
-    };
-    const interval = setInterval(updateCourseContents, 1000); // Check every second
-    return () => clearInterval(interval); // Clear interval on component unmount
-  }, [serverTime, classCourseContents, classSchedule.date_schedule, classSchedule.time_start, classSchedule.time_end, classSchedule.id]);
-
   //Get Student FER Data Per Minute 
   useEffect(() => {
     const fetchStudentFERData = async () => {
@@ -248,106 +159,7 @@ const ScheduleSession = () => {
     }, 1000);
     
     return () => clearInterval(interval);
-  }, [serverTime, params.subject_id, params.schedule_id]);
-
-  useEffect(() => {
-    console.log("Enter here!")
-    if (classSchedule.status === ClassScheduleStatus.OPENED) {
-      console.log("Detected Schedule Opened!");
-      const interval = setInterval(async () => {
-        const response5minutes = await getFERLast5MinutesDataBySubjectSchedIds(
-          Number(params.subject_id), 
-          Number(params.schedule_id)
-        );
-  
-        if (response5minutes.success) {
-          console.log("Fetching 5minutes data:", response5minutes.data);
-          const sadThreshold = teacherThresholds.find(item => item.expression_type === "sad");          
-          if (response5minutes.data.sad >= (sadThreshold?.threshold ?? 50)) {
-            toast("Sad Threshold Exceeded", {
-              description: `Students' dominant expression is ${response5minutes.data.sad}% sadness.`,
-              icon: "😢",
-              duration: 5000,
-              style: {
-                backgroundColor: "hsl(240, 90%, 50%)",
-                color: "#09090b",
-              },
-            });
-          }
-  
-          const disgustedThreshold = teacherThresholds.find(item => item.expression_type === "disgusted");          
-          if (response5minutes.data.disgusted >= (disgustedThreshold?.threshold ?? 50)) {
-            toast("Disgusted Threshold Exceeded", {
-              description: `Students' dominant expression is ${response5minutes.data.disgusted}% disgusted.`,
-              icon: "🤢",
-              duration: 5000,
-              style: {
-                backgroundColor: "hsl(60, 90%, 50%)",
-                color: "#09090b",
-              },
-            });
-          }
-  
-          const angryThreshold = teacherThresholds.find(item => item.expression_type === "angry");          
-          if (response5minutes.data.angry >= (angryThreshold?.threshold ?? 50)) {
-            toast("Angry Threshold Exceeded", {
-              description: `Students' dominant expression is ${response5minutes.data.angry}% angry.`,
-              icon: "😡",
-              duration: 5000,
-              style: {
-                backgroundColor: "hsl(0, 90%, 50%)",
-                color: "#f9fafb",
-              },
-            });
-          }
-  
-          const fearfulThreshold = teacherThresholds.find(item => item.expression_type === "fearful");          
-          if (response5minutes.data.fearful >= (fearfulThreshold?.threshold ?? 50)) {
-            toast("Fearful Threshold Exceeded", {
-              description: `Students' dominant expression is ${response5minutes.data.fearful}% fearful.`,
-              icon: "😨",
-              duration: 5000,
-              style: {
-                backgroundColor: "hsl(280, 90%, 50%)",
-                color: "#09090b",
-              },
-            });
-          }
-  
-          const naThreshold = teacherThresholds.find(item => item.expression_type === "na");                    
-          if (response5minutes.data.na >= (naThreshold?.threshold ?? 50)) {
-            toast("No Face Detected Threshold Exceeded", {
-              description: `${response5minutes.data.na}% of the students are not showing their faces on camera.`,
-              duration: 5000,
-              style: {
-                backgroundColor: "hsl(0, 0%, 50%)",
-                color: "#09090b",
-              },
-            });
-          }
-        }
-      }, 60000); // 5 minutes interval (300,000 ms)
-  
-      return () => clearInterval(interval);
-    }
-  }, [classSchedule.status, params.subject_id, params.schedule_id, teacherThresholds]);
-  
-  const handleEndSession = async () => { 
-    if (isEndSessionLoading) return; // Prevent duplicate requests
-    
-    setIsEndSessionLoading(true);
-    const response = await updateClassScheduleStatus(Number(params.subject_id), Number(params.schedule_id), ClassScheduleStatus.FiNISHED)          
-    if (response.success) {        
-      setIsEndSessionLoading(false);      
-      await router.push(`/teacher/my-classes/current/class-details/${Number(params.subject_id)}`)            
-    }
-    else {
-      toast.error("Error!", {
-        description: `${response.data.message}`,
-      });
-      setIsEndSessionLoading(false);
-    }
-  }
+  }, [params.subject_id, params.schedule_id]);
 
   return (
     <>
@@ -409,16 +221,8 @@ const ScheduleSession = () => {
                     <h1 className="text-base sm:text-2xl font-bold">
                       {`${classSubject.name ?? ""} [ ${classSubject.days} ]`}
                     </h1>
-                    <pre className="mt-0 text-base text-gray-600">{formatDate(classSchedule.date_schedule)} • {`${classSchedule.time_start} - ${classSchedule.time_end}`}</pre>
-                    <pre className="mt-2 text-base text-black-600">Time: {serverTime.toLocaleTimeString()}</pre>
-                  </div>
-                  <Button
-                      variant="destructive"
-                      onClick={() => handleEndSession()}
-                      disabled={isEndSessionLoading}
-                      className="w-full sm:w-auto">   
-                      End Session
-                  </Button>           
+                    <pre className="mt-0 text-base text-gray-600">{formatDate(classSchedule.date_schedule)} • {`${classSchedule.time_start} - ${classSchedule.time_end}`}</pre>                    
+                  </div>                  
                 </div>                          
                 <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
                   {/* Average FER Donut Chart */}
@@ -437,30 +241,7 @@ const ScheduleSession = () => {
         </div>
         <Toaster />
       </SidebarInset>
-    </SidebarProvider>    
-
-    <Dialog open={isEndSessionDialogOpen} onOpenChange={setIsEndSessionDialogOpen}>          
-      <DialogContent className="max-w-sm sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Confirmation Dialog</DialogTitle>
-          <DialogDescription>   
-            Are you sure you want to end this subject?         
-          </DialogDescription>
-        </DialogHeader>                    
-        <DialogFooter className="flex-col sm:flex-row gap-2">
-          <Button 
-              variant="outline" 
-              type="button" 
-              className="w-full sm:w-auto"
-              onClick={() => setIsEndSessionDialogOpen(false)}>
-            no
-          </Button>
-          <Button type="submit" variant="default" className="w-full sm:w-auto" onClick={handleEndSession}>
-            yes
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    </SidebarProvider>        
     </>
   );
 };

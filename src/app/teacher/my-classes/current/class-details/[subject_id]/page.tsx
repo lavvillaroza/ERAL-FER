@@ -214,8 +214,17 @@ const SubjectDetails = () => {
       });
     }
     else {
-        router.push(`/teacher/my-classes/current/class-details/${classSubject.id}/${schedule_id}`)      
+        await router.push(`/teacher/my-classes/current/class-details/${classSubject.id}/${schedule_id}`)      
     }      
+  }
+
+  const viewScheduleSession = async (schedule_id: number) => {
+    const schedule = classSchedules.find(schedule => schedule.id === schedule_id);
+    if (!schedule) {
+      toast.error("Schedule not found!");
+      return;
+    }
+    await router.push(`/teacher/my-classes/current/class-details/${classSubject.id}/${schedule_id}/view`)      
   }
 
   const statusActions = (schedule: ClassScheduleModel) : Record<string, JSX.Element> => ({
@@ -301,7 +310,7 @@ const SubjectDetails = () => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">              
-                <DropdownMenuItem onClick={() => {}}>
+                <DropdownMenuItem onClick={() => viewScheduleSession(schedule.id)}>
                   <ViewIcon /> View
                 </DropdownMenuItem>                        
             </DropdownMenuContent>

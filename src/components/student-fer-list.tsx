@@ -35,9 +35,7 @@ const getExpressionColor = (expression: Expression) => {
   }
 };
 
-export function StudentsFERList({ students }: { students: ClassStudentFERAggStudentModel[] }) {
-
-  console.log("STUDENTS",students);
+export function StudentsFERList({ students }: { students: ClassStudentFERAggStudentModel[] }) {  
   const [search, setSearch] = useState("");
   const [selectedExpressions, setSelectedExpressions] = useState<Expression[]>(expressions);
 
