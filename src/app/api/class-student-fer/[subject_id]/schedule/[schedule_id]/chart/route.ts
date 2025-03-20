@@ -77,7 +77,7 @@ export async function GET(req: NextRequest, { params }: { params: { subject_id: 
         fearful: Number(row.fearful),
         na: Number(row.na)
     }));
-    console.log(fixedResult);
+        
     return NextResponse.json({
         success: true,
         message: "Successfully Aggregated Overall FER data",

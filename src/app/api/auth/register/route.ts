@@ -55,6 +55,44 @@ export async function POST(req: NextRequest) {
 
         if (!newUser) throw new Error("User registration failed.");        
         
+        if (newUser.role === "teacher") {
+            const responsecreateDefaulThreshold = await prisma.userTeacherThreshold.createMany({
+                data: [
+                  {
+                    user_id: newUser.user_id,
+                    expression_type: 'sad',
+                    message: 'Need improvement in participation.',
+                    threshold: 50.00,                    
+                  },
+                  {
+                    user_id: newUser.user_id,
+                    expression_type: 'angry',
+                    message: 'Take a deep breath. Lets find a solution together.',
+                    threshold: 50.00,                    
+                  },
+                  {
+                    user_id: newUser.user_id,
+                    expression_type: 'disgusted',
+                    message: 'Something seems off. Lets see how we can improve this.',
+                    threshold: 50.00,                    
+                  },
+                  {
+                    user_id: newUser.user_id,
+                    expression_type: 'fearful',
+                    message: 'You got this! Dont let fear hold you back.',
+                    threshold: 50.00,                    
+                  },
+                  {
+                    user_id: newUser.user_id,
+                    expression_type: 'na',
+                    message: 'Are you still there?',
+                    threshold: 50.00,                    
+                  },
+                ],
+              })              
+            console.log(responsecreateDefaulThreshold.count);
+        }  
+        
         // ✅ Convert Buffer to Base64 when returning JSON response
         return NextResponse.json(
             {   

@@ -10,32 +10,34 @@ import { ClassStudentFERAggStudentModel } from "@/models/classStudentFERAggStude
 import { ChevronDown, Filter } from "lucide-react";
 import Image from "next/image";
 
-type Expression = "happy" | "sad" | "angry" | "fearful" | "disgusted" | "surprised" | "neutral";
+type Expression = "happy" | "sad" | "angry" | "fearful" | "disgusted" | "surprised" | "neutral" | "na";
 
-const expressions: Expression[] = ["happy", "sad", "angry", "fearful", "disgusted", "surprised", "neutral"];
+const expressions: Expression[] = ["happy", "sad", "angry", "fearful", "disgusted", "surprised", "neutral", "na"];
 
 const getExpressionColor = (expression: Expression) => {
   switch (expression) {
     case "happy":
-      return "text-green-700";
+      return "hsl(120, 90%, 50%)";
     case "sad":
-      return "text-blue-600";
+      return "hsl(240, 90%, 50%)";
     case "angry":
-      return "text-red-600";
+      return "hsl(0, 90%, 50%)";
     case "fearful":
-      return "text-blue-900";
+      return "hsl(280, 90%, 50%)";
     case "disgusted":
-      return "text-green-900";
+      return "hsl(60, 90%, 50%)";
     case "surprised":
-      return "text-orange-500";
+      return "hsl(30, 90%, 50%)";
     case "neutral":
-      return "text-gray-500";
-    default:
-      return "text-gray-400";
+      return "hsl(210, 90%, 50%)";
+    case "na":
+      return "hsl(0, 0%, 50%)";
   }
 };
 
 export function StudentsFERList({ students }: { students: ClassStudentFERAggStudentModel[] }) {
+
+  console.log("STUDENTS",students);
   const [search, setSearch] = useState("");
   const [selectedExpressions, setSelectedExpressions] = useState<Expression[]>(expressions);
 

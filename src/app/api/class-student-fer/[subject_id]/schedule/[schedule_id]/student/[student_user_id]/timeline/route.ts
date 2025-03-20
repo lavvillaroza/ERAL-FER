@@ -43,7 +43,7 @@ export async function GET(req: NextRequest, { params }: { params: { subject_id: 
               class_subject_id,
               class_schedule_id,
               student_user_id,
-              DATE_FORMAT(datetime_stamp, '%Y-%m-%d %H:%i') AS time_per_minute,
+              DATE_FORMAT(DATE_ADD(datetime_stamp, INTERVAL 8 HOUR), '%Y-%m-%d %H:%i') AS time_per_minute,
               COUNT(CASE WHEN dominant_fer = 'surprised' THEN 1 END) AS surprised_count,
               COUNT(CASE WHEN dominant_fer = 'happy' THEN 1 END) AS happy_count,
               COUNT(CASE WHEN dominant_fer = 'neutral' THEN 1 END) AS neutral_count,

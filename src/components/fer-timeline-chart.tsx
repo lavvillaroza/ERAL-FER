@@ -41,36 +41,36 @@ const emotions = [
 
 const chartConfig = { 
   surprised: {
-    emotion: "surprised",
-    fill: "hsl(30, 100%, 50%)", // Bright orange
+    label: "Surprised",
+    fill: "hsl(30, 90%, 50%)", // Warm orange
   },
   happy: {
-    emotion: "happy",
-    fill: "hsl(120, 100%, 40%)", // Bright green
+    label: "Happy",
+    fill: "hsl(120, 90%, 50%)", // Vibrant green
   },
   neutral: {
-    emotion: "neutral",
-    fill: "hsl(210, 20%, 50%)", // Neutral gray
+    label: "Neutral",
+    fill: "hsl(210, 90%, 50%)", // Soft blue
   },
   sad: {
-    emotion: "sad",
-    fill: "hsl(240, 100%, 50%)", // Cool blue
+    label: "Sad",
+    fill: "hsl(240, 90%, 50%)", // Deep blue
   },
   disgusted: {
-    emotion: "disgusted",
-    fill: "hsl(60, 100%, 20%)", // Olive
+    label: "Disgusted",
+    fill: "hsl(60, 90%, 50%)", // Bright yellow
   },
   angry: {
-    emotion: "angry",
-    fill: "hsl(0, 100%, 50%)", // Intense red
+    label: "Angry",
+    fill: "hsl(0, 90%, 50%)", // Strong red
   },
   fearful: {
-    emotion: "fearful",
-    fill: "hsl(210, 30%, 30%)", // Dark gray
-  },  
+    label: "Fearful",
+    fill: "hsl(280, 90%, 50%)", // Rich purple
+  },
   na: {
     label: "NA",
-    fill: "hsl(222.2, 84%, 4.9%)", // Dark gray
+    fill: "hsl(0, 0%, 50%)", // Neutral gray
   },
 }
 

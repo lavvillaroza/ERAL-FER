@@ -23,15 +23,14 @@ import { ClassScheduleStatus } from "@/types/classScheduleStatus";
 import { FERPieChart } from "@/components/fer-pie-chart";
 import { ClassStudentFERAggChartModel } from "@/models/classStudentFERAggChartModel";
 import { ClassStduentFERAggTimelineModel } from "@/models/classStudentFERAggTimelineModel";
-import { getFERChartDataBySubjectSchedIds, getFERStudentsDataBySubjectScheduleIds, getFERTimelineDataBySubjectSchedIds } from "@/services/classStudentFerAppService";
+import { getFERChartDataBySubjectSchedIds, getFERLast5MinutesDataBySubjectSchedIds, getFERStudentsDataBySubjectScheduleIds, getFERTimelineDataBySubjectSchedIds } from "@/services/classStudentFerAppService";
 import { StudentsFERList } from "@/components/student-fer-list";
 import { ClassStudentFERAggStudentModel } from "@/models/classStudentFERAggStudentModel";
 import { getDecodedAuthToken, refreshAuthToken } from "@/services/authAppService";
-import { UserDetails } from "@prisma/client";
-import { getUserDetailsByUserId } from "@/services/userAppService";
-import { AlertDestructive } from "@/components/alert-destructive";
+import { getUserThresholdByUserId } from "@/services/userAppService";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { UserTeacherThresholdModel } from "@/models/userTeacherThresholdModel";
 
 const ScheduleSession = () => {  
   const params = useParams();   
@@ -47,17 +46,14 @@ const ScheduleSession = () => {
       topic_title: "",
       remarks: ""
     });
-  const [classCourseContents, setClassCourseContents] = useState<ClassCourseContentModel[]>([]);   
-  //const [currentClassAverage] = useState(78);
-  const [showNotification, setShowNotification] = useState(false);
-  const [notificationMessage, setNotificationMessage] = useState("");
+  const [classCourseContents, setClassCourseContents] = useState<ClassCourseContentModel[]>([]);     
   const [isLoading, setIsLoading] = useState(true);            
   const [serverTime, setServerTime] = useState(new Date());  
   const [classStudentFERChartData, setClassStudentFERChartData] = useState<ClassStudentFERAggChartModel>({} as ClassStudentFERAggChartModel);
   const [classStudentFERTimelineData, setClassStudentFERTimelineData] = useState<ClassStduentFERAggTimelineModel[]>([]); 
   const [classStudentFERStudentData, setclassStudentFERStudentData] = useState<ClassStudentFERAggStudentModel[]>([]);
   const [teacherUserId, setTeacherUserId] = useState<number>(0);
-  const [teacherUserDetails, setTeacherUserDetails] = useState<UserDetails>({} as UserDetails);
+  const [teacherThresholds, setTeacherThresholds] = useState<UserTeacherThresholdModel[]>([]);
   const [isEndSessionDialogOpen, setIsEndSessionDialogOpen] = useState(false);    
   const [isEndSessionLoading, setIsEndSessionLoading] = useState(false);
 
@@ -97,16 +93,16 @@ const ScheduleSession = () => {
         console.log("teacherUserId:", teacherUserId);    
         if (teacherUserId === 0)  return;    
 
-        const [resSubject, resUserDetails, resSchedule] = await Promise.all([
+        const [resSubject, resUserThreshold, resSchedule] = await Promise.all([
           getClassSubjectById(Number(params.subject_id)),          
-          getUserDetailsByUserId(teacherUserId),
+          getUserThresholdByUserId(teacherUserId),
           getClassScheduleById(Number(params.subject_id), Number(params.schedule_id)),          
         ])
         if (!resSubject.success) {
           throw new Error(resSubject.message);
         }
 
-        if (!resUserDetails.success) {
+        if (!resUserThreshold.success) {
           throw new Error(resSchedule.message);
         }  
        
@@ -116,13 +112,13 @@ const ScheduleSession = () => {
         setClassSubject(resSubject.data);          
         setClassSchedule(resSchedule.data);    
         setClassCourseContents(resSchedule.data.course_contents);                        
-        setTeacherUserDetails(resUserDetails.data);
+        setTeacherThresholds(resUserThreshold.data);
 
       } catch (error) {
         console.log("Error fetching class subject:", error);
-        toast.error("Failed to fetch class subject!", {
+        toast.error("Failed to fetch class subject!", {          
           description: error instanceof Error ? error.message : JSON.stringify(error),
-        });
+        });        
       } 
       finally {
         setIsLoading(false);
@@ -132,7 +128,6 @@ const ScheduleSession = () => {
   }, [params.schedule_id, params.subject_id, teacherUserId]);
 
   
-
   useEffect(() => {
     let syncInterval: NodeJS.Timeout;
     let tickInterval: NodeJS.Timeout;
@@ -244,45 +239,92 @@ const ScheduleSession = () => {
         console.error("Error fetching student FER data:", error);
       }
     };
-    const interval = setInterval(() => {
-      //const now = new Date(); // Use the current system time
-      //const seconds = now.getSeconds();      
-      // if (seconds === 1) { // Trigger exactly when seconds are 0
-      //   fetchStudentFERData();
-      // }
+    const interval = setInterval(() => {      
       fetchStudentFERData();
     }, 1000);
     
     return () => clearInterval(interval);
   }, [serverTime, params.subject_id, params.schedule_id]);
 
-  // useEffect(() => {
-  //   if (classSchedule.status === ClassScheduleStatus.OPENED) {
-  //     const interval = setInterval(() => {
-  //       const negativeThresholdTrigger = classStudentFERChartData.angry + classStudentFERChartData.disgusted + 
-  //                                       classStudentFERChartData.fearful + classStudentFERChartData.sad +
-  //                                       classStudentFERChartData.na;
-
-  //       console.log("ThreshHold:",negativeThresholdTrigger);
-
-  //       // if (negativeThresholdTrigger >= Number(teacherUserDetails.thresh_hold)) {
-  //       //   setShowNotification(true);
-  //       //   setNotificationMessage(
-  //       //     `Negative Expression: ${Number(negativeThresholdTrigger).toFixed(2)}%              
-  //       //     threshold exceeded!`
-  //       //   );          
-  //       // }
-  //       // Auto-dismiss notification after 3 seconds
-  //       // setTimeout(() => {
-  //       //   setShowNotification(false);
-  //       // }, 3000);
-  //     }, 3000);      
-  //     return () => clearInterval(interval);
-  //   }
-  // }, [classSchedule.status, classStudentFERChartData.angry, 
-  //   classStudentFERChartData.disgusted, classStudentFERChartData.fearful, 
-  //   classStudentFERChartData.na, classStudentFERChartData.sad]);
-
+  useEffect(() => {
+    if (classSchedule.status === ClassScheduleStatus.OPENED) {
+      const interval = setInterval(async () => {
+        const response5minutes = await getFERLast5MinutesDataBySubjectSchedIds(
+          Number(params.subject_id), 
+          Number(params.schedule_id)
+        );
+  
+        if (response5minutes.success) {
+          const sadThreshold = teacherThresholds.find(item => item.expression_type === "sad");
+          if (response5minutes.data.sad >= (sadThreshold?.threshold ?? 50)) {
+            toast("Sad Threshold Exceeded", {
+              description: `Students' dominant expression is ${response5minutes.data.sad}% sadness.`,
+              icon: "😢",
+              duration: 5000,
+              style: {
+                backgroundColor: "hsl(240, 90%, 50%)",
+                color: "#09090b",
+              },
+            });
+          }
+  
+          const disgustedThreshold = teacherThresholds.find(item => item.expression_type === "disgusted");
+          if (response5minutes.data.disgusted >= (disgustedThreshold?.threshold ?? 50)) {
+            toast("Disgusted Threshold Exceeded", {
+              description: `Students' dominant expression is ${response5minutes.data.disgusted}% disgusted.`,
+              icon: "🤢",
+              duration: 5000,
+              style: {
+                backgroundColor: "hsl(60, 90%, 50%)",
+                color: "#09090b",
+              },
+            });
+          }
+  
+          const angryThreshold = teacherThresholds.find(item => item.expression_type === "angry");
+          if (response5minutes.data.angry >= (angryThreshold?.threshold ?? 50)) {
+            toast("Angry Threshold Exceeded", {
+              description: `Students' dominant expression is ${response5minutes.data.angry}% angry.`,
+              icon: "😡",
+              duration: 5000,
+              style: {
+                backgroundColor: "hsl(0, 90%, 50%)",
+                color: "#09090b",
+              },
+            });
+          }
+  
+          const fearfulThreshold = teacherThresholds.find(item => item.expression_type === "fearful");
+          if (response5minutes.data.fearful >= (fearfulThreshold?.threshold ?? 50)) {
+            toast("Fearful Threshold Exceeded", {
+              description: `Students' dominant expression is ${response5minutes.data.fearful}% fearful.`,
+              icon: "😨",
+              duration: 5000,
+              style: {
+                backgroundColor: "hsl(280, 90%, 50%)",
+                color: "#09090b",
+              },
+            });
+          }
+  
+          const naThreshold = teacherThresholds.find(item => item.expression_type === "na");
+          if (response5minutes.data.na >= (naThreshold?.threshold ?? 50)) {
+            toast("No Face Detected Threshold Exceeded", {
+              description: `${response5minutes.data.na}% of the students are not showing their faces on camera.`,
+              duration: 5000,
+              style: {
+                backgroundColor: "hsl(0, 0%, 50%)",
+                color: "#09090b",
+              },
+            });
+          }
+        }
+      }, 300000); // 5 minutes interval (300,000 ms)
+  
+      return () => clearInterval(interval);
+    }
+  }, [classSchedule.status, params.subject_id, params.schedule_id, teacherThresholds]);
+  
   const handleEndSession = async () => { 
     if (isEndSessionLoading) return; // Prevent duplicate requests
     
@@ -370,16 +412,7 @@ const ScheduleSession = () => {
                       className="w-full sm:w-auto">   
                       End Session
                   </Button>           
-                </div>          
-                {/* Notification */}
-                {showNotification && (
-                  <AlertDestructive 
-                      message={notificationMessage}
-                      show={showNotification} 
-                      onClose={() => setShowNotification(false)}
-                    />                                   
-                )}
-
+                </div>                          
                 <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
                   {/* Average FER Donut Chart */}
                   <FERPieChart data={classStudentFERChartData} />

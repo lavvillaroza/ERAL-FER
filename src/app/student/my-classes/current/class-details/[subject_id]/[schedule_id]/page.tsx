@@ -177,7 +177,7 @@ const ScheduleSession = () => {
     
     // If all expressions are 0, set `na` to 100 and dominant_fer to "na"
     let dominantFER = "na";
-    let highestValue = 100;
+    let highestValue = 1;
     
     if (!allZero) {
       // Find the highest expression value and its corresponding emotion

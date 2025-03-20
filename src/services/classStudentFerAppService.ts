@@ -81,8 +81,28 @@ export const getFERTimelineDataBySubjectSchedIds = async (subject_id: number, sc
         const result = await response.json();
         if (result.success === false) {
             throw new Error(result.message);
-        }
-        console.log(result.data);
+        }        
+        return result;
+    }
+    catch (error) {
+        throw new Error("ClassStudentFerAppService @ getFERTimelineDataBySubjectSchedIds API:" + error);
+    }        
+}
+
+export const getFERLast5MinutesDataBySubjectSchedIds = async (subject_id: number, schedule_id: number) => { 
+    try {
+        const response = await fetch(`/api/class-student-fer/${subject_id}/schedule/${schedule_id}/five-minutes`, {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json'
+            },            
+        });
+
+        const result = await response.json();
+        if (result.success === false) {
+            throw new Error(result.message);
+        }        
         return result;
     }
     catch (error) {

@@ -22,35 +22,35 @@ import { ChartPie } from "lucide-react";
 const chartConfig = { 
   surprised: {
     label: "Surprised",
-    color: "hsl(30, 100%, 50%)", // Bright orange
+    color: "hsl(30, 90%, 50%)", // Warm orange
   },
   happy: {
     label: "Happy",
-    color: "hsl(120, 100%, 40%)", // Bright green
+    color: "hsl(120, 90%, 50%)", // Vibrant green
   },
   neutral: {
     label: "Neutral",
-    color: "hsl(210, 20%, 50%)", // Neutral gray
+    color: "hsl(210, 90%, 50%)", // Soft blue
   },
   sad: {
     label: "Sad",
-    color: "hsl(240, 100%, 50%)", // Cool blue
+    color: "hsl(240, 90%, 50%)", // Deep blue
   },
   disgusted: {
     label: "Disgusted",
-    color: "hsl(60, 100%, 20%)", // Olive
+    color: "hsl(60, 90%, 50%)", // Bright yellow
   },
   angry: {
     label: "Angry",
-    color: "hsl(0, 100%, 50%)", // Intense red
+    color: "hsl(0, 90%, 50%)", // Strong red
   },
   fearful: {
     label: "Fearful",
-    color: "hsl(210, 30%, 30%)", // Dark gray
+    color: "hsl(280, 90%, 50%)", // Rich purple
   },
   na: {
     label: "NA",
-    color: "hsl(222.2, 84%, 4.9%)", // Black
+    color: "hsl(0, 0%, 50%)", // Neutral gray
   },
 } satisfies ChartConfig;
 
@@ -127,7 +127,7 @@ export function FERPieChart({ data }: FERPieChartProps) {
         <ResponsiveContainer width="100%" height="100%">
           <ChartContainer
             config={chartConfig}
-            className="mx-auto max-h-[500px] w-full">
+            className="mx-auto aspect-square max-h-[500px] w-full">
             {chartData.length > 0 ? (
               <PieChart>
                 <Tooltip formatter={(value, name) => [`${value}%`, name]} />

@@ -4,7 +4,6 @@ import { handleApiError } from "@/app/utils/errorHandler";
 
 const prisma = new PrismaClient();
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function GET(req: NextRequest, { params }: { params: { subject_id: string, schedule_id: string} }) {
   try {
     const { subject_id, schedule_id } = await params;
@@ -18,11 +17,10 @@ export async function GET(req: NextRequest, { params }: { params: { subject_id: 
     if (isNaN(classScheduleId)) {
         return NextResponse.json({ message: "Invalid Class Schedule Id" }, { status: 400 });
     }
-    
-    const result = await prisma.$queryRaw<Array<{          
+        
+    const result = await prisma.$queryRaw<Array<{        
         class_subject_id: number;
-        class_schedule_id: number;        
-        time_per_minute: Date;
+        class_schedule_id: number;
         surprised: number;
         happy: number;
         neutral: number;
@@ -33,10 +31,9 @@ export async function GET(req: NextRequest, { params }: { params: { subject_id: 
         na: number;
     }>>`
     WITH AggregatedData AS (
-        SELECT 
+        SELECT         
             class_subject_id,
-            class_schedule_id,            
-            DATE_FORMAT(DATE_ADD(datetime_stamp, INTERVAL 8 HOUR), '%Y-%m-%d %H:%i') AS time_per_minute,
+            class_schedule_id,
             COUNT(CASE WHEN dominant_fer = 'surprised' THEN 1 END) AS surprised_count,
             COUNT(CASE WHEN dominant_fer = 'happy' THEN 1 END) AS happy_count,
             COUNT(CASE WHEN dominant_fer = 'neutral' THEN 1 END) AS neutral_count,
@@ -48,13 +45,13 @@ export async function GET(req: NextRequest, { params }: { params: { subject_id: 
             COUNT(*) AS total_count -- Total number of records per minute
         FROM ClassStudentsFER
         WHERE class_subject_id = ${classSubjectId}
-          AND class_schedule_id =  ${classScheduleId}                         
-        GROUP BY class_subject_id, class_schedule_id, time_per_minute
+                AND class_schedule_id = ${classScheduleId}
+        AND datetime_stamp >= NOW() - INTERVAL 5 MINUTE -- Filter last 5 minutes
+        GROUP BY class_subject_id, class_schedule_id
     )
     SELECT 
         class_subject_id,
-        class_schedule_id,        
-        time_per_minute,
+        class_schedule_id,          
         ROUND((surprised_count / total_count) * 100, 2) AS surprised,
         ROUND((happy_count / total_count) * 100, 2) AS happy,
         ROUND((neutral_count / total_count) * 100, 2) AS neutral,
@@ -65,13 +62,24 @@ export async function GET(req: NextRequest, { params }: { params: { subject_id: 
         ROUND((na_count / total_count) * 100, 2) AS na
     FROM AggregatedData
     WHERE total_count > 0
-    ORDER BY class_subject_id, class_schedule_id, time_per_minute;  
-    `;
-
+    ORDER BY class_subject_id, class_schedule_id           
+      `;    
+    const fixedResult = result.map(row => ({
+        ...row,
+        surprised: Number(row.surprised),
+        happy: Number(row.happy),
+        neutral: Number(row.neutral),
+        sad: Number(row.sad),
+        angry: Number(row.angry),
+        disgusted: Number(row.disgusted),
+        fearful: Number(row.fearful),
+        na: Number(row.na)
+    }));
+        
     return NextResponse.json({
         success: true,
-        message: "Successfully Aggregated Minute FER data",
-        data: result}, 
+        message: "Successfully Aggregated Overall FER data",
+        data: fixedResult[0] || null}, 
         { status: 200 });
     
   } catch (error) {
@@ -82,4 +90,3 @@ export async function GET(req: NextRequest, { params }: { params: { subject_id: 
     await prisma.$disconnect(); // Close connection
   }
 }
-
