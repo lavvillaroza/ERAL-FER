@@ -6,14 +6,12 @@ import { useEffect, useState } from "react"
 import { SubjectCard } from "@/components/subject-card-current"
 import { ClassSubjectModel } from "@/models/classSubjectModel";
 import { toast, Toaster } from "sonner";
-import { Bell } from "lucide-react";
 import { AppSidebarStudent } from "@/components/app-sidebar-student";
 import { getClassSubjectsByStudentId } from "@/services/classSubjectAppService";
 import { useRouter } from "next/navigation";
 import { getDecodedAuthToken, refreshAuthToken } from "@/services/authAppService";
 import { ClassStatus } from "@/types/classStatus";
 import Loading from "@/components/loading";
-import { Badge } from "@/components/ui/badge";
 
 export default function Page() {
   const router = useRouter();
@@ -126,10 +124,10 @@ export default function Page() {
           </div> 
           <div className="flex items-center">
               <div className="relative">
-                  <button aria-label='bell' className="p-2 rounded-full hover:bg-gray-100">
+                  {/* <button aria-label='bell' className="p-2 rounded-full hover:bg-gray-100">
                       <Bell className="w-6 h-6 text-gray-600" />
                       <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0">3</Badge>
-                  </button>
+                  </button> */}
               </div>
           </div>                   
         </header>

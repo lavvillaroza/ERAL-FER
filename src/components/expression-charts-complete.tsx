@@ -19,7 +19,7 @@ interface ExpressionChartsProps {
   className?: string;
 }
 
-export function ExpressionChartsDummy({
+export function ExpressionChartsComplete({
   moods,
   chartSize = 80,
   strokeWidth = 8,
@@ -42,7 +42,7 @@ export function ExpressionChartsDummy({
   }, [chartSize]);
   
   return (
-    <div className={`grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2 sm:gap-4 ${className}`}>
+    <div className={`grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 gap-2 sm:gap-4 ${className}`}>
       {moods.map((mood, index) => (
         <Card key={index} className="shadow-lg ">
           <CardContent className={`flex flex-col items-center justify-center p-2 sm:p-4 rounded-[7px] ${mood.bgClass}`}>

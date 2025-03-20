@@ -13,8 +13,6 @@ import { Separator } from "@radix-ui/react-separator";
 import { StudentTable } from "@/components/tables/student-table";
 import { TeacherTable } from "@/components/tables/teacher-table";
 import { AdminTable } from "@/components/tables/admin-table";
-import { Bell } from 'lucide-react'
-import { Badge } from "@/components/ui/badge";
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { getDecodedAuthToken, refreshAuthToken } from '@/services/authAppService'
@@ -75,10 +73,10 @@ export default function UserManagementPage() {
           </div>
           <div className="flex items-center space-x-4 px-4">
             <div className="relative">
-              <button className="p-2 rounded-full hover:bg-gray-100 relative">
+              {/* <button className="p-2 rounded-full hover:bg-gray-100 relative">
                 <Bell className="w-6 h-6 text-gray-600" />
                 <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0">3</Badge>
-              </button>
+              </button> */}
             </div>
           </div>
         </header>        

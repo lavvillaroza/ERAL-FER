@@ -45,7 +45,7 @@ const ScheduleSession = () => {
   const [classStudentFERTimelineData, setClassStudentFERTimelineData] = useState<ClassStduentFERAggTimelineModel[]>([]); 
   const [classStudentFERStudentData, setclassStudentFERStudentData] = useState<ClassStudentFERAggStudentModel[]>([]);
   const [teacherUserId, setTeacherUserId] = useState<number>(0);  
-
+  
   useEffect(() => {
       const checkSession = async () => {
         try {
@@ -78,7 +78,7 @@ const ScheduleSession = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      try {             
+      try {              
         if (teacherUserId === 0)  return;    
 
         const [resSubject, resUserThreshold, resSchedule] = await Promise.all([

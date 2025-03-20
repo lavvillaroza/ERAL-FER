@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { Card, CardContent } from "@/components/ui/card";
-import { ChevronRight, Bell } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { CourceContents } from "@/components/course-contents";
 import { ClassSubjectModel } from "@/models/classSubjectModel";
@@ -23,9 +23,9 @@ import { ClassStudentFERModel } from "@/models/classStudentFERModel";
 //import { addClassStudentFERData } from "@/services/classStudentFerAppService";
 import { getDecodedAuthToken, refreshAuthToken } from "@/services/authAppService";
 import { roundToTwoDecimals } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
 import FacialExpressionRecognition from "@/components/face-expression-recognition";
 import { addClassStudentFERData } from "@/services/classStudentFerAppService";
+import { ClassStudentFERAggChartModel } from "@/models/classStudentFERAggChartModel";
 
 const ScheduleSession = () => {
   const router = useRouter();
@@ -62,6 +62,7 @@ const ScheduleSession = () => {
         dominant_fer: "",         
         datetime_stamp: new Date(),
   });
+  const [classStudentFerChart, setClassStudentFerChart] = useState<ClassStudentFERAggChartModel>({} as ClassStudentFERAggChartModel);
 
   useEffect(() => {
       const checkSession = async () => {
@@ -186,6 +187,17 @@ const ScheduleSession = () => {
         ["na", 0]
       );
     }
+
+    setClassStudentFerChart({
+      surprised: roundToTwoDecimals(expressionsData.surprised),
+      happy: roundToTwoDecimals(expressionsData.happy),
+      neutral: roundToTwoDecimals(expressionsData.neutral),
+      sad: roundToTwoDecimals(expressionsData.sad),
+      angry: roundToTwoDecimals(expressionsData.angry),
+      disgusted: roundToTwoDecimals(expressionsData.disgusted),
+      fearful: roundToTwoDecimals(highestValue),
+      na: roundToTwoDecimals(highestValue),
+    })
     
     const classStudentFERData: ClassStudentFERModel = {
       id: 0, // Assuming id is auto-generated
@@ -262,10 +274,10 @@ const ScheduleSession = () => {
             </div>          
             <div className="flex items-center">
                 <div className="relative">
-                    <button aria-label='bell' className="p-2 rounded-full hover:bg-gray-100">
+                    {/* <button aria-label='bell' className="p-2 rounded-full hover:bg-gray-100">
                         <Bell className="w-6 h-6 text-gray-600" />
                         <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0">3</Badge>
-                    </button>
+                    </button> */}
                 </div>
             </div>
         </header>
@@ -291,7 +303,7 @@ const ScheduleSession = () => {
                 </div>          
                 <div className="w-full">
                   <div className="h-auto sm:h-[165px] mb-4">
-                    <ExpressionCharts studentFer={classStudentFer} />
+                    <ExpressionCharts studentFer={classStudentFerChart} />
                   </div>            
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
                     <Card className="col-span-1 shadow-lg">

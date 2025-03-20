@@ -3,10 +3,9 @@ import { useState, useEffect } from "react";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { CalendarDays, ChevronRight, MoreHorizontal, MergeIcon } from "lucide-react";
+import { CalendarDays, ChevronRight, } from "lucide-react";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { ExpressionCharts } from "@/components/expression-charts";
 import { ClassSubjectModel } from "@/models/classSubjectModel";
@@ -14,14 +13,12 @@ import { getClassSubjectById } from "@/services/classSubjectAppService";
 import { ClassScheduleModel } from "@/models/classScheduleModel";
 import { toast, Toaster } from "sonner";
 import { getClassSchedules, } from "@/services/classScheduleAppService";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useParams, useRouter } from "next/navigation";
 import { Separator } from "@radix-ui/react-separator";
 import { AppSidebarStudent } from "@/components/app-sidebar-student";
 import CourseContentModal from "@/components/course-content-modal";
 import Loading from "@/components/loading";
 import { getFERStudentsDataBySubjectStudentUserIds } from "@/services/classStudentFerAppService";
-import { JSX } from "react/jsx-runtime";
 import { getDecodedAuthToken, refreshAuthToken } from "@/services/authAppService";
 import { ClassStudentFERAggChartModel } from "@/models/classStudentFERAggChartModel";
 
@@ -93,12 +90,12 @@ const SubjectDetails = () => {
           throw new Error(resFERStudentData.message);
       }
 
-      if (!resSchedules.success) {
+        if (!resSchedules.success) {
           throw new Error(resSchedules.message);
-      }  
-      console.log(resFERStudentData);
+      }      
         setClassSubject(resSubject.data);                  
         setClassSchedules(resSchedules.data);   
+
         setClassStudentFer({          
           surprised: resFERStudentData.data[0].surprised || 0,
           happy: resFERStudentData.data[0].happy || 0,
@@ -124,40 +121,6 @@ const SubjectDetails = () => {
     fetchData();    
   }, [params.subject_id, studentUserId]); 
 
-  const joinScheduleSession = async (schedule_id: number) => {
-    router.push(`/student/my-classes/current/class-details/${classSubject.id}/${schedule_id}`)      
-  }
-
-  const statusActions = (schedule: ClassScheduleModel) : Record<string, JSX.Element> => ({    
-    opened: (
-      <div className="flex justify-center gap-2">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">              
-              <DropdownMenuItem onClick={() => joinScheduleSession(schedule.id)}>
-                <MergeIcon/>Join
-              </DropdownMenuItem>                        
-          </DropdownMenuContent>
-        </DropdownMenu>    
-      </div>           
-    ),
-    finished: (
-      <div className="flex justify-center gap-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>            
-        </DropdownMenu>    
-      </div>          
-    ),    
-  });
-  
   return (
     <SidebarProvider>
       <AppSidebarStudent userId={studentUserId} />
@@ -175,15 +138,15 @@ const SubjectDetails = () => {
                             <ChevronRight className="h-4 w-4" />
                         </BreadcrumbSeparator> 
                         <BreadcrumbItem>
-                            <BreadcrumbLink href="/student/my-classes/current">
-                              Current
+                            <BreadcrumbLink href="/student/my-classes/completed">
+                              Completed
                             </BreadcrumbLink>
                         </BreadcrumbItem>                          
                         <BreadcrumbSeparator>
                             <ChevronRight className="h-4 w-4" />
                         </BreadcrumbSeparator>   
                         <BreadcrumbItem>
-                            <BreadcrumbLink href={"/student/my-classes/current/class-details/" + classSubject.id}>
+                            <BreadcrumbLink href={"/student/my-classes/completed/class-details/" + classSubject.id}>
                               Details
                             </BreadcrumbLink>
                         </BreadcrumbItem>         
@@ -245,10 +208,7 @@ const SubjectDetails = () => {
                                       </TableHead>
                                       <TableHead className="whitespace-nowrap text-center hidden lg:table-cell">
                                         Course Content
-                                      </TableHead>
-                                      <TableHead className="whitespace-nowrap text-center">
-                                        Action
-                                      </TableHead>
+                                      </TableHead>                                      
                                     </TableRow>
                                   </TableHeader>
                                   <TableBody>
@@ -290,12 +250,9 @@ const SubjectDetails = () => {
                                               </TableCell>
                                               <TableCell className="hidden lg:table-cell">
                                                 <div className="flex justify-center">
-                                                  <CourseContentModal schedule={schedule} variant={"student"}/>
+                                                  <CourseContentModal schedule={schedule} variant="student"/>
                                                 </div>
-                                              </TableCell>
-                                              <TableCell>
-                                                {statusActions(schedule)[schedule.status] || <p className="text-center text-gray-500">No actions available</p>}
-                                              </TableCell>
+                                              </TableCell>                                              
                                             </TableRow>
                                           ))
                                       )}

@@ -46,9 +46,7 @@ export const SubjectCard = ({ subject, user_id, variant }: SubjectCardProps) => 
       const basePath = variant === "student" ? "/student" : "/teacher";
       router.push(`${basePath}/my-classes/current/${variant === "student" ? subject.id : subject.teacher_user_id}`);
     }, [router, variant, subject.id, subject.teacher_user_id]);
-
     
-
     const checkIfCurrentTime = useCallback((timeRange: string) => {
       const [start, end] = timeRange.split(" - ");
       const now = new Date();
@@ -89,15 +87,7 @@ export const SubjectCard = ({ subject, user_id, variant }: SubjectCardProps) => 
             width={400}
             height={192}
             loading="lazy"
-            className="w-full h-48 rounded-2xl object-cover"/>
-          <button 
-            onClick={handleJoin}
-            disabled={!isJoinable}
-            className={`absolute top-3 right-3 ${
-              isJoinable ? 'bg-green-500 hover:bg-green-600' : 'bg-gray-400 cursor-not-allowed'
-            } text-white font-bold px-3 py-1 rounded-full text-sm transition-colors`}>
-            Online
-          </button>
+            className="w-full h-48 rounded-2xl object-cover"/>          
         </div>
                 
         <div className="p-4">

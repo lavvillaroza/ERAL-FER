@@ -202,9 +202,8 @@ export const getFERStudentsDataBySubjectStudentUserIds = async (subject_id: numb
             headers: {
                 'Content-Type': 'application/json'
             },            
-        });
-
-        const result = await response.json();
+        });        
+        const result = await response.json();        
         if (result.success === false) {
             throw new Error(result.message);
         }

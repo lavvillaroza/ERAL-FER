@@ -3,7 +3,6 @@
 
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebarStudent } from "@/components/app-sidebar-student";
-import { Bell } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList } from "@/components/ui/breadcrumb";
 import { Separator } from "@radix-ui/react-separator";
@@ -11,19 +10,19 @@ import { TopClassesCard } from "@/components/top-classes-card";
 import { useRouter } from "next/navigation";
 import { getDecodedAuthToken, refreshAuthToken } from "@/services/authAppService";
 import { toast, Toaster } from "sonner"
-import { ExpressionChartsDummy } from "@/components/expression-charts-dummy";
-import { Badge } from "@/components/ui/badge";
+import { ExpressionChartsComplete } from "@/components/expression-charts-complete";
 
 export default function Page() {
     // Set initial moods state
     const [moods] = useState([
-      { icon: "😲", percentage: "25.00", label: "Surprised", bgClass: "bg-gray-100/50", color: "text-orange-500" },
-      { icon: "😊", percentage: "15.00", label: "Happy", bgClass: "bg-gray-100/50", color: "text-green-500" },
-      { icon: "😐", percentage: "20.00", label: "Neutral", bgClass: "bg-gray-100/50", color: "text-blue-500" },
-      { icon: "😢", percentage: "10.00", label: "Sad", bgClass: "bg-gray-100/50", color: "text-purple-500" },
-      { icon: "🤢", percentage: "8.00", label: "Disgusted", bgClass: "bg-gray-100/50", color: "text-zinc-700" },
-      { icon: "😡", percentage: "12.00", label: "Angry", bgClass: "bg-gray-100/50", color: "text-red-500" },
-      { icon: "😨", percentage: "10.00", label: "Fearful", bgClass: "bg-gray-100/50", color: "text-slate-500" }
+      { icon: "😲", percentage: "0.00", label: "Surprised", bgClass: "bg-gray-100/50", color: "text-orange-500" },
+        { icon: "😊", percentage: "0.00", label: "Happy", bgClass: "bg-gray-100/50", color: "text-green-500" },
+        { icon: "😐", percentage: "0.00", label: "Neutral", bgClass: "bg-gray-100/50", color: "text-blue-500" },
+        { icon: "😢", percentage: "0.00", label: "Sad", bgClass: "bg-gray-100/50", color: "text-purple-500" },
+        { icon: "🤢", percentage: "0.00", label: "Disgusted", bgClass: "bg-gray-100/50", color: "text-zinc-700" },
+        { icon: "😡", percentage: "0.00", label: "Angry", bgClass: "bg-gray-100/50", color: "text-red-500" },
+        { icon: "😨", percentage: "0.00", label: "Fearful", bgClass: "bg-gray-100/50", color: "text-slate-500" },
+        { icon: "😶", percentage: "0.00", label: "NA", bgClass: "bg-gray-100/50", color: "hsl(0, 0%, 50%)" },
   ]);
 
 
@@ -180,16 +179,16 @@ export default function Page() {
              {/* Notification Bell with Counter */}
               <div className="relative">
                 {/* Bell Icon */}
-                <button className="p-2 rounded-full hover:bg-gray-100 relative">
+                {/* <button className="p-2 rounded-full hover:bg-gray-100 relative">
                     <Bell className="w-6 h-6 text-gray-600" />
                     <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0">3</Badge>
-                </button>
+                </button> */}
               </div>
           </div>
         </header>
         <div className="flex-1 p-2 sm:p-4 pt-0">            
             <div className="h-full flex flex-col gap-2 sm:gap-4">               
-              <ExpressionChartsDummy moods={moods} /> 
+              <ExpressionChartsComplete moods={moods} /> 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-5 flex-1">                
                 <TopClassesCard 
                   title="Top Completed Classes with Positive Expressions"

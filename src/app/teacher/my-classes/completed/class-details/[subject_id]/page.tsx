@@ -1,0 +1,289 @@
+"use client";
+import { useState, useEffect } from "react";
+import { AppSidebarTeacher } from "@/components/app-sidebar-teacher";
+import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { CalendarDays, ChevronRight, MoreHorizontal, ViewIcon } from "lucide-react";
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
+import { ClassSubjectModel } from "@/models/classSubjectModel";
+import { getClassSubjectById} from "@/services/classSubjectAppService";
+import { ClassScheduleModel } from "@/models/classScheduleModel";
+import { toast, Toaster } from "sonner";
+import { getClassSchedules } from "@/services/classScheduleAppService";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useParams, useRouter } from "next/navigation";
+import { Separator } from "@radix-ui/react-separator";
+import Loading from "@/components/loading";
+import CourseContentModal from "@/components/course-content-modal";
+import { getDecodedAuthToken, refreshAuthToken } from "@/services/authAppService";
+import { JSX } from "react/jsx-runtime";
+
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case "finished":
+      return "bg-gray-500";
+    case "upcoming":
+      return "bg-blue-500";
+    case "canceled":
+      return "bg-red-500";
+    default:
+      return "bg-green-500";
+  }
+};
+
+const SubjectDetails = () => {
+  const router = useRouter();
+  const [classSubject, setClassSubject] = useState<ClassSubjectModel>({} as ClassSubjectModel);
+  const [classSchedules, setClassSchedules] = useState<ClassScheduleModel[]>([]);  
+  const params = useParams();    
+  const [isLoading, setIsLoading] = useState(true);  
+  const [teacherUserId, setTeacherUserId] = useState<number>(0);
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const token = await getDecodedAuthToken();
+        if (!token) {
+          console.log("No auth token found.");
+          toast.error("Failed to fetch class subjects!", {
+            description: "No auth token found.",
+          });
+          router.push("/login");
+          return; // Stop execution
+        }
+        const decodedToken = token.data; 
+        if (!decodedToken) {
+          const refreshToken = await refreshAuthToken();
+          if (!refreshToken || refreshToken.success === false) {
+            router.push("/login");
+          }
+          setTeacherUserId(refreshToken.data.id);
+        }
+        else {
+          setTeacherUserId(decodedToken.id);
+        }
+      } catch (error) {
+        console.error("Error checking session:", error);
+        router.push("/login");
+      }
+    };
+    checkSession();
+  }, [router]);
+
+  useEffect(() => {
+    const fetchData = async () => {      
+      try {                                    
+        const [resSubject, resSchedules] = await Promise.all([
+          getClassSubjectById(Number(params.subject_id)),          
+          getClassSchedules(Number(params.subject_id)),
+        ]);
+
+        if (!resSubject.success) {
+            throw new Error(resSubject.message);
+        }
+
+        if (!resSchedules.success) {
+          throw new Error(resSchedules.message);
+      }      
+        setClassSubject(resSubject.data);                  
+        setClassSchedules(resSchedules.data);          
+      } catch (error) {
+        console.log("Error fetching class subject:", error);
+        toast.error("Failed to fetch class subject!", {
+          description: error instanceof Error ? error.message : JSON.stringify(error),
+        });
+      }
+      finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchData();    
+  }, [params.subject_id]);
+
+  const viewScheduleSession = async (schedule_id: number) => {
+    const schedule = classSchedules.find(schedule => schedule.id === schedule_id);
+    if (!schedule) {
+      toast.error("Schedule not found!");
+      return;
+    }
+    await router.push(`/teacher/my-classes/current/class-details/${classSubject.id}/${schedule_id}/view`)      
+  }
+
+  const statusActions = (schedule: ClassScheduleModel) : Record<string, JSX.Element> => ({    
+    finished: (
+      <div className="flex justify-center gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">              
+                <DropdownMenuItem onClick={() => viewScheduleSession(schedule.id)}>
+                  <ViewIcon /> View
+                </DropdownMenuItem>                        
+            </DropdownMenuContent>
+        </DropdownMenu>    
+      </div>          
+    ),    
+  });  
+  return (
+    <>
+    <SidebarProvider>
+      <AppSidebarTeacher userId={teacherUserId} />
+      <SidebarInset>
+      <header className="flex h-16 shrink-0 items-center justify-between gap-2 sticky top-0 bg-white z-10 px-4 sm:px-4 border-b">
+            <div className="flex items-center gap-2">
+                <SidebarTrigger className="-ml-1" />
+                <Separator orientation="vertical" className="mr-2 h-4" />
+                <Breadcrumb>
+                    <BreadcrumbList>
+                        <BreadcrumbItem className="hidden md:block">
+                            <BreadcrumbLink href="#">My Classes</BreadcrumbLink>
+                        </BreadcrumbItem> 
+                        <BreadcrumbSeparator>
+                            <ChevronRight className="h-4 w-4" />
+                        </BreadcrumbSeparator> 
+                        <BreadcrumbItem>
+                            <BreadcrumbLink href="/teacher/my-classes/current">
+                              Current
+                            </BreadcrumbLink>
+                        </BreadcrumbItem>                          
+                        <BreadcrumbSeparator>
+                            <ChevronRight className="h-4 w-4" />
+                        </BreadcrumbSeparator>   
+                        <BreadcrumbItem>
+                            <BreadcrumbLink href={`/teacher/my-classes/current/class-details/${params.subject_id}`}>
+                              Details
+                            </BreadcrumbLink>
+                        </BreadcrumbItem>         
+                    </BreadcrumbList>              
+                </Breadcrumb>            
+            </div>          
+            <div className="flex items-center">
+                <div className="relative">
+                    {/* <button aria-label='bell' className="p-2 rounded-full hover:bg-gray-100">
+                        <Bell className="w-6 h-6 text-gray-600" />
+                        <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0">3</Badge>
+                    </button> */}
+                </div>
+            </div>
+        </header>
+        <div className="flex-1 p-2 sm:p-4">     
+          {isLoading ? (
+            <Loading/>
+          ) :  (
+            <>
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0 mb-2">
+                <div>   
+                  <h1 className="text-base sm:text-2xl font-bold">
+                     {classSubject.name ?? ""}                                          
+                  </h1>
+                  <pre className="mt-0 text-base text-gray-600">{`[ ${classSubject.days} ] ${classSubject.time_schedule}`}</pre>
+                </div>                
+              </div>                            
+              <div className="flex flex-col gap-4 sm:gap-6">
+                {/* Class Schedule Card */}
+                <Card className="w-full">
+                  <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <CardTitle className="flex items-center gap-2 text-lg sm:text-xl ">
+                      <CalendarDays className="h-4 w-4 sm:h-5 sm:w-5" />
+                      Class Schedule
+                    </CardTitle>                    
+                  </CardHeader>
+                  <CardContent>
+                    <ScrollArea className="h-[300px] sm:h-[400px] pr-4">
+                      <div className="w-full overflow-auto">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead className="whitespace-nowrap">
+                                Date
+                              </TableHead>
+                              <TableHead className="whitespace-nowrap hidden sm:table-cell">
+                                Time
+                              </TableHead>
+                              <TableHead className="whitespace-nowrap">
+                                Status
+                              </TableHead>
+                              <TableHead className="whitespace-nowrap hidden md:table-cell">
+                                Remarks
+                              </TableHead>
+                              <TableHead className="whitespace-nowrap text-center hidden lg:table-cell">
+                                Course Content
+                              </TableHead>
+                              <TableHead className="whitespace-nowrap text-center">
+                                Action
+                              </TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                              {classSchedules.length === 0 ? (
+                                <TableRow>
+                                  <TableCell colSpan={6} className="text-center text-gray-500">
+                                    No records available
+                                  </TableCell>
+                                </TableRow>
+                              ) : (
+                                classSchedules
+                                  .sort(
+                                    (a, b) =>
+                                      new Date(b.date_schedule).getTime() -
+                                      new Date(a.date_schedule).getTime()
+                                  )
+                                  .map((schedule) => (
+                                    <TableRow key={schedule.id}>
+                                      <TableCell className="whitespace-nowrap">
+                                        <div>
+                                          {schedule.date_schedule}
+                                          <div className="sm:hidden text-xs text-gray-500">
+                                            {schedule.time_start + " - " + schedule.time_end}
+                                          </div>
+                                        </div>
+                                      </TableCell>
+                                      <TableCell className="whitespace-nowrap hidden sm:table-cell">
+                                        {schedule.time_start + " - " + schedule.time_end}
+                                      </TableCell>
+                                      <TableCell>
+                                        <Badge
+                                          variant="secondary"
+                                          className={`${getStatusColor(schedule.status)} text-white whitespace-nowrap`}>
+                                          {schedule.status}
+                                        </Badge>                                        
+                                      </TableCell>
+                                      <TableCell className="max-w-[200px] truncate hidden md:table-cell">
+                                        {schedule.remarks}
+                                      </TableCell>
+                                      <TableCell className="hidden lg:table-cell">
+                                        <div className="flex justify-center">
+                                          <CourseContentModal schedule={schedule} variant="teacher"/>
+                                        </div>
+                                      </TableCell>
+                                      <TableCell>
+                                        {statusActions(schedule)[schedule.status] || <p className="text-center text-gray-500">No actions available</p>}
+                                      </TableCell>
+                                    </TableRow>
+                                  ))
+                              )}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </ScrollArea>
+                  </CardContent>
+                </Card>                
+              </div>
+            </>          
+          )}               
+        </div>
+        <Toaster />
+      </SidebarInset>
+    </SidebarProvider>              
+    </>
+  );
+};
+
+export default SubjectDetails;

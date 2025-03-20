@@ -80,7 +80,6 @@ export const getClassSubjectsByStudentId = async (student_user_id: number, statu
     }    
 };
 
-
 export const createClassSubject = async (
   classSubject: Omit<ClassSubjectModel, "id">) => {       
     try {

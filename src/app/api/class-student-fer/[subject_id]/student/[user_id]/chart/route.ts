@@ -19,23 +19,54 @@ export async function GET(req: NextRequest, { params }: { params: { subject_id: 
         return NextResponse.json({ message: "Invalid User Id" }, { status: 400 });
     }
 
-    const result = await prisma.$queryRaw`
-      WITH AggregatedExpressions AS (
-          SELECT                                 
-              ROUND(AVG(surprised), 2) AS surprised,
-              ROUND(AVG(happy), 2) AS happy,
-              ROUND(AVG(neutral), 2) AS neutral,
-              ROUND(AVG(sad), 2) AS sad,
-              ROUND(AVG(angry), 2) AS angry,
-              ROUND(AVG(disgusted), 2) AS disgusted,
-              ROUND(AVG(fearful), 2) AS fearful
-          FROM dberal.ClassStudentsFER
-          WHERE class_subject_id = ${classSubjectId}          
-          AND student_user_id = ${classUserId}
-          GROUP BY class_subject_id, student_user_id
+    const result = await prisma.$queryRaw<Array<{
+        date_group: string;
+        class_subject_id: number;
+        student_user_id: number;
+        surprised: number;
+        happy: number;
+        neutral: number;
+        sad: number;
+        angry: number;
+        disgusted: number;
+        fearful: number;
+        na: number;
+    }>>`
+    WITH AggregatedData AS (
+          SELECT 
+              DATE_FORMAT(DATE_ADD(datetime_stamp, INTERVAL 8 HOUR), '%Y-%m-%d') AS date_group, 
+              class_subject_id,
+              student_user_id,
+              COUNT(CASE WHEN dominant_fer = 'surprised' THEN 1 END) AS surprised_count,
+              COUNT(CASE WHEN dominant_fer = 'happy' THEN 1 END) AS happy_count,
+              COUNT(CASE WHEN dominant_fer = 'neutral' THEN 1 END) AS neutral_count,
+              COUNT(CASE WHEN dominant_fer = 'sad' THEN 1 END) AS sad_count,
+              COUNT(CASE WHEN dominant_fer = 'angry' THEN 1 END) AS angry_count,
+              COUNT(CASE WHEN dominant_fer = 'disgusted' THEN 1 END) AS disgusted_count,
+              COUNT(CASE WHEN dominant_fer = 'fearful' THEN 1 END) AS fearful_count,  
+              COUNT(CASE WHEN dominant_fer = 'na' THEN 1 END) AS na_count,  
+              COUNT(*) AS total_count -- Total number of records per minute
+          FROM ClassStudentsFER
+          WHERE class_subject_id = ${classSubjectId}
+            AND student_user_id = ${classUserId}          
+          GROUP BY date_group, class_subject_id, student_user_id
       )
-      SELECT * FROM AggregatedExpressions
-      `;
+      SELECT 
+      date_group,
+          class_subject_id,
+          student_user_id,          
+          ROUND((surprised_count / total_count) * 100, 2) AS surprised,
+          ROUND((happy_count / total_count) * 100, 2) AS happy,
+          ROUND((neutral_count / total_count) * 100, 2) AS neutral,
+          ROUND((sad_count / total_count) * 100, 2) AS sad,
+          ROUND((angry_count / total_count) * 100, 2) AS angry,
+          ROUND((disgusted_count / total_count) * 100, 2) AS disgusted,
+          ROUND((fearful_count / total_count) * 100, 2) AS fearful,
+          ROUND((na_count / total_count) * 100, 2) AS na
+      FROM AggregatedData
+      WHERE total_count > 0
+      ORDER BY class_subject_id, student_user_id                  
+      `;   
 
     return NextResponse.json({
         success: true,

@@ -44,16 +44,14 @@ export function AppSidebarTeacher({ userId, ...props }: AppSidebarTeacherProps) 
 
   useEffect(() => {
     const fetchData = async () => {
-      try {     
-        console.log("UserId:", userId);    
+      try {                
         if (userId === 0)  return;    
 
         const response = await getUserByUserId(userId);
 
         if (!response.success) {
           throw new Error(response.message);
-        }
-        console.log(response.data);
+        }        
         setUser(response.data);          
       } catch (error) {
         console.log("Error fetching User:", error);       

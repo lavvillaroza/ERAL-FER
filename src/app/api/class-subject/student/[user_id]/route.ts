@@ -29,30 +29,23 @@ export async function GET(req: NextRequest, { params }: { params: { user_id: str
             { status: 400 });
     }
 
-
-    const classSubjects = await prisma.classSubject.findMany({
-        where: {
-          status: status, // Fetch only completed classes
-          students: {
-            some: {
-              student_id: studentUserId
-            }
-          }
+    const classStudents = await prisma.classStudents.findMany({
+      where: {
+        student_id: studentUserId,
+        subject: {
+          status: status, // Filtering based on ClassSubject's status                        
         },
-        include: {
-          students: {
-            include: {
-              student_details: true // Include student details if needed
-            }
-          },
-          schedules: true // Include schedules if needed
-        }
-      });
-
+      },
+      include: {
+        subject: true, // To fetch related ClassSubject data
+        student_details: true, // To fetch related UserDetails data
+      },
+    });
+    const subjects = classStudents.map(cs => cs.subject);
     return NextResponse.json({
         success: true,
         message: "Class Subjects fetched successfully!",
-        data: classSubjects},
+        data: subjects},
         { status: 200 });      
   } catch (error) {    
     return handleApiError(error);

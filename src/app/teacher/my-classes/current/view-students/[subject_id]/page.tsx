@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogDescription,  DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Users, ChevronRight, Bell, Search, Save, BadgePlus, BadgeX } from "lucide-react";
+import { Users, ChevronRight, Search, Save, BadgePlus, BadgeX } from "lucide-react";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { Input } from "@/components/ui/input";
 import { ClassSubjectModel } from "@/models/classSubjectModel";
@@ -23,8 +23,9 @@ import { GetFullName } from "@/lib/fullName";
 import { UserRole } from "@/types/userRole";
 import { UserDetailsModel } from "@/models/userDetailsModel";
 import Loading from "@/components/loading";
-import { ExpressionChartsDummy } from "@/components/expression-charts-dummy";
+import { ExpressionChartsComplete } from "@/components/expression-charts-complete";
 import { getDecodedAuthToken, refreshAuthToken } from "@/services/authAppService";
+import { getFERChartDataBySubjectId } from "@/services/classStudentFerAppService";
 
 const ViewStudents = () => {  
   const router = useRouter();
@@ -42,6 +43,17 @@ const ViewStudents = () => {
   const [isSaving, setIsSaving] = useState(false);  
   const [isLoading, setIsLoading] = useState(true);  
   const [teacherUserId, setTeacherUserId] = useState<number>(0);
+
+  const [moods, setMoods] = useState([
+    { icon: "😲", percentage: "0.00", label: "Surprised", bgClass: "bg-gray-100/50", color: "text-orange-500" },
+    { icon: "😊", percentage: "0.00", label: "Happy", bgClass: "bg-gray-100/50", color: "text-green-500" },
+    { icon: "😐", percentage: "0.00", label: "Neutral", bgClass: "bg-gray-100/50", color: "text-blue-500" },
+    { icon: "😢", percentage: "0.00", label: "Sad", bgClass: "bg-gray-100/50", color: "text-purple-500" },
+    { icon: "🤢", percentage: "0.00", label: "Disgusted", bgClass: "bg-gray-100/50", color: "text-zinc-700" },
+    { icon: "😡", percentage: "0.00", label: "Angry", bgClass: "bg-gray-100/50", color: "text-red-500" },
+    { icon: "😨", percentage: "0.00", label: "Fearful", bgClass: "bg-gray-100/50", color: "text-slate-500" },
+    { icon: "😶", percentage: "0.00", label: "NA", bgClass: "bg-gray-100/50", color: "hsl(0, 0%, 50%)" },
+  ]);
 
   useEffect(() => {
     const checkSession = async () => {
@@ -77,16 +89,30 @@ const ViewStudents = () => {
   useEffect(() => {        
     const fetchData = async () => {
       try {                                    
-        const [responseSubject, responseStudents, responseStudentList] = await Promise.all([
+        const [responseSubject, responseStudents, responseStudentList, responseExpression] = await Promise.all([
           getClassSubjectById(Number(params.subject_id)),
           getClassStudents(Number(params.subject_id)),          
           getUsersDetailsByRole(UserRole.STUDENT),
+          getFERChartDataBySubjectId(Number(params.subject_id))
         ]);
 
         setClassSubject(responseSubject.data);  
         setClassstudents(responseStudents.data);                 
         setAvailableStudents(responseStudentList.data);
-
+        if (responseExpression.data) {          
+          setMoods((prevMoods) => {
+            const newMoods =  responseExpression.data[0] || {};            
+            const updatedMoods = prevMoods.map((mood) => {
+              const moodKey = mood.label.toLowerCase().trim(); // Trim extra spaces
+              const moodValue = newMoods[moodKey];
+              return {
+                ...mood,
+                percentage: moodValue ? Number(moodValue).toFixed(2) : "0.00",
+              };
+            });        
+            return updatedMoods;
+          });          
+        }        
       } catch (error) {
         console.log("Error fetching class subject:", error);
         toast.error("Failed to fetch class subject!", {
@@ -99,18 +125,12 @@ const ViewStudents = () => {
     }    
     fetchData();    
   }, [params.subject_id]);
+
+  useEffect(() => {
+    
+    console.log("Updated moods:", moods);
+  }, [moods]); // ✅ Logs moods only when updated
   
-
-  const [moods] = useState([
-    { icon: "😲", percentage: "0.00", label: "Surprised", bgClass: "bg-gray-100/50", color: "text-orange-500" },
-    { icon: "😊", percentage: "0.00", label: "Happy", bgClass: "bg-gray-100/50", color: "text-green-500" },
-    { icon: "😐", percentage: "0.00", label: "Neutral", bgClass: "bg-gray-100/50", color: "text-blue-500" },
-    { icon: "😢", percentage: "0.00", label: "Sad", bgClass: "bg-gray-100/50", color: "text-purple-500" },
-    { icon: "🤢", percentage: "0.00", label: "Disgusted", bgClass: "bg-gray-100/50", color: "text-zinc-700" },
-    { icon: "😡", percentage: "0.00", label: "Angry", bgClass: "bg-gray-100/50", color: "text-red-500" },
-    { icon: "😨", percentage: "0.00", label: "Fearful", bgClass: "bg-gray-100/50", color: "text-slate-500" },
-  ]);
-
   const fetchUpdatedClassStudents = async () => {
     try {
       const responseStudents = await getClassStudents(Number(params.subject_id));
@@ -242,7 +262,7 @@ const ViewStudents = () => {
     <SidebarProvider>
         <AppSidebarTeacher userId={teacherUserId}/>
             <SidebarInset>
-                <header className="flex h-16 shrink-0 items-center justify-between gap-2 sticky top-0 bg-white z-10 px-2 sm:px-4">
+                <header className="flex h-16 shrink-0 items-center justify-between gap-2 sticky top-0 bg-white z-10 px-2 sm:px-4 border-b">
                     <div className="flex items-center gap-2">
                         <SidebarTrigger className="-ml-1" />
                         <Separator orientation="vertical" className="mr-2 h-4" />
@@ -272,9 +292,9 @@ const ViewStudents = () => {
                     </div>          
                     <div className="flex items-center">
                         <div className="relative">
-                            <button aria-label='bell' className="p-2 rounded-full hover:bg-gray-100">
+                            {/* <button aria-label='bell' className="p-2 rounded-full hover:bg-gray-100">
                                 <Bell className="w-6 h-6 text-gray-600" />
-                            </button>
+                            </button> */}
                         </div>
                     </div>
                 </header>
@@ -425,21 +445,19 @@ const ViewStudents = () => {
                               <DialogHeader>
                                   <DialogTitle>Confirm Removal</DialogTitle>
                                   <DialogDescription>
-                                  Are you sure you want to remove {studentToRemove?.first_name + " " + studentToRemove?.middle_name + " " + studentToRemove?.last_name} from this class?
+                                    Are you sure you want to remove {studentToRemove?.first_name + " " + studentToRemove?.middle_name + " " + studentToRemove?.last_name} from this class?
                                   </DialogDescription>
                               </DialogHeader>
                               <div className="flex justify-end gap-2 mt-4">
                                   <Button
-                                  variant="outline"
-                                  onClick={() => setShowConfirmDialog(false)}
-                                  >
-                                  Cancel
+                                    variant="outline"
+                                    onClick={() => setShowConfirmDialog(false)}>
+                                    Cancel
                                   </Button>
                                   <Button
-                                  variant="destructive"
-                                  onClick={handleConfirmRemove}
-                                  >
-                                  Remove
+                                    variant="destructive"
+                                    onClick={handleConfirmRemove}>
+                                    Remove
                                   </Button>
                               </div>
                               </DialogContent>
@@ -447,9 +465,8 @@ const ViewStudents = () => {
                           )}        
                       </div>
                       <div className="h-auto sm:h-[165px] mb-4">
-                          <ExpressionChartsDummy moods={moods} />
+                          <ExpressionChartsComplete moods={moods} />                                                                       
                       </div>
-
                       <div className="flex flex-col gap-4 sm:gap-6">
                           {/* Student List Card */}
                           <Card className="w-full">
@@ -510,8 +527,7 @@ const ViewStudents = () => {
                                   </ScrollArea>
                               </CardContent>
                           </Card>                             
-                      </div>
-                      
+                      </div>                      
                       </>
                     )}                    
                 </div>

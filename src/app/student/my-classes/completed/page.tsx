@@ -8,13 +8,11 @@ import { useEffect, useState } from "react";
 import { ClassSubjectModel } from "@/models/classSubjectModel";
 import { getDecodedAuthToken, refreshAuthToken } from "@/services/authAppService";
 import { toast, Toaster } from "sonner";
-import { getClassSubjectsByTeacherId } from "@/services/classSubjectAppService";
 import { ClassStatus } from "@/types/classStatus";
-import { Bell } from "lucide-react";
 import Loading from "@/components/loading";
 import { useRouter } from "next/navigation";
-import { Badge } from "@/components/ui/badge";
 import { AppSidebarStudent } from "@/components/app-sidebar-student";
+import { getClassSubjectsByStudentId } from "@/services/classSubjectAppService";
 
 export default function Page() {
   const router = useRouter();
@@ -55,8 +53,9 @@ export default function Page() {
       try {        
           console.log(studentUserId);
           if (studentUserId === 0) return;
-          const response = await getClassSubjectsByTeacherId(studentUserId, ClassStatus.COMPLETED);        
-          if (response.success === true) {
+          const response = await getClassSubjectsByStudentId(studentUserId, ClassStatus.COMPLETED);                  
+          console.log("RESPONSE:" ,response.data);
+          if (response.success === true) {            
             setClassSubjects(response.data);  
           }
           else {
@@ -79,7 +78,7 @@ export default function Page() {
     // Cleanup function to clear interval when component unmounts
     return () => clearInterval(intervalId);
     
-  }, []);
+  }, [studentUserId]);
   return (
     <>
       <SidebarProvider>
@@ -103,10 +102,10 @@ export default function Page() {
             </div>
             <div className="flex items-center">
               <div className="relative">
-                  <button aria-label='bell' className="p-2 rounded-full hover:bg-gray-100">
+                  {/* <button aria-label='bell' className="p-2 rounded-full hover:bg-gray-100">
                       <Bell className="w-6 h-6 text-gray-600" />
                       <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0">3</Badge>
-                  </button>
+                  </button> */}
               </div>
             </div>        
           </header>

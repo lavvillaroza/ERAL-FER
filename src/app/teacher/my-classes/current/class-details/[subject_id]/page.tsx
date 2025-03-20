@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { CalendarDays, ChevronRight, Plus, MoreHorizontal, Bell, CircleX, MergeIcon, ViewIcon, DoorOpenIcon, CircleXIcon } from "lucide-react";
+import { CalendarDays, ChevronRight, Plus, MoreHorizontal, CircleX, MergeIcon, ViewIcon, DoorOpenIcon, CircleXIcon } from "lucide-react";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -281,7 +281,7 @@ const SubjectDetails = () => {
             </DialogContent>
           </Dialog>
           <div className="lg:hidden flex justify-center">
-            <CourseContentModal schedule={schedule}/>
+            <CourseContentModal schedule={schedule} variant="teacher"/>
           </div>
       </div>
     ),
@@ -407,9 +407,9 @@ const SubjectDetails = () => {
   };
 
   const handleEndClass = async () => { 
-    const response = await updateClassSubjectStatus(Number(params.subject_id), ClassStatus.COMPLETED)      
-    if (response.success) {        
-      router.push(`/teacher/my-classes/current/class-details/${classSubject.id}`)      
+      const response = await updateClassSubjectStatus(Number(params.subject_id), ClassStatus.COMPLETED)      
+    if (response.success) {              
+      await router.push(`/teacher/my-classes/current`)      
     }
     else {
       toast.error("Error!", {
@@ -452,10 +452,10 @@ const SubjectDetails = () => {
             </div>          
             <div className="flex items-center">
                 <div className="relative">
-                    <button aria-label='bell' className="p-2 rounded-full hover:bg-gray-100">
+                    {/* <button aria-label='bell' className="p-2 rounded-full hover:bg-gray-100">
                         <Bell className="w-6 h-6 text-gray-600" />
                         <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0">3</Badge>
-                    </button>
+                    </button> */}
                 </div>
             </div>
         </header>
@@ -474,7 +474,7 @@ const SubjectDetails = () => {
                 <Button
                     variant="destructive"
                     size="sm" className="w-full sm:w-auto mr-6"
-                    onClick={() => {console.log("End Session is clicked!")}}>
+                    onClick={() => setIsEndClassDialogOpen(true)}>
                     <CircleX className="h-4 w-4 mr-1" /> End Class
                 </Button>
               </div>
@@ -608,7 +608,7 @@ const SubjectDetails = () => {
                                       </TableCell>
                                       <TableCell className="hidden lg:table-cell">
                                         <div className="flex justify-center">
-                                          <CourseContentModal schedule={schedule}/>
+                                          <CourseContentModal schedule={schedule} variant={"teacher"}/>
                                         </div>
                                       </TableCell>
                                       <TableCell>

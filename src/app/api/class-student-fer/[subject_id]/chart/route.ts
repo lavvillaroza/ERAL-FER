@@ -14,38 +14,25 @@ export async function GET(req: NextRequest, { params }: { params: { subject_id: 
         return NextResponse.json({ message: "Invalid Class Subject Id" }, { status: 400 });
     }  
     
-    const result = await prisma.$queryRaw<Array<{          
-        class_subject_id: number;        
-        time_per_minute: Date;
-        surprised: number;
-        happy: number;
-        neutral: number;
-        sad: number;
-        angry: number;
-        disgusted: number;
-        fearful: number;
-        na: number;
-    }>>`
+    const result = await prisma.$queryRaw`
     WITH AggregatedData AS (
         SELECT 
-            class_subject_id,                  
-            DATE_FORMAT(datetime_stamp, '%Y-%m-%d %H:%i') AS time_per_minute,
+            class_subject_id,
             COUNT(CASE WHEN dominant_fer = 'surprised' THEN 1 END) AS surprised_count,
             COUNT(CASE WHEN dominant_fer = 'happy' THEN 1 END) AS happy_count,
             COUNT(CASE WHEN dominant_fer = 'neutral' THEN 1 END) AS neutral_count,
             COUNT(CASE WHEN dominant_fer = 'sad' THEN 1 END) AS sad_count,
             COUNT(CASE WHEN dominant_fer = 'angry' THEN 1 END) AS angry_count,
             COUNT(CASE WHEN dominant_fer = 'disgusted' THEN 1 END) AS disgusted_count,
-            COUNT(CASE WHEN dominant_fer = 'fearful' THEN 1 END) AS fearful_count,  
-            COUNT(CASE WHEN dominant_fer = 'na' THEN 1 END) AS na_count,  
+            COUNT(CASE WHEN dominant_fer = 'fearful' THEN 1 END) AS fearful_count,     
+            COUNT(CASE WHEN dominant_fer = 'na' THEN 1 END) AS na_count,
             COUNT(*) AS total_count -- Total number of records per minute
         FROM ClassStudentsFER
-        WHERE class_subject_id = ${classSubjectId}                                 
-        GROUP BY class_subject_id, time_per_minute
-    )
-    SELECT 
-        class_subject_id,        
-        time_per_minute,
+        WHERE class_subject_id = ${classSubjectId} 
+        GROUP BY class_subject_id
+        )
+        SELECT 
+        class_subject_id,
         ROUND((surprised_count / total_count) * 100, 2) AS surprised,
         ROUND((happy_count / total_count) * 100, 2) AS happy,
         ROUND((neutral_count / total_count) * 100, 2) AS neutral,
@@ -54,9 +41,9 @@ export async function GET(req: NextRequest, { params }: { params: { subject_id: 
         ROUND((disgusted_count / total_count) * 100, 2) AS disgusted,
         ROUND((fearful_count / total_count) * 100, 2) AS fearful,
         ROUND((na_count / total_count) * 100, 2) AS na
-    FROM AggregatedData
-    WHERE total_count > 0
-    ORDER BY class_subject_id, time_per_minute;  
+        FROM AggregatedData
+        WHERE total_count > 0
+        ORDER BY class_subject_id    
     `;
 
     return NextResponse.json({

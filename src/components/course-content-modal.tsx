@@ -13,8 +13,9 @@ import { getClassCourseContentByScheduleId, getClassScheduleById, updateClassCou
 import { toast, Toaster } from "sonner";
 import Loading from "@/components/loading";
 import { convertTo24HourFormat, formatDate, formatTime } from '@/lib/formatTime';
+import { ClassScheduleStatus } from '@/types/classScheduleStatus';
 
-const CourseContentModal = ({ schedule }: { schedule: ClassScheduleModel }) => {  
+const CourseContentModal = ({ schedule, variant }: { schedule: ClassScheduleModel, variant: "student" | "teacher" }) => {  
   const [scheduleSelected, setScheduleSelected] = useState<ClassScheduleModel>(schedule);
   const [courseContents, setCourseContents] = useState<ClassCourseContentModel[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -22,7 +23,6 @@ const CourseContentModal = ({ schedule }: { schedule: ClassScheduleModel }) => {
   const [editCourseContentOpen, setEditCourseContentOpen] = useState(false);
   const [editScheduleTopicTitle, setEditScheduleTopicTitle] = useState('');  
   const [editCourseContents, setEditCourseContents] = useState<ClassCourseContentModel[]>([]);
-
 
   useEffect(() => {
     if (!schedule?.id || !schedule?.class_subject_id) return;
@@ -199,14 +199,19 @@ const CourseContentModal = ({ schedule }: { schedule: ClassScheduleModel }) => {
                 {formatDate(schedule.date_schedule)} • {`${schedule.time_start} - ${schedule.time_end}`}
               </DialogDescription>
             </div>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={startEditMode}>
-                <Edit className="h-4 w-4 mr-1" /> Edit
-              </Button>            
-            </div>
+            {schedule.status !== ClassScheduleStatus.FiNISHED  && 
+              (
+                variant === "teacher" && (
+                  <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={startEditMode}>
+                    <Edit className="h-4 w-4 mr-1" /> Edit
+                  </Button>            
+                </div>
+                )                
+            )}            
           </DialogHeader>
 
           {/* Edit Lesson Modal */}

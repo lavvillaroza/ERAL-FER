@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { AppSidebarTeacher } from "@/components/app-sidebar-teacher";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
-import { ChevronRight, Bell} from "lucide-react";
+import { ChevronRight} from "lucide-react";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { CourceContents } from "@/components/course-contents";
 import { ClassSubjectModel } from "@/models/classSubjectModel";
@@ -29,7 +29,6 @@ import { ClassStudentFERAggStudentModel } from "@/models/classStudentFERAggStude
 import { getDecodedAuthToken, refreshAuthToken } from "@/services/authAppService";
 import { getUserThresholdByUserId } from "@/services/userAppService";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
 import { UserTeacherThresholdModel } from "@/models/userTeacherThresholdModel";
 
 const ScheduleSession = () => {  
@@ -250,15 +249,15 @@ const ScheduleSession = () => {
     return () => clearInterval(interval);
   }, [serverTime, params.subject_id, params.schedule_id]);
 
-  useEffect(() => {
-    console.log("Enter here!")
-    if (classSchedule.status === ClassScheduleStatus.OPENED) {
-      console.log("Detected Schedule Opened!");
+  useEffect(() => {    
+    if (classSchedule.status === ClassScheduleStatus.OPENED) {      
       const interval = setInterval(async () => {
         const response5minutes = await getFERLast5MinutesDataBySubjectSchedIds(
           Number(params.subject_id), 
           Number(params.schedule_id)
         );
+
+        if(!response5minutes.data) return;
   
         if (response5minutes.success) {
           console.log("Fetching 5minutes data:", response5minutes.data);
@@ -269,8 +268,8 @@ const ScheduleSession = () => {
               icon: "😢",
               duration: 5000,
               style: {
-                backgroundColor: "hsl(240, 90%, 50%)",
-                color: "#09090b",
+                backgroundColor: "hsl(0, 90%, 50%)",
+                color: "#f9fafb",
               },
             });
           }
@@ -282,8 +281,8 @@ const ScheduleSession = () => {
               icon: "🤢",
               duration: 5000,
               style: {
-                backgroundColor: "hsl(60, 90%, 50%)",
-                color: "#09090b",
+                backgroundColor: "hsl(0, 90%, 50%)",
+                color: "#f9fafb",
               },
             });
           }
@@ -308,8 +307,8 @@ const ScheduleSession = () => {
               icon: "😨",
               duration: 5000,
               style: {
-                backgroundColor: "hsl(280, 90%, 50%)",
-                color: "#09090b",
+                backgroundColor: "hsl(0, 90%, 50%)",
+                color: "#f9fafb",
               },
             });
           }
@@ -320,8 +319,8 @@ const ScheduleSession = () => {
               description: `${response5minutes.data.na}% of the students are not showing their faces on camera.`,
               duration: 5000,
               style: {
-                backgroundColor: "hsl(0, 0%, 50%)",
-                color: "#09090b",
+                backgroundColor: "hsl(0, 90%, 50%)",
+                color: "#f9fafb",
               },
             });
           }
@@ -392,10 +391,10 @@ const ScheduleSession = () => {
             </div>          
             <div className="flex items-center">
                 <div className="relative">
-                    <button aria-label='bell' className="p-2 rounded-full hover:bg-gray-100">
+                    {/* <button aria-label='bell' className="p-2 rounded-full hover:bg-gray-100">
                         <Bell className="w-6 h-6 text-gray-600" />
                         <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0">3</Badge>
-                    </button>
+                    </button> */}
                 </div>
             </div>
         </header>

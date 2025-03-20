@@ -271,7 +271,7 @@ const handleNAInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAre
                           required/>                        
                     </div>   
                     <div className="space-y-2">
-                        <Label htmlFor={`sad-threshold`}>Expression</Label>
+                        <Label htmlFor={`sad-threshold`}>Threshold</Label>
                         <Input
                           id={`sad-threshold`}
                           type="number"
@@ -315,7 +315,7 @@ const handleNAInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAre
                           required/>                        
                     </div>   
                     <div className="space-y-2">
-                        <Label htmlFor={`angry-threshold`}>Expression</Label>
+                        <Label htmlFor={`angry-threshold`}>Threshold</Label>
                         <Input
                           id={`angry-threshold`}
                           type="number"
@@ -359,7 +359,7 @@ const handleNAInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAre
                           required/>                        
                     </div>   
                     <div className="space-y-2">
-                        <Label htmlFor={`fearful-threshold`}>Expression</Label>
+                        <Label htmlFor={`fearful-threshold`}>Threshold</Label>
                         <Input
                           id={`fearful-threshold`}
                           type="number"
@@ -403,9 +403,9 @@ const handleNAInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAre
                           required/>                        
                     </div>   
                     <div className="space-y-2">
-                        <Label htmlFor={`fearful-threshold`}>Expression</Label>
+                        <Label htmlFor={`disgusted-threshold`}>Threshold</Label>
                         <Input
-                          id={`fearful-threshold`}
+                          id={`disgusted-threshold`}
                           type="number"
                           min={0}
                           max={100}
@@ -447,7 +447,7 @@ const handleNAInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAre
                           required/>                        
                     </div>   
                     <div className="space-y-2">
-                        <Label htmlFor={`na-threshold`}>Expression</Label>
+                        <Label htmlFor={`na-threshold`}>Threshold</Label>
                         <Input
                           id={`na-threshold`}
                           type="number"

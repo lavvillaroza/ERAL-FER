@@ -4,13 +4,12 @@ import React, { useEffect, useState } from 'react';
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebarAdmin } from "@/components/app-sidebar-admin";
 import { Card, CardContent } from "@/components/ui/card";
-import { Bell } from "lucide-react";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList } from "@/components/ui/breadcrumb";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { TopClassesCard } from "@/components/top-classes-card";
-import { ExpressionChartsDummy } from '@/components/expression-charts-dummy';
+import { ExpressionChartsComplete } from '@/components/expression-charts-complete';
 import { toast, Toaster } from "sonner"
 import { useRouter } from 'next/navigation';
 import { getDecodedAuthToken, refreshAuthToken } from '@/services/authAppService';
@@ -147,17 +146,17 @@ export default function Page() {
           </div>          
           <div className="flex items-center space-x-4 px-4">
             <div className="relative">
-              <button className="p-2 rounded-full hover:bg-gray-100 relative">
+              {/* <button className="p-2 rounded-full hover:bg-gray-100 relative">
                 <Bell className="w-6 h-6 text-gray-600" />
                 <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0">3</Badge>
-              </button>
+              </button> */}
             </div>
           </div>
         </header>
 
         <div className="flex flex-1 flex-col gap-4 p-4 pt-4">            
           <div className="w-full">
-            <ExpressionChartsDummy moods={moods} chartSize={100} strokeWidth={10} className="mb-6" />
+            <ExpressionChartsComplete moods={moods} chartSize={100} strokeWidth={10} className="mb-6" />
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
                  {/* For Notifications Card */}
