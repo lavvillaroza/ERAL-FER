@@ -226,11 +226,15 @@ const ViewStudents = () => {
     setIsSaving(true);    
     try {            
       const addedStudentsIntoClassStudents: ClassStudentModel[] = currentStudents.map(userDetails => ({
-        id: 0,
-        class_subject_id: Number(params.subject_id),
-        student_id: userDetails.user_id,
-        student_details: userDetails}));          
-
+          id: 0,
+          class_subject_id: Number(params.subject_id),
+          student_id: userDetails.user_id,
+          student_details: {
+              ...userDetails,
+              profile_image: null, // Explicitly setting profile_image to null
+          }
+      }));
+       
       if (addedStudentsIntoClassStudents.length > 0) {        
         const saveCurrentStudents = async () => {
           try {
