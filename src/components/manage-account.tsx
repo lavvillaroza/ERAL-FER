@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
-import { Camera } from "lucide-react";
+import { Camera, Save } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { UserModel } from "@/models/userModel";
 import { UserRole } from "@/types/userRole";
@@ -30,6 +30,8 @@ const ManageAccount: React.FC<ManageAccountProps> = ({ isOpen, onClose, user }) 
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [errors, setErrors] = useState<{ [key: string]: string | undefined }>({});
+  const [isProfileSaving, setIsProfileSaving] = useState(false);
+  const [isPasswordSaving, setIsPasswordSaving] = useState(false);
 
   // Sync user prop with state
   useEffect(() => {
@@ -39,6 +41,7 @@ const ManageAccount: React.FC<ManageAccountProps> = ({ isOpen, onClose, user }) 
   }, [user]);
 
   const handleSave = async () => {
+    setIsProfileSaving(true);
     try {        
         if (userInfo?.user_id !== undefined) {
           const response = await updateUserDetailsByUserId(userInfo.user_id, userInfo);
@@ -58,10 +61,13 @@ const ManageAccount: React.FC<ManageAccountProps> = ({ isOpen, onClose, user }) 
         toast.error("Failed to save user details!", {
             description: error instanceof Error ? error.message : JSON.stringify(error),
           });
+    }{
+      setIsProfileSaving(false);
     }
   }
 
   const handleChangePassword = async () => {
+    setIsPasswordSaving(true);
     // Create an instance of ChangePasswordModel
     const passwordData: ChangePasswordModel = {
         currentPassword,
@@ -108,6 +114,7 @@ const ManageAccount: React.FC<ManageAccountProps> = ({ isOpen, onClose, user }) 
     finally {
         // Clear errors and process the password change logic
         setErrors({});
+        setIsPasswordSaving(false);
     }
   }
 
@@ -260,9 +267,23 @@ const ManageAccount: React.FC<ManageAccountProps> = ({ isOpen, onClose, user }) 
                     </div>
                   </div>
                   <div className="flex justify-end">
-                    <Button onClick={handleSave}>
-                        Save Changes
-                    </Button>
+                      <Button
+                          variant="default"
+                          onClick={handleSave}
+                          disabled={isProfileSaving}
+                          className="gap-2">
+                          {isProfileSaving ? (
+                          <>
+                              <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-200 border-t-white"></div>
+                              Saving...
+                          </>
+                          ) : (
+                          <>
+                              <Save className="h-4 w-4" />
+                              Save Changes
+                          </>
+                          )}
+                      </Button>                              
                   </div>
                 </div>
               </CardContent>
@@ -293,9 +314,23 @@ const ManageAccount: React.FC<ManageAccountProps> = ({ isOpen, onClose, user }) 
                     {errors.confirmPassword && <p className="text-red-500 text-sm">{errors.confirmPassword}</p>}
                   </div>                  
                   <div className="flex justify-end">
-                    <Button onClick={handleChangePassword}>
-                        Update Password
-                    </Button>
+                      <Button
+                          variant="default"
+                          onClick={handleChangePassword}
+                          disabled={isPasswordSaving}
+                          className="gap-2">
+                          {isPasswordSaving ? (
+                          <>
+                              <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-200 border-t-white"></div>
+                              Saving...
+                          </>
+                          ) : (
+                          <>
+                              <Save className="h-4 w-4" />
+                              Save Changes
+                          </>
+                          )}
+                      </Button>                        
                   </div>
                 </div>
               </CardContent>

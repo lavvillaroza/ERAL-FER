@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { UserModel } from "@/models/userModel";
 import { getUserThresholdByUserId, updateUserThresholdByUserId } from "@/services/userAppService";
-import { toast, Toaster } from "sonner";
+import { toast } from "sonner";
 import { UserTeacherThresholdModel } from "@/models/userTeacherThresholdModel";
 import { Textarea } from '@/components/ui/textarea';
 import Loading from "@/components/loading";
@@ -569,7 +569,7 @@ const handleNAInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAre
         </Tabs>                
       </DialogContent>
     </Dialog>
-    <Toaster />
+    
     </>
   );
 };
