@@ -187,15 +187,15 @@ const ViewStudents = () => {
                                     <ChevronRight className="h-4 w-4" />
                                 </BreadcrumbSeparator> 
                                 <BreadcrumbItem>
-                                    <BreadcrumbLink href="/teacher/my-classes/current">
-                                      Current
+                                    <BreadcrumbLink href="/teacher/my-classes/completed">
+                                      Completed
                                     </BreadcrumbLink>
                                 </BreadcrumbItem>                                  
                                 <BreadcrumbSeparator>
                                     <ChevronRight className="h-4 w-4" />
                                 </BreadcrumbSeparator>   
                                 <BreadcrumbItem>
-                                    <BreadcrumbLink href={"/teacher/my-classes/current/view-students/" + classSubject.id}>
+                                    <BreadcrumbLink href={"/teacher/my-classes/completed/view-students/" + classSubject.id}>
                                       View Students
                                     </BreadcrumbLink>
                                 </BreadcrumbItem>         

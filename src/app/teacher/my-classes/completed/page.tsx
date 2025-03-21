@@ -53,10 +53,7 @@ export default function Page() {
     const fetchClassSubjects = async () => {                                   
       try {       
           if (teacherUserId === 0) return;                     
-          const response = await getClassSubjectsByTeacherId(teacherUserId, ClassStatus.COMPLETED);      
-          
-          console.log("fetchClassSubjects:",response.data)
-
+          const response = await getClassSubjectsByTeacherId(teacherUserId, ClassStatus.COMPLETED);                
           if (response.success === true) {
             setClassSubjects(response.data);  
           }

@@ -149,15 +149,15 @@ const SubjectDetails = () => {
                             <ChevronRight className="h-4 w-4" />
                         </BreadcrumbSeparator> 
                         <BreadcrumbItem>
-                            <BreadcrumbLink href="/teacher/my-classes/current">
-                              Current
+                            <BreadcrumbLink href="/teacher/my-classes/completed">
+                              Completed
                             </BreadcrumbLink>
                         </BreadcrumbItem>                          
                         <BreadcrumbSeparator>
                             <ChevronRight className="h-4 w-4" />
                         </BreadcrumbSeparator>   
                         <BreadcrumbItem>
-                            <BreadcrumbLink href={`/teacher/my-classes/current/class-details/${params.subject_id}`}>
+                            <BreadcrumbLink href={`/teacher/my-classes/completed/class-details/${params.subject_id}`}>
                               Details
                             </BreadcrumbLink>
                         </BreadcrumbItem>         
