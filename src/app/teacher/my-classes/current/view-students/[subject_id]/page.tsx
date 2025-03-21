@@ -138,31 +138,33 @@ const ViewStudents = () => {
     }    
     fetchData();    
   }, [params.subject_id]);
-
   
   useEffect(() => {
     const getStudentList = mapFERDataToStudents(classStudents, classStudentFerData)
     setStudentList(getStudentList);    
   }, [classStudents, classStudentFerData]); // ✅ Logs moods only when updated
   
-  const mapFERDataToStudents = (
-    classStudents: ClassStudentModel[],
-    ferData: classStudentFERAggStudentsDataModel[]
-  ): (ClassStudentFERAggStudentModel & { ferData?: classStudentFERAggStudentsDataModel })[] => {
-    return classStudents.map(student => {
-      const dominantExpression = getDominantExpression(ferData.find(fer => fer.student_user_id === student.student_id) ?? {} as classStudentFERAggStudentsDataModel);
-      
-      return {
-        id: student.student_details.user_id,
-        full_name: GetFullName(student.student_details),
-        course: student.student_details.course || "", // Provide a default value for null
-        dominantExpression: String(dominantExpression.expression || "NONE"),
-        average: Number(dominantExpression.value) || 0,    
-      };
-    });
-  };
+    const mapFERDataToStudents = (
+      classStudents: ClassStudentModel[],
+      ferData: classStudentFERAggStudentsDataModel[]
+    ): (ClassStudentFERAggStudentModel & { ferData?: classStudentFERAggStudentsDataModel })[] => {
+      return classStudents.map(student => {
+        const dominantExpression = getDominantExpression(ferData.find(fer => fer.student_user_id === student.student_id) ?? {} as classStudentFERAggStudentsDataModel);
+        
+        return {
+          id: student.student_details.user_id,
+          full_name: GetFullName(student.student_details),
+          course: student.student_details.course || "", // Provide a default value for null
+          dominantExpression: String(dominantExpression.expression || "NONE"),
+          average: Number(dominantExpression.value) || 0,    
+        };
+      });
+    };
 
-    const getDominantExpression = (ferData: classStudentFERAggStudentsDataModel) => {
+  const getDominantExpression = (ferData: classStudentFERAggStudentsDataModel) => {
+      if (!ferData) {
+        return { expression: "NONE", value: 0 };
+      }
       const emotions = {
         surprised: ferData.surprised,
         happy: ferData.happy,

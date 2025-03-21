@@ -66,6 +66,7 @@ const SubjectDetails = () => {
   const [openAddScheduleDialog, setOpenAddScheduleDialog] = useState(false);
   const [isEndClassDialogOpen, setIsEndClassDialogOpen] = useState(false);
   const [teacherUserId, setTeacherUserId] = useState<number>(0);
+  const [isSavingSchedule, setIsSavingSchedule] = useState(false);
   useEffect(() => {
     const checkSession = async () => {
       try {
@@ -347,6 +348,10 @@ const SubjectDetails = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();    
+
+    if (isSavingSchedule) return; // Prevent multiple submissions
+      setIsSavingSchedule(true);
+
     try {
 
       newSchedule.class_subject_id = classSubject.id;
@@ -537,7 +542,9 @@ const SubjectDetails = () => {
                             </div>
                           </div>
                           <DialogFooter className="flex-col sm:flex-row gap-2">
-                            <Button type="submit" className="w-full sm:w-auto">Save</Button>
+                            <Button type="submit" className="w-full sm:w-auto" disabled={isSavingSchedule}>
+                              {isSavingSchedule ? "Saving..." : "Save"}
+                          </Button>
                           </DialogFooter>
                         </form>
                       </DialogContent>
