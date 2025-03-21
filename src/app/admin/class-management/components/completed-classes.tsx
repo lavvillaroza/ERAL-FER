@@ -1,61 +1,156 @@
 'use client'
 
-import { useState } from 'react'
-import { DataTable } from "@/components/ui/data-table"
-import { Button } from "@/components/ui/button"
-import { DonutChart } from "@/components/donut-chart"
-import { Card, CardContent } from '@/components/ui/card'
+import { useEffect, useState } from 'react'
+import { DonutChart } from '@/components/donut-chart'
+import { DataTable } from '@/components/ui/data-table'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardFooter } from '@/components/ui/card'
+import TimelineModal from './TimelineModal'
+import { ClassSubjectModel } from '@/models/classSubjectModel'
+import { toast, Toaster } from "sonner";
+import { getDecodedAuthToken, refreshAuthToken } from '@/services/authAppService'
+import { useRouter } from 'next/navigation'
+import { getClassSubjects } from '@/services/classSubjectAppService'
+import { ClassStatus } from '@/types/classStatus'
+import { getUsers } from '@/services/userAppService'
+import { UserDetailsModel } from '@/models/userDetailsModel'
+import { GetFullName } from '@/lib/fullName'
+import { UserRole } from '@/types/userRole'
+import { Badge } from '@/components/ui/badge'
+import { CircleArrowLeftIcon } from 'lucide-react'
+import Loading from '@/components/loading'
 
-interface ClassData {
-  id: string
-  title: string
-  code: string
-  instructor: string
-  studentCount: number
-  status: string
-  completedDate: string
+// Define a new interface for the merged result
+export interface ClassSubjectWithTeacher extends ClassSubjectModel {
+  teacherDetails?: UserDetailsModel | null; // Optional in case no match is found
 }
 
-export default function CompletedClasses() {
-  const [selectedClass, setSelectedClass] = useState<ClassData | null>(null)
+export default function CurrentClasses() {
+  const router = useRouter();
+  const [classSubjects, setClassSubjects] = useState<ClassSubjectModel[]>([]);
+  const [classTeachersDetails, setClassTeachersDetails] = useState<UserDetailsModel[]>([]);
+  const [selectedClass, setSelectedClass] = useState<ClassSubjectModel | null>(null);
+  const [adminUserId, setAdminUserId] = useState<number>(0);
+  const [isLoading, setIsLoading] = useState(true);  
+  const [selectedTimeline, setSelectedTimeline] = useState<{
+    date: string
+    time: string
+    status: string
+    remarks: string
+  } | null>(null)
+  const [classSubjectWTeacherDetails, setClassSubjectWTeacherDetails] = useState<ClassSubjectWithTeacher[]>([]);
 
-  // Sample data - replace with your actual data
-  const classes: ClassData[] = [
-    {
-      id: '1',
-      title: 'Computer Programming 1',
-      code: 'CRP-2002024',
-      instructor: 'John Doe',
-      studentCount: 35,
-      status: 'Completed',
-      completedDate: '2024-02-20'
-    },
-    // ... more classes
-  ]
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const token = await getDecodedAuthToken();
+        if (!token) {
+          console.log("No auth token found.");
+          toast.error("Failed to fetch class subjects!", {
+            description: "No auth token found.",
+          });
+          router.push("/login");
+          return; // Stop execution
+        }
+        const decodedToken = token.data;
+        if (!decodedToken) {
+          const refreshToken = await refreshAuthToken();
+          if (!refreshToken || refreshToken.success === false) {
+            router.push("/login");
+          }
+          setAdminUserId(refreshToken.data.id);
+        } else {
+          setAdminUserId(decodedToken.id);
+        }
+      } catch (error) {
+        console.error("Error checking session:", error);
+        router.push("/login");
+      }
+    };
+    checkSession();
+  }, [router]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+
+        if (adminUserId === 0) return;
+        const [responseGetSubjects, responseGetTeachers] = await Promise.all([
+                  getClassSubjects(ClassStatus.COMPLETED),          
+                  getUsers(UserRole.TEACHER),
+                ]);
+
+        if (!responseGetSubjects.success) throw new Error(responseGetSubjects.message);            
+        if (!responseGetTeachers.success) throw new Error(responseGetTeachers.message);
+
+        console.log("responseGetTeachers.data:", responseGetTeachers.data);
+        
+        setClassSubjects(responseGetSubjects.data);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const getUserDetails = responseGetTeachers.data.map(((user: { userDetails: any }) => user.userDetails));
+        console.log("getUserDetails:", getUserDetails);
+        setClassTeachersDetails(getUserDetails);
+
+      } catch (error) {
+        console.log("Error fetching class subjects:", error);
+        toast.error("Failed to fetch class subjects!", {
+          description: error instanceof Error ? error.message : JSON.stringify(error),
+        });
+      }
+      finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+    // Set interval to run fetchClassSubjects every 5 seconds
+    const intervalId = setInterval(fetchData, 5000); // 5 seconds        
+    // Cleanup function to clear interval when component unmounts
+    return () => clearInterval(intervalId);
+  }, [adminUserId]);
+
+  // Function to merge data
+  const matchSubjectsWithTeachers = (
+    subjects: ClassSubjectModel[],
+    users: UserDetailsModel[]
+  ): ClassSubjectWithTeacher[] => {
+    return subjects.map(subject => ({
+        ...subject,
+        teacherDetails: users.find(user => user.user_id === subject.teacher_user_id) || null
+    }));
+  };
+
+  useEffect(() => {
+    const combinedData = matchSubjectsWithTeachers(classSubjects, classTeachersDetails);
+    setClassSubjectWTeacherDetails(combinedData);
+  },[classSubjects, classTeachersDetails]);
 
   if (!selectedClass) {
     return (
-      <div className="grid lg:grid-cols-4 md:grid-cols-3 sm:grid-cols-2 grid-cols-1 gap-6">
-        {classes.map((classItem) => (
-          <Card 
-            key={classItem.id} 
-            className="hover:shadow-lg transition-shadow cursor-pointer"
-            onClick={() => setSelectedClass(classItem)}
-          >
-            <CardContent className="p-4">
-              <h3 className="font-semibold mb-2">{classItem.title}</h3>
-              <p className="text-sm text-gray-500">Code: {classItem.code}</p>
-              <p className="text-sm text-gray-500">Instructor: {classItem.instructor}</p>
-              <p className="text-sm text-gray-500">Students: {classItem.studentCount}</p>
-              <p className="text-sm text-gray-500">Completed: {classItem.completedDate}</p>
-              <div className="mt-3">
-                <span className="text-sm bg-gray-100 text-gray-800 px-2 py-1 rounded">
-                  {classItem.status}
-                </span>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+      <div className="grid lg:grid-cols-4 md:grid-cols-2 sm:grid-cols-1 grid-cols-1 gap-6 auto-rows-fr">
+          {isLoading ? 
+            (
+              <Loading/>
+            ) : (
+                classSubjectWTeacherDetails.map((subject) => (
+                  <Card 
+                    key={subject.id} 
+                    className="w-auto min-w-[200px] h-full flex flex-col hover:shadow-lg transition-shadow cursor-pointer"
+                    onClick={() => setSelectedClass(subject)}>
+                    <CardContent className="p-4 flex-grow">
+                      <h3 className="font-semibold mb-2">{subject.name}</h3>              
+                      <p className="text-sm text-gray-500">Instructor: {GetFullName(subject.teacherDetails ?? undefined)}</p>
+                      <p className="text-sm text-gray-500">Schedule: {`[ ${subject.days} ]`}</p>
+                      <p className="text-sm text-gray-500">Time: {`${subject.time_schedule}`}</p>
+                    </CardContent>
+                    <CardFooter className="mt-auto"> {/* Pushes footer to the bottom */}
+                      <div className="w-full flex justify-start">                
+                        <Badge>{subject.status}</Badge>
+                      </div>
+                    </CardFooter>
+                  </Card>
+                ))                     
+              )}   
       </div>
     )
   }
@@ -63,16 +158,15 @@ export default function CompletedClasses() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">{selectedClass.title}</h2>
+        <h2 className="text-2xl font-bold">{selectedClass.name}</h2>
         <Button variant="outline" onClick={() => setSelectedClass(null)}>
-          Back to Classes
+            <CircleArrowLeftIcon/>Back
         </Button>
       </div>
-
       <div className="grid grid-cols-2 gap-6">
         <DonutChart />
         <div>
-          <h3 className="text-xl font-semibold mb-4">Class Schedule</h3>
+          <h3 className="text-xl font-semibold mb-4">Class Schedules</h3>
           <DataTable 
             columns={[
               { header: 'Date', accessorKey: 'date' },
@@ -82,7 +176,16 @@ export default function CompletedClasses() {
               {
                 header: 'Action',
                 cell: () => (
-                  <Button variant="outline" size="sm">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setSelectedTimeline({
+                      date: '2024-02-25',
+                      time: '10:00 AM',
+                      status: 'In Progress',
+                      remarks: 'Class is going well'
+                    })}
+                  >
                     View Timeline
                   </Button>
                 ),
@@ -94,16 +197,23 @@ export default function CompletedClasses() {
       </div>
 
       <div>
-        <h3 className="text-xl font-semibold mb-4">Student List</h3>
+        <h3 className="text-xl font-semibold mb-4">Class Students</h3>
         <DataTable 
           columns={[
             { header: 'Name', accessorKey: 'name' },
+            { header: 'Course', accessorKey: 'Course' },
             { header: 'Dominant Face Expression', accessorKey: 'faceExpression' },
             { header: 'Average Percentage', accessorKey: 'averagePercentage' },
           ]}
           data={[]}
         />
-      </div>
+      </div>      
+      <TimelineModal 
+        isOpen={!!selectedTimeline}
+        onClose={() => setSelectedTimeline(null)}
+        data={selectedTimeline || undefined}
+      />
+      <Toaster />
     </div>
   )
 } 

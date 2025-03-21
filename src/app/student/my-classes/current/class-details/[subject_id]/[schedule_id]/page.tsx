@@ -195,8 +195,8 @@ const ScheduleSession = () => {
       sad: roundToTwoDecimals(expressionsData.sad),
       angry: roundToTwoDecimals(expressionsData.angry),
       disgusted: roundToTwoDecimals(expressionsData.disgusted),
-      fearful: roundToTwoDecimals(highestValue),
-      na: roundToTwoDecimals(highestValue),
+      fearful: roundToTwoDecimals(expressionsData.fearful),
+      na: roundToTwoDecimals(allZero ? 1 : 0),
     })
     
     const classStudentFERData: ClassStudentFERModel = {

@@ -1,10 +1,14 @@
 import { ClassSubjectModel } from "@/models/classSubjectModel";
 
-export const getClassSubjects = async (): Promise<ClassSubjectModel[]> => {
+export const getClassSubjects = async (status: string) => {
     try {
-        const response = await fetch('/api/class-subject', {
+        const queryParams = `?status=${status}`; 
+        const response = await fetch(`/api/class-subject${queryParams}`, {
             method: 'GET',
             credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json'
+            } 
         });
         const result = await response.json();
         if (result.success === false) {

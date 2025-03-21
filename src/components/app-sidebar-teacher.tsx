@@ -1,6 +1,6 @@
 "use client";
 
-import { BookCopy, LayoutDashboard, School } from "lucide-react";
+import { BookCopy, School } from "lucide-react";
 import { NavMain } from "@/components/ui/nav-main";
 import { NavUser } from "@/components/ui/nav-user";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
@@ -17,14 +17,14 @@ export function AppSidebarTeacher({ userId, ...props }: AppSidebarTeacherProps) 
   const [user, setUser] = useState<UserModel>({} as UserModel);
   const data = {
     navMain: [
-      {
-        title: "Dashboard",
-        url: "/teacher",
-        icon: LayoutDashboard,
-        isActive: true,
-        items: [],
-      },
-      {
+      // {
+      //   title: "Dashboard",
+      //   url: "/teacher",
+      //   icon: LayoutDashboard,
+      //   isActive: true,
+      //   items: [],
+      // },
+       {
         title: "My Classes",
         url: "#",
         icon: School,

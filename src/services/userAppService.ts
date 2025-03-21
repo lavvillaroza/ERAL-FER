@@ -2,6 +2,27 @@ import { UserModel } from "@/models/userModel";
 import { UserTeacherThresholdModel } from "@/models/userTeacherThresholdModel";
 
 // ✅ Fetch User and User Details
+export const getUsers = async (role: string) => {
+    try {
+        const queryParams = `?role=${role}`; 
+        const response = await fetch(`/api/user${queryParams}`, {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json'
+            } 
+        });
+        const result = await response.json();
+        if (result.success === false) {
+            throw new Error(result.message);
+        }
+        return result;
+    }
+    catch (error) {
+        throw new Error("UserAppService @ getUsers API:" + error);
+    }      
+};
+
 export const getUserRole = async () => {
     try {
         const response = await fetch('/api/auth/role', {

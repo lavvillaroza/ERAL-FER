@@ -5,30 +5,36 @@ import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 
 // 📌 GET: Fetch all users
-export async function GET() {
-  try {
+export async function GET(req: NextRequest) {
+  try {    
+
+    // Parse query parameters from the URL
+    const { searchParams } = new URL(req.url);
+    const role = searchParams.get("role"); // 'current' or 'completed'
+    
+
+    // Build query filters
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const whereClause: any = {
+      role: role,
+    };
     const users = await prisma.user.findMany({
-      select: {
-        user_id: true,       // Include user_id
-        email: true,         // Include email
-        role: true,          // Include role
-        account_status: true, // Include account status
-        userDetails: {       // Include userDetails (LEFT JOIN-like behavior)
-          select: {
-            first_name: true,
-            middle_name: true,
-            last_name: true,
-            course: true,
-            online_status: true,
-            profile_image: true,            
-          }
-        }
-      }
+      where: whereClause,
+      include: {
+        userDetails: true,
+      },
     });    
-    return NextResponse.json(users, { status: 200 });
+    return NextResponse.json(
+      {            
+        success: true,
+        message: "Fetched all users successfully!",
+        data: users
+      },
+      { status: 201 }
+  );
 
   } catch (error) {
-    return NextResponse.json({ error: "Error fetching users: " + error }, { status: 500 });
+    return handleApiError(error);
   }
 }
 

@@ -1,7 +1,7 @@
 "use client";
 
 
-import { BookCopy, LayoutDashboard, Users} from "lucide-react"
+import { BookCopy, Users} from "lucide-react"
 import { NavMain } from "@/components/ui/nav-main"
 import { NavUser } from "@/components/ui/nav-user"
 import { Sidebar, SidebarContent, SidebarFooter,SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem} from "@/components/ui/sidebar"
@@ -18,13 +18,13 @@ export function AppSidebarAdmin({ userId, ...props }: AppSidebarAdminProps) {
   const [user, setUser] = useState<UserModel>({} as UserModel);
   const data = {    
     navMain: [
-      {
-        title: "Dashboard",
-        url: "/admin",
-        icon: LayoutDashboard,
-        isActive: true,
-        items: [],
-      },
+      // {
+      //   title: "Dashboard",
+      //   url: "/admin",
+      //   icon: LayoutDashboard,
+      //   isActive: true,
+      //   items: [],
+      // },
       {
         title: "Class Management",
         url: "/admin/class-management",
