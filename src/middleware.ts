@@ -45,11 +45,11 @@ export async function middleware(req: NextRequest) {
    if (url.pathname === "/") {
     switch (userRole) {
       case "admin":
-        return NextResponse.redirect(new URL("/admin", req.url));
+        return NextResponse.redirect(new URL("/admin/class-management", req.url));
       case "teacher":
-        return NextResponse.redirect(new URL("/teacher", req.url));
+        return NextResponse.redirect(new URL("/teacher/my-classes/current", req.url));
       case "student":
-        return NextResponse.redirect(new URL("/student", req.url));
+        return NextResponse.redirect(new URL("/student/my-classes/current ", req.url));
       default:
         return NextResponse.redirect(new URL("/unauthorized", req.url));
     }

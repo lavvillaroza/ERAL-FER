@@ -7,7 +7,7 @@ export async function GET(req: NextRequest, { params }: { params: { role: string
       const { role } = await params;
             
       const users = await prisma.user.findMany({
-        where: { role: role }, // Filter users by role
+        where: { role: role, account_status: "activated" }, // Filter users by role
         include: {          
           userDetails: true,      
         },

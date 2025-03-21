@@ -30,13 +30,13 @@ export default function LoginPage() {
             // 🔀 Redirect based on role
             switch (responseLogin.data.role) {
                 case "admin":
-                    router.push("/admin");
+                    router.push("/admin/class-management");
                     break;
                 case "teacher":
-                    router.push("/teacher");
+                    router.push("/teacher/my-classes/current");
                     break;
                 case "student":
-                    router.push("/student");
+                    router.push("/student/my-classes/current");
                     break;
                 default:
                     router.push("/");

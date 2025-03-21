@@ -95,18 +95,31 @@ const SubjectDetails = () => {
       }      
         setClassSubject(resSubject.data);                  
         setClassSchedules(resSchedules.data);   
-
-        setClassStudentFer({          
-          surprised: resFERStudentData.data[0].surprised || 0,
-          happy: resFERStudentData.data[0].happy || 0,
-          neutral: resFERStudentData.data[0].neutral || 0,
-          sad: resFERStudentData.data[0].sad || 0,
-          angry: resFERStudentData.data[0].angry || 0,
-          disgusted: resFERStudentData.data[0].disgusted || 0,
-          fearful: resFERStudentData.data[0].fearful || 0,        
-          na: resFERStudentData.data[0].na || 0,
-        });
-                        
+        
+        if (resFERStudentData.data[0]) {
+          setClassStudentFer({          
+            surprised: resFERStudentData.data[0].surprised || 0,
+            happy: resFERStudentData.data[0].happy || 0,
+            neutral: resFERStudentData.data[0].neutral || 0,
+            sad: resFERStudentData.data[0].sad || 0,
+            angry: resFERStudentData.data[0].angry || 0,
+            disgusted: resFERStudentData.data[0].disgusted || 0,
+            fearful: resFERStudentData.data[0].fearful || 0,        
+            na: resFERStudentData.data[0].na || 0,
+          });
+        }
+        else {
+          setClassStudentFer({          
+            surprised: 0,
+            happy: 0,
+            neutral: 0,
+            sad: 0,
+            angry: 0,
+            disgusted: 0,
+            fearful: 0,        
+            na: 0,
+          });
+        }                                
       } catch (error) {
         console.log("Error fetching class subject:", error);
         toast.error("Failed to fetch class subject!", {

@@ -21,6 +21,9 @@ import { UserRole } from "@/types/userRole";
 import Loading from "@/components/loading";
 import { ExpressionChartsComplete } from "@/components/expression-charts-complete";
 import { getDecodedAuthToken, refreshAuthToken } from "@/services/authAppService";
+import { ClassStudentFERAggStudentModel } from "@/models/classStudentFERAggStudentModel";
+import { classStudentFERAggStudentsDataModel } from "@/models/classStudentFERAggStudentsDataModel";
+import { getFERChartDataBySubjectId, getFERStudentsDataBySubjectId } from "@/services/classStudentFerAppService";
 
 const ViewStudents = () => {  
   const router = useRouter();
@@ -29,8 +32,9 @@ const ViewStudents = () => {
   const [classStudents, setClassstudents] = useState<ClassStudentModel[]> ([]);  
   const [isLoading, setIsLoading] = useState(true);  
   const [teacherUserId, setTeacherUserId] = useState<number>(0);
-
-  const [moods] = useState([
+  const [studentList, setStudentList] = useState<ClassStudentFERAggStudentModel[]>([]);
+  const [classStudentFerData, setClassStudentFerData] = useState<classStudentFERAggStudentsDataModel[]>([]);
+  const [moods, setMoods] = useState([
     { icon: "😲", percentage: "0.00", label: "Surprised", bgClass: "bg-gray-100/50", color: "text-orange-500" },
     { icon: "😊", percentage: "0.00", label: "Happy", bgClass: "bg-gray-100/50", color: "text-green-500" },
     { icon: "😐", percentage: "0.00", label: "Neutral", bgClass: "bg-gray-100/50", color: "text-blue-500" },
@@ -39,7 +43,7 @@ const ViewStudents = () => {
     { icon: "😡", percentage: "0.00", label: "Angry", bgClass: "bg-gray-100/50", color: "text-red-500" },
     { icon: "😨", percentage: "0.00", label: "Fearful", bgClass: "bg-gray-100/50", color: "text-slate-500" },
     { icon: "😶", percentage: "0.00", label: "NA", bgClass: "bg-gray-100/50", color: "hsl(0, 0%, 50%)" },
-  ]);  
+  ]);
 
   useEffect(() => {
     const checkSession = async () => {
@@ -73,31 +77,99 @@ const ViewStudents = () => {
   }, [router]);
 
   useEffect(() => {        
-    const fetchData = async () => {
-      try {                                    
-        const [responseSubject, responseStudents] = await Promise.all([
-          getClassSubjectById(Number(params.subject_id)),
-          getClassStudents(Number(params.subject_id)),          
-          getUsersDetailsByRole(UserRole.STUDENT),
-        ]);
-        setClassSubject(responseSubject.data);  
-        setClassstudents(responseStudents.data);                         
-      } catch (error) {
-        console.log("Error fetching class subject:", error);
-        toast.error("Failed to fetch class subject!", {
-          description: error instanceof Error ? error.message : JSON.stringify(error),
-        });
-      }  
-      finally {
-        setIsLoading(false);
-      }     
-    }    
-    fetchData();    
-  }, [params.subject_id]);
+      const fetchData = async () => {
+        try {                                    
+          const [responseSubject, responseStudents, responseStudentList, responseExpression, responseExpressionPerStudent] = await Promise.all([
+            getClassSubjectById(Number(params.subject_id)),
+            getClassStudents(Number(params.subject_id)),          
+            getUsersDetailsByRole(UserRole.STUDENT),
+            getFERChartDataBySubjectId(Number(params.subject_id)), 
+            getFERStudentsDataBySubjectId(Number(params.subject_id))
+          ]); 
+          
+          if (!responseSubject.success) throw new Error(responseSubject.message);
+          if (!responseStudents.success) throw new Error(responseStudents.message);
+          if (!responseStudentList.success) throw new Error(responseStudentList.message);
+          if (!responseExpression.success) throw new Error(responseExpression.message);
+          if (!responseExpressionPerStudent.success) throw new Error(responseExpressionPerStudent.message);
   
-
+          setClassSubject(responseSubject.data);  
+          setClassstudents(responseStudents.data);                           
+          if (responseExpression.data) {          
+            setMoods((prevMoods) => {
+              const newMoods =  responseExpression.data[0] || {};            
+              const updatedMoods = prevMoods.map((mood) => {
+                const moodKey = mood.label.toLowerCase().trim(); // Trim extra spaces
+                const moodValue = newMoods[moodKey];
+                return {
+                  ...mood,
+                  percentage: moodValue ? Number(moodValue).toFixed(2) : "0.00",
+                };
+              });        
+              return updatedMoods;
+            });          
+          }
+          setClassStudentFerData(responseExpressionPerStudent.data);
   
+        } catch (error) {
+          console.log("Error fetching class subject:", error);
+          toast.error("Failed to fetch class subject!", {
+            description: error instanceof Error ? error.message : JSON.stringify(error),
+          });
+        }  
+        finally {
+          setIsLoading(false);
+        }     
+      }    
+      fetchData();    
+    }, [params.subject_id]);
   
+    
+    useEffect(() => {
+      const getStudentList = mapFERDataToStudents(classStudents, classStudentFerData)
+      setStudentList(getStudentList);    
+    }, [classStudents, classStudentFerData]); // ✅ Logs moods only when updated
+    
+    const mapFERDataToStudents = (
+      classStudents: ClassStudentModel[],
+      ferData: classStudentFERAggStudentsDataModel[]
+    ): (ClassStudentFERAggStudentModel & { ferData?: classStudentFERAggStudentsDataModel })[] => {
+      return classStudents.map(student => {
+        const dominantExpression = getDominantExpression(ferData.find(fer => fer.student_user_id === student.student_id) ?? {} as classStudentFERAggStudentsDataModel);
+        
+        return {
+          id: student.student_details.user_id,
+          full_name: GetFullName(student.student_details),
+          course: student.student_details.course || "", // Provide a default value for null
+          dominantExpression: String(dominantExpression.expression || "NONE"),
+          average: Number(dominantExpression.value) || 0,    
+        };
+      });
+    };
+  
+    const getDominantExpression = (ferData: classStudentFERAggStudentsDataModel) => {
+        const emotions = {
+          surprised: ferData.surprised,
+          happy: ferData.happy,
+          neutral: ferData.neutral,
+          sad: ferData.sad,
+          angry: ferData.angry,
+          disgusted: ferData.disgusted,
+          fearful: ferData.fearful,
+          na: ferData.na
+        };
+        
+        // Extract emotion values (explicitly ensuring numbers)
+        const emotionEntries = Object.entries(emotions).map(([key, value]) => [key, Number(value)]);
+  
+        // Find the dominant expression with the highest value
+        const [dominant_expression, highest_avg_value] = emotionEntries.reduce(
+          (max, [emotion, value]) => (value > max[1] ? [emotion, value] : max),
+          ["na", 0] // Default to "na" if all values are 0
+        );            
+        return { expression: dominant_expression, value: highest_avg_value };
+      };
+      
   return (
     <SidebarProvider>
         <AppSidebarTeacher userId={teacherUserId}/>
@@ -185,26 +257,26 @@ const ViewStudents = () => {
                                                 </TableRow>
                                               </TableHeader>
                                               <TableBody>
-                                                {classStudents.length === 0 ? (
-                                                     <TableRow>
+                                                {studentList.length === 0 ? (
+                                                      <TableRow>
                                                       <TableCell colSpan={4} className="text-gray-500 italic text-center py-4">
                                                         No matching students found
                                                       </TableCell>
                                                     </TableRow>                                                   
                                                 ) : (
-                                                    classStudents.map((student) => (
-                                                      <TableRow key={student.student_details.user_id}>
+                                                      studentList.map((student) => (
+                                                      <TableRow key={student.id}>
                                                         <TableCell className="whitespace-nowrap">
-                                                            {GetFullName(student.student_details)}
+                                                            {student.full_name}
                                                         </TableCell>
                                                         <TableCell className="whitespace-nowrap">
-                                                            {student.student_details.course}
+                                                            {student.course}
                                                         </TableCell>
                                                         <TableCell className="whitespace-nowrap">
-                                                            N/A
+                                                            {student.dominantExpression}
                                                         </TableCell>
                                                         <TableCell className="whitespace-nowrap">
-                                                            N/A
+                                                            {student.average + "%"} 
                                                         </TableCell>
                                                       </TableRow>
                                                   ))
@@ -215,8 +287,7 @@ const ViewStudents = () => {
                                   </ScrollArea>
                               </CardContent>
                           </Card>                             
-                      </div>
-                      
+                      </div>                      
                       </>
                     )}                    
                 </div>
