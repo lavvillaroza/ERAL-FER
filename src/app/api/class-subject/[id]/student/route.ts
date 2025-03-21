@@ -60,10 +60,11 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       });  
 
       const newStudents = await prisma.classStudents.createMany({
-        data: 
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          body.map(({ id, student_details, ...student }) => student),
-      });  
+        data: body.map(({ class_subject_id, student_id }) => ({
+          class_subject_id,
+          student_id,
+        })),
+      });
             
       return NextResponse.json({
         success: true,
