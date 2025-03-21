@@ -77,10 +77,9 @@ const ScheduleSession = () => {
     }, [router]);
 
   useEffect(() => {
+    if (teacherUserId === 0)  return;    
     const fetchData = async () => {
-      try {             
-        if (teacherUserId === 0)  return;    
-
+      try {                     
         const [resSubject, resUserThreshold, resSchedule] = await Promise.all([
           getClassSubjectById(Number(params.subject_id)),          
           getUserThresholdByUserId(teacherUserId),

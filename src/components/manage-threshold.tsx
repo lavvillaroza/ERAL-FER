@@ -8,11 +8,12 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { UserModel } from "@/models/userModel";
 import { getUserThresholdByUserId, updateUserThresholdByUserId } from "@/services/userAppService";
-import { toast } from "sonner";
+import { toast, Toaster } from "sonner";
 import { UserTeacherThresholdModel } from "@/models/userTeacherThresholdModel";
 import { Textarea } from '@/components/ui/textarea';
 import Loading from "@/components/loading";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Save } from "lucide-react";
 
 interface ManageThresholdProps {
   isOpen: boolean;
@@ -27,6 +28,11 @@ const ManageThreshold: React.FC<ManageThresholdProps> = ({ isOpen, onClose, user
   const [userThresholdFearful, setUserThresholdFearful] = useState<UserTeacherThresholdModel>({} as UserTeacherThresholdModel);
   const [userThresholdDisgusted, setUserThresholdDisgusted] = useState<UserTeacherThresholdModel>({} as UserTeacherThresholdModel);
   const [userThresholdNA, setUserThresholdNA] = useState<UserTeacherThresholdModel>({} as UserTeacherThresholdModel);
+  const [isNASaving, setIsNASaving] = useState(false);
+  const [isSadSaving, setIsSadSaving] = useState(false);
+  const [isAngrySaving, setIsAngrySaving] = useState(false);
+  const [isFearfulSaving, setIsFearfulSaving] = useState(false);
+  const [isDisgustedSaving, setIsDisgustedSaving] = useState(false);
   // Sync user prop with state
   useEffect(() => {
     if (user) {
@@ -65,6 +71,7 @@ const ManageThreshold: React.FC<ManageThresholdProps> = ({ isOpen, onClose, user
   }, [user]);
 
   const handleSadSave = async () => {    
+    setIsSadSaving(true);
     try {        
         if (userInfo?.user_id !== undefined) {
           const response = await updateUserThresholdByUserId(userInfo.user_id, userThresholdSad);
@@ -87,6 +94,9 @@ const ManageThreshold: React.FC<ManageThresholdProps> = ({ isOpen, onClose, user
             description: error instanceof Error ? error.message : JSON.stringify(error),
           });
     }    
+    finally {
+      setIsSadSaving(false);
+    } 
   }
 
 const handleSadInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -99,6 +109,7 @@ const handleSadInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAr
 };  
 
 const handleAngrySave = async () => {
+  setIsAngrySaving(true);
   try {        
       if (userInfo?.user_id !== undefined) {
         const response = await updateUserThresholdByUserId(userInfo.user_id, userThresholdAngry);
@@ -118,7 +129,10 @@ const handleAngrySave = async () => {
       toast.error("Failed to save threshold for angry!", {
           description: error instanceof Error ? error.message : JSON.stringify(error),
         });
-  }    
+  }   
+  finally {
+    setIsAngrySaving(false);
+  } 
 }
 
 const handleAngryInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -131,6 +145,7 @@ const handleAngryInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLText
 };  
 
 const handleFearfulSave = async () => {
+  setIsFearfulSaving(true);
   try {        
       if (userInfo?.user_id !== undefined) {
         const response = await updateUserThresholdByUserId(userInfo.user_id, userThresholdFearful);
@@ -151,6 +166,9 @@ const handleFearfulSave = async () => {
           description: error instanceof Error ? error.message : JSON.stringify(error),
         });
   }    
+  finally {
+    setIsFearfulSaving(false);
+  }
 }
 
 const handleFearfulInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -164,6 +182,7 @@ const handleFearfulInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTe
 
 
 const handleDisgustedSave = async () => {
+  setIsDisgustedSaving(true);
   try {        
       if (userInfo?.user_id !== undefined) {
         const response = await updateUserThresholdByUserId(userInfo.user_id, userThresholdDisgusted);
@@ -184,6 +203,9 @@ const handleDisgustedSave = async () => {
           description: error instanceof Error ? error.message : JSON.stringify(error),
         });
   }    
+  finally {
+    setIsDisgustedSaving(false);
+  }
 }
 
 const handleDisgustedInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -197,6 +219,7 @@ const handleDisgustedInputChange = (e: React.ChangeEvent<HTMLInputElement | HTML
 
 
 const handleNASave = async () => {
+  setIsNASaving(true);
   try {        
       if (userInfo?.user_id !== undefined) {
         const response = await updateUserThresholdByUserId(userInfo.user_id, userThresholdDisgusted);
@@ -216,7 +239,10 @@ const handleNASave = async () => {
       toast.error("Failed to save threshold for NA!", {
           description: error instanceof Error ? error.message : JSON.stringify(error),
         });
-  }    
+  }
+  finally {
+    setIsNASaving(false);
+  }
 }
 
 const handleNAInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -233,6 +259,7 @@ const handleNAInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAre
     return <Loading/>; // Or a spinner
   }
   return (
+    <>
     <Dialog open={isOpen} onOpenChange={(isOpen) => { if (!isOpen) onClose(); }}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
@@ -285,9 +312,23 @@ const handleNAInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAre
                     </div>                 
                   </div>
                   <div className="flex justify-end">
-                    <Button onClick={handleSadSave}>
-                        Save Changes
-                    </Button>
+                      <Button
+                          variant="default"
+                          onClick={handleSadSave}
+                          disabled={isSadSaving}
+                          className="gap-2">
+                          {isSadSaving ? (
+                          <>
+                              <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-200 border-t-white"></div>
+                              Saving...
+                          </>
+                          ) : (
+                          <>
+                              <Save className="h-4 w-4" />
+                              Save Changes
+                          </>
+                          )}
+                      </Button>                                             
                   </div>
                 </div>
               </CardContent>
@@ -329,9 +370,23 @@ const handleNAInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAre
                     </div>                 
                   </div>
                   <div className="flex justify-end">
-                    <Button onClick={handleAngrySave}>
-                        Save Changes
-                    </Button>
+                      <Button
+                          variant="default"
+                          onClick={handleAngrySave}
+                          disabled={isAngrySaving}
+                          className="gap-2">
+                          {isAngrySaving ? (
+                          <>
+                              <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-200 border-t-white"></div>
+                              Saving...
+                          </>
+                          ) : (
+                          <>
+                              <Save className="h-4 w-4" />
+                              Save Changes
+                          </>
+                          )}
+                      </Button>                      
                   </div>
                 </div>
               </CardContent>
@@ -373,9 +428,23 @@ const handleNAInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAre
                     </div>                 
                   </div>
                   <div className="flex justify-end">
-                    <Button onClick={handleFearfulSave}>
-                        Save Changes
-                    </Button>
+                      <Button
+                          variant="default"
+                          onClick={handleFearfulSave}
+                          disabled={isFearfulSaving}
+                          className="gap-2">
+                          {isFearfulSaving ? (
+                          <>
+                              <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-200 border-t-white"></div>
+                              Saving...
+                          </>
+                          ) : (
+                          <>
+                              <Save className="h-4 w-4" />
+                              Save Changes
+                          </>
+                          )}
+                      </Button>                          
                   </div>
                 </div>
               </CardContent>
@@ -417,9 +486,23 @@ const handleNAInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAre
                     </div>                 
                   </div>
                   <div className="flex justify-end">
-                    <Button onClick={handleDisgustedSave}>
-                        Save Changes
-                    </Button>
+                       <Button
+                          variant="default"
+                          onClick={handleDisgustedSave}
+                          disabled={isDisgustedSaving}
+                          className="gap-2">
+                          {isDisgustedSaving ? (
+                          <>
+                              <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-200 border-t-white"></div>
+                              Saving...
+                          </>
+                          ) : (
+                          <>
+                              <Save className="h-4 w-4" />
+                              Save Changes
+                          </>
+                          )}
+                      </Button>                           
                   </div>
                 </div>
               </CardContent>
@@ -461,9 +544,23 @@ const handleNAInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAre
                     </div>                 
                   </div>
                   <div className="flex justify-end">
-                    <Button onClick={handleNASave}>
-                        Save Changes
-                    </Button>
+                      <Button
+                          variant="default"
+                          onClick={handleNASave}
+                          disabled={isNASaving}
+                          className="gap-2">
+                          {isNASaving ? (
+                          <>
+                              <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-200 border-t-white"></div>
+                              Saving...
+                          </>
+                          ) : (
+                          <>
+                              <Save className="h-4 w-4" />
+                              Save Changes
+                          </>
+                          )}
+                      </Button>                    
                   </div>
                 </div>
               </CardContent>
@@ -472,6 +569,8 @@ const handleNAInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAre
         </Tabs>                
       </DialogContent>
     </Dialog>
+    <Toaster />
+    </>
   );
 };
 

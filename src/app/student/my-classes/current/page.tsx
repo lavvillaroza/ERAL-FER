@@ -78,9 +78,9 @@ export default function Page() {
     }, [router]);
 
   useEffect(() => {
+    if(studentUserId === 0) return;          
     const fetchClassSubjects = async () => {                               
-        try {            
-          if(studentUserId === 0) return;          
+        try {                      
           const response = await getClassSubjectsByStudentId(studentUserId, ClassStatus.CURRENT);        
           if (response.success === true) {
             setClassSubjects(response.data);  

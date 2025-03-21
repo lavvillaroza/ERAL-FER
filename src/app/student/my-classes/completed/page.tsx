@@ -49,10 +49,9 @@ export default function Page() {
   }, [router]);
 
   useEffect(() => {    
+    if (studentUserId === 0) return;
     const fetchClassSubjects = async () => {                             
-      try {        
-          console.log(studentUserId);
-          if (studentUserId === 0) return;
+      try {                  
           const response = await getClassSubjectsByStudentId(studentUserId, ClassStatus.COMPLETED);                  
           console.log("RESPONSE:" ,response.data);
           if (response.success === true) {            
