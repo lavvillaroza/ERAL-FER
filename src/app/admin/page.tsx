@@ -9,91 +9,25 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { TopClassesCard } from "@/components/top-classes-card";
-import { ExpressionChartsComplete } from '@/components/expression-charts-complete';
 import { toast, Toaster } from "sonner"
 import { useRouter } from 'next/navigation';
 import { getDecodedAuthToken, refreshAuthToken } from '@/services/authAppService';
+import { UserPieChart } from '@/components/users-chart';
+import { UserStatusPieChart } from '@/components/user-status-chart';
+import { SubjectsPieChart } from '@/components/subject-chart';
+import { getTopClassSubjects } from '@/services/classSubjectAppService';
+import { getNewAccountNotifications } from '@/services/notificationsAppService';
 
-export default function Page() {
-  // Previous state definitions remain the same until topClasses
-  const [moods] = useState([
-    { icon: "😲", percentage: "25.00", label: "Surprised", bgClass: "bg-gray-100/50", color: "text-orange-500" },
-    { icon: "😊", percentage: "15.00", label: "Happy", bgClass: "bg-gray-100/50", color: "text-green-500" },
-    { icon: "😐", percentage: "20.00", label: "Neutral", bgClass: "bg-gray-100/50", color: "text-blue-500" },
-    { icon: "😢", percentage: "10.00", label: "Sad", bgClass: "bg-gray-100/50", color: "text-purple-500" },
-    { icon: "🤢", percentage: "8.00", label: "Disgusted", bgClass: "bg-gray-100/50", color: "text-zinc-700" },
-    { icon: "😡", percentage: "12.00", label: "Angry", bgClass: "bg-gray-100/50", color: "text-red-500" },
-    { icon: "😨", percentage: "10.00", label: "Fearful", bgClass: "bg-gray-100/50", color: "text-slate-500" }
-  ]);
+interface UserNotification {
+  id: number;
+  name: string;
+  role: string;
+  time: string;
+}
 
-  const [notifications] = useState([
-    { id: 1, name: "John Smith", time: "2 minutes ago", class: "Mathematics 101", role: "student" },
-    { id: 2, name: "Sarah Johnson", time: "5 minutes ago", class: "Physics 202", role: "teacher" },
-    { id: 3, name: "Mike Williams", time: "10 minutes ago", class: "Chemistry 301", role: "admin" },
-  ]);
-
-  const [topClasses] = useState([
-    { 
-      id: 1, 
-      name: "Mathematics 101",
-      students: 45,
-      emotions: {
-        happy: 35,
-        surprised: 30,
-        neutral: 27
-      }
-    },
-    { 
-      id: 2, 
-      name: "Physics 202",
-      students: 38,
-      emotions: {
-        happy: 32,
-        surprised: 28,
-        neutral: 28
-      }
-    },
-    { 
-      id: 3, 
-      name: "Chemistry 301",
-      students: 42,
-      emotions: {
-        happy: 30,
-        surprised: 25,
-        neutral: 30
-      }
-    },
-    { 
-      id: 4, 
-      name: "Biology 201",
-      students: 36,
-      emotions: {
-        happy: 28,
-        surprised: 27,
-        neutral: 28
-      }
-    },
-    { 
-      id: 5, 
-      name: "Computer Science 101",
-      students: 50,
-      emotions: {
-        happy: 25,
-        surprised: 30,
-        neutral: 27
-      }
-    },
-  ]);
-
-  const [, setCurrentTime] = useState(new Date());
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
-    return () => clearInterval(interval);
-  }, []);
-
+export default function Page() {  
+  const [notifications, setNotifications] = useState<UserNotification[]>([]);
+  const [topClasses, setTopClasses] = useState([]);
   const router = useRouter(); 
   const [userId, setUserId] = useState<number>(0);  
   useEffect(() => {
@@ -125,7 +59,90 @@ export default function Page() {
     };
     checkSession();
   }, [router]);
+  
+  useEffect(() => {        
+      const fetchTopSubjectWithFER = async () => {
+        try {         
+          const response = await getTopClassSubjects();
+          if (!response.success) {
+            throw new Error(response.message);
+          }      
+          const result = response.data; // Assuming API returns an array of users
+          console.log(result);
+          // Format the results into the required structure
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const formattedData = result.map((row: { id: number; name: string; students: number; happy: number; surprised: number; neutral: number; }) => ({
+            id: row.id,
+            name: row.name,
+            students: Number(row.students),
+            emotions: {
+              happy: row.happy,
+              surprised: row.surprised,
+              neutral: row.neutral
+            }
+          }));
+          setTopClasses(formattedData);
 
+        } catch (error) {
+          console.log("Error fetching class subject:", error);
+          toast.error("Failed to fetch class subject!", {
+            description: error instanceof Error ? error.message : JSON.stringify(error),
+          });
+        }          
+      }
+  
+      fetchTopSubjectWithFER();    
+    }, []);  
+
+
+    useEffect(() => {        
+      const fetchNewAccountRegistered = async () => {
+        try {         
+          const response = await getNewAccountNotifications();
+          if (!response.success) {
+            throw new Error(response.message);
+          }      
+          const result = response.data; // Assuming API returns an array of users
+          if (result.success == false) {
+            throw new Error(result.message);
+          }          
+          setNotifications(result);
+        } catch (error) {
+          console.log("Error fetching new registered accounts:", error);
+          toast.error("Failed to fetch new registered accounts!", {
+            description: error instanceof Error ? error.message : JSON.stringify(error),
+          });
+        }          
+      }
+  
+      fetchNewAccountRegistered();    
+    }, []);  
+
+    function getTimeAgo(timestamp: string | Date): string {
+      const now = new Date();
+      const time = new Date(timestamp);
+      const diffMs = now.getTime() - time.getTime(); // Difference in milliseconds
+      const diffMinutes = Math.floor(diffMs / 60000); // Convert to minutes
+    
+      if (diffMinutes < 1) return "Now";
+      if (diffMinutes < 60) return `${diffMinutes} minute${diffMinutes > 1 ? "s" : ""} ago`;
+    
+      const diffHours = Math.floor(diffMinutes / 60);
+      if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
+    
+      const diffDays = Math.floor(diffHours / 24);
+      if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`;
+    
+      const diffWeeks = Math.floor(diffDays / 7);
+      if (diffWeeks < 4) return `${diffWeeks} week${diffWeeks > 1 ? "s" : ""} ago`;
+    
+      const diffMonths = Math.floor(diffDays / 30);
+      if (diffMonths < 12) return `${diffMonths} month${diffMonths > 1 ? "s" : ""} ago`;
+    
+      const diffYears = Math.floor(diffDays / 365);
+      return `${diffYears} year${diffYears > 1 ? "s" : ""} ago`;
+    }
+    
   // Rest of the component remains the same until the topClasses mapping
   return (    
     <SidebarProvider>
@@ -156,8 +173,12 @@ export default function Page() {
 
         <div className="flex flex-1 flex-col gap-4 p-4 pt-4">            
           <div className="w-full">
-            <ExpressionChartsComplete moods={moods} chartSize={100} strokeWidth={10} className="mb-6" />
 
+            <div className={`grid grid-cols-3 sm:grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-2 sm:gap-4 mb-4`}>
+              <UserPieChart/>
+              <UserStatusPieChart/>
+              <SubjectsPieChart/>
+            </div>                        
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
                  {/* For Notifications Card */}
                  <Card className="col-span-1 shadow-sm hover:shadow-md transition-shadow">
@@ -165,7 +186,7 @@ export default function Page() {
                     <h2 className="text-xl font-semibold mb-4">New Account Notifications</h2>
                     <ScrollArea className="h-[500px] pr-4">
                       <div className="space-y-4">
-                        {notifications.map((notification) => (
+                        {notifications.length !== 0 &&  notifications.map((notification) => (
                           <Card key={notification.id}>
                             <CardContent className="p-4 bg-gray-50">
                               <div className="flex items-center justify-between">
@@ -175,10 +196,9 @@ export default function Page() {
                                     <Badge variant="outline" className="capitalize">
                                       {notification.role}
                                     </Badge>
-                                  </div>
-                                  <p className="text-sm text-gray-600">Registered for {notification.class}</p>
+                                  </div>                                  
                                 </div>
-                                <span className="text-sm text-gray-500 ml-4">{notification.time}</span>
+                                <span className="text-sm text-gray-500 ml-4">{getTimeAgo(notification.time)}</span>
                               </div>
                             </CardContent>
                           </Card>

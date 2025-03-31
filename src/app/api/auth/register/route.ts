@@ -53,7 +53,20 @@ export async function POST(req: NextRequest) {
             return createdUser;
         });
 
-        if (!newUser) throw new Error("User registration failed.");        
+        if (!newUser) throw new Error("User registration failed.");    
+        
+        const newNotification = await prisma.notification.create({
+          data: {
+            title: "New User Registered",
+            message: `${newUser.userDetails?.first_name} ${newUser.userDetails?.middle_name} ${newUser.userDetails?.last_name}`,
+            user_id: newUser.user_id, // Convert if necessary, default to 0
+            color_code: "0",
+            status:  0, // Convert if necessary, default to 0
+            for_admin: "Y",
+          },
+        });
+
+        console.log(newNotification);
         
         if (newUser.role === "teacher") {
             const responsecreateDefaulThreshold = await prisma.userTeacherThreshold.createMany({

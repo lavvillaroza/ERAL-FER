@@ -23,6 +23,26 @@ export const getUsers = async (role: string) => {
     }      
 };
 
+export const getAllUsers = async () => {
+    try {        
+        const response = await fetch(`/api/user/all`, {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json'
+            } 
+        });
+        const result = await response.json();
+        if (result.success === false) {
+            throw new Error(result.message);
+        }
+        return result;
+    }
+    catch (error) {
+        throw new Error("UserAppService @ getUsers API:" + error);
+    }      
+};
+
 export const getUserRole = async () => {
     try {
         const response = await fetch('/api/auth/role', {

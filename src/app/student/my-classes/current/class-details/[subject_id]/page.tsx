@@ -91,12 +91,12 @@ const SubjectDetails = () => {
 
         if (!resFERStudentData.success) {
           throw new Error(resFERStudentData.message);
-      }
+        }
 
-      if (!resSchedules.success) {
-          throw new Error(resSchedules.message);
-      }  
-      console.log(resFERStudentData);
+        if (!resSchedules.success) {
+            throw new Error(resSchedules.message);
+        }  
+        console.log(resFERStudentData);
         setClassSubject(resSubject.data);                  
         setClassSchedules(resSchedules.data);   
         setClassStudentFer({          

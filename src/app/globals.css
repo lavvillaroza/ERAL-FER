@@ -2,8 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-
-
 body {
   font-family: Arial, Helvetica, sans-serif;
 }
@@ -89,13 +87,39 @@ body {
   }
 }
 
-
-
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@media print {
+  @page {
+    size: A4; /* or use 'letter' for US Letter size */
+    margin: 0.5in; /* Adjust margin (e.g., 0.5in, 1cm, auto) */
+  }
+
+  body {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .print-container {
+    width: 100%;
+    padding: 20px;
+    background: white;
+  }
+
+  .print-container img {
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* Hide all buttons when printing */
+  button {
+    display: none !important;
   }
 }

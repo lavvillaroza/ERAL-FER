@@ -1,5 +1,26 @@
 import { ClassSubjectModel } from "@/models/classSubjectModel";
 
+
+export const getAllClassSubjects = async () => {
+    try {        
+        const response = await fetch(`/api/class-subject/all`, {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json'
+            } 
+        });
+        const result = await response.json();
+        if (result.success === false) {
+            throw new Error(result.message);
+        }
+        return result;
+    }
+    catch (error) {
+        throw new Error("ClassSubjectAppService @ getUsersByUserId API:" + error);
+    }         
+};
+
 export const getClassSubjects = async (status: string) => {
     try {
         const queryParams = `?status=${status}`; 
@@ -126,3 +147,23 @@ export const updateClassSubjectStatus = async (subject_id: number,  status: stri
         throw new Error("ClassSubjectAppService @ updateClassSubjectStatus API:" + error);
     }        
 }
+
+export const getTopClassSubjects = async () => {
+    try {        
+        const response = await fetch(`/api/top-class-subject`, {
+            method: 'GET',
+            credentials: 'include', // ✅ Ensure cookies are sent if needed
+            headers: {
+                'Content-Type': 'application/json'
+            }        
+        });
+        const result = await response.json();
+        if (result.success === false) {
+            throw new Error(result.message);
+        }
+        return result;
+    }
+    catch (error) {
+        throw new Error("ClassSubjectAppService @ ClassSubjects by TeacherUserId API:" + error);
+    }    
+};

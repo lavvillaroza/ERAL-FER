@@ -21,9 +21,7 @@ export async function GET(req: NextRequest, { params }: { params: { user_id: str
 
     if (!user) {
       throw new Error("User not found!")
-    }
-    console.log(user)
-
+    }    
     // Convert Uint8Array to Base64 string
     let profileImageBase64 = null;
     if (user.userDetails?.profile_image) {

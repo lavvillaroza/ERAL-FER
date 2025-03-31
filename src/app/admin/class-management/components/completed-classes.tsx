@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { DonutChart } from '@/components/donut-chart'
 import { DataTable } from '@/components/ui/data-table'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardFooter } from '@/components/ui/card'
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import TimelineModal from './TimelineModal'
 import { ClassSubjectModel } from '@/models/classSubjectModel'
 import { toast, Toaster } from "sonner";
@@ -75,20 +75,18 @@ export default function CurrentClasses() {
       try {
 
         if (adminUserId === 0) return;
+        setIsLoading(true);        
         const [responseGetSubjects, responseGetTeachers] = await Promise.all([
                   getClassSubjects(ClassStatus.COMPLETED),          
                   getUsers(UserRole.TEACHER),
                 ]);
 
         if (!responseGetSubjects.success) throw new Error(responseGetSubjects.message);            
-        if (!responseGetTeachers.success) throw new Error(responseGetTeachers.message);
-
-        console.log("responseGetTeachers.data:", responseGetTeachers.data);
+        if (!responseGetTeachers.success) throw new Error(responseGetTeachers.message);        
         
         setClassSubjects(responseGetSubjects.data);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const getUserDetails = responseGetTeachers.data.map(((user: { userDetails: any }) => user.userDetails));
-        console.log("getUserDetails:", getUserDetails);
+        const getUserDetails = responseGetTeachers.data.map(((user: { userDetails: any }) => user.userDetails));        
         setClassTeachersDetails(getUserDetails);
 
       } catch (error) {
@@ -101,12 +99,7 @@ export default function CurrentClasses() {
         setIsLoading(false);
       }
     };
-
-    fetchData();
-    // Set interval to run fetchClassSubjects every 5 seconds
-    const intervalId = setInterval(fetchData, 5000); // 5 seconds        
-    // Cleanup function to clear interval when component unmounts
-    return () => clearInterval(intervalId);
+    fetchData();    
   }, [adminUserId]);
 
   // Function to merge data
@@ -127,31 +120,52 @@ export default function CurrentClasses() {
 
   if (!selectedClass) {
     return (
-      <div className="grid lg:grid-cols-4 md:grid-cols-2 sm:grid-cols-1 grid-cols-1 gap-6 auto-rows-fr">
-          {isLoading ? 
-            (
-              <Loading/>
-            ) : (
-                classSubjectWTeacherDetails.map((subject) => (
-                  <Card 
-                    key={subject.id} 
-                    className="w-auto min-w-[200px] h-full flex flex-col hover:shadow-lg transition-shadow cursor-pointer"
-                    onClick={() => setSelectedClass(subject)}>
-                    <CardContent className="p-4 flex-grow">
-                      <h3 className="font-semibold mb-2">{subject.name}</h3>              
-                      <p className="text-sm text-gray-500">Instructor: {GetFullName(subject.teacherDetails ?? undefined)}</p>
-                      <p className="text-sm text-gray-500">Schedule: {`[ ${subject.days} ]`}</p>
-                      <p className="text-sm text-gray-500">Time: {`${subject.time_schedule}`}</p>
-                    </CardContent>
-                    <CardFooter className="mt-auto"> {/* Pushes footer to the bottom */}
-                      <div className="w-full flex justify-start">                
-                        <Badge>{subject.status}</Badge>
-                      </div>
-                    </CardFooter>
-                  </Card>
-                ))                     
-              )}   
-      </div>
+      <>
+        {isLoading ? 
+              (
+                <div className="flex items-center justify-center h-[700px] w-full">
+                  <Loading />
+                </div>  
+              ) : (
+                <div className="grid lg:grid-cols-4 md:grid-cols-2 sm:grid-cols-1 grid-cols-1 gap-6 auto-rows-fr">
+                    {
+                      classSubjectWTeacherDetails.map((subject) => (
+                        <Card 
+                          key={subject.id} 
+                          className="w-auto min-w-[200px] h-full flex flex-col hover:shadow-lg transition-shadow cursor-pointer">
+                          <CardHeader>
+                            <div className="w-full flex justify-start">                
+                              <Badge>{subject.status}</Badge>
+                            </div>
+                          </CardHeader>
+                          <CardContent className="px-4 flex-grow">
+                            <h3 className="font-semibold mb-2">{subject.name}</h3>              
+                            <p className="text-sm text-gray-500">Instructor: {GetFullName(subject.teacherDetails ?? undefined)}</p>
+                            <p className="text-sm text-gray-500">Schedule: {`[ ${subject.days} ]`}</p>
+                            <p className="text-sm text-gray-500">Time: {`${subject.time_schedule}`}</p>
+                          </CardContent>
+                          <CardFooter className="mt-auto"> {/* Pushes footer to the bottom */}
+                            <div className="grid grid-cols-1 gap-2 mt-4 sm:grid-cols-2 ml-auto justify-self-end">
+                                  <Button
+                                      variant="outline" 
+                                      className="flex-1"
+                                      onClick={() => router.push(`/admin/class-management/class-details/${subject.id}`)}>
+                                      Details
+                                  </Button> 
+                                  <Button
+                                      variant="outline"
+                                      className="flex-1"
+                                      onClick={() => router.push(`/admin/class-management/view-students/${subject.id}`)}>
+                                      View Students
+                                  </Button>                                  
+                            </div>
+                          </CardFooter>
+                        </Card>
+                      ))     
+                    }
+                </div>                                  
+              )}        
+      </>                     
     )
   }
 

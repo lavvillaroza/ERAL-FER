@@ -101,7 +101,7 @@ export function FERTimeLineChart({ data }: FERTimeLineChartProps) {
         // Find the dominant expression with the highest average value
         const [dominant_expression, highest_avg_value] = emotionEntries.reduce(
             (max, [emotion, value]) => (value as number > max[1] ? [emotion, value as number] : max),
-            ["neutral", 0] // Default to neutral if all values are 0
+            ["na", 0] // Default to neutral if all values are 0
         );
 
         return {

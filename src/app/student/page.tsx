@@ -11,10 +11,12 @@ import { useRouter } from "next/navigation";
 import { getDecodedAuthToken, refreshAuthToken } from "@/services/authAppService";
 import { toast, Toaster } from "sonner"
 import { ExpressionChartsComplete } from "@/components/expression-charts-complete";
+import Loading from "@/components/loading";
+import { getOverAllFERChartDataByStudentUserId, getTopClassesCompletedDataByStudentUserId, getTopClassesCurrentDataByStudentUserId } from "@/services/classStudentFerAppService";
 
 export default function Page() {
     // Set initial moods state
-    const [moods] = useState([
+    const [moods, setMoods] = useState([
       { icon: "😲", percentage: "0.00", label: "Surprised", bgClass: "bg-gray-100/50", color: "text-orange-500" },
         { icon: "😊", percentage: "0.00", label: "Happy", bgClass: "bg-gray-100/50", color: "text-green-500" },
         { icon: "😐", percentage: "0.00", label: "Neutral", bgClass: "bg-gray-100/50", color: "text-blue-500" },
@@ -24,25 +26,12 @@ export default function Page() {
         { icon: "😨", percentage: "0.00", label: "Fearful", bgClass: "bg-gray-100/50", color: "text-slate-500" },
         { icon: "😶", percentage: "0.00", label: "NA", bgClass: "bg-gray-100/50", color: "hsl(0, 0%, 50%)" },
   ]);
-
-
-  const [, setCurrentTime] = useState(new Date());  
+  
   const router = useRouter();
   const [studentUserId, setStudentUserId] = useState<number>(0);  
-  // const [classStudentFer, setClassStudentFer] = useState<ClassStudentFERModel>({
-  //           id: 0, // Assuming id is auto-generated
-  //           classsched_id: 0,
-  //           student_user_id: 0, // Assuming student_user_id is available
-  //           surprised: 0,
-  //           happy: 0,
-  //           neutral: 0,
-  //           sad: 0,
-  //           angry: 0,
-  //           disgusted: 0,
-  //           fearful: 0,        
-  //           na: 0,
-  //           datetime_stamp: new Date(),
-  //     });
+  const [isLoading, setIsLoading] = useState(true);  
+  const [topSubjectsCurrent, setTopSubjectsCurrent] = useState([]);
+  const [topSubjectsCompleted, setTopSubjectsCompleted] = useState([]);
 
   useEffect(() => {
     const checkSession = async () => {
@@ -72,88 +61,84 @@ export default function Page() {
     };
     checkSession();    
   }, [router]);
-
   
+  useEffect(() => {        
+          if (studentUserId === 0) return;        
+          const fetchData = async () => {
+            try {                                    
+              const [responseExpression, responseTopClassesCurrPositveFER, responseTopClassesCompPositiveFER] = await Promise.all([
+                getOverAllFERChartDataByStudentUserId(studentUserId),
+                getTopClassesCurrentDataByStudentUserId(studentUserId),          
+                getTopClassesCompletedDataByStudentUserId(studentUserId),              
+              ]); 
+                          
+              if (!responseExpression.success) throw new Error(responseExpression.message);
+              if (!responseTopClassesCurrPositveFER.success) throw new Error(responseTopClassesCurrPositveFER.message);
+              if (!responseTopClassesCompPositiveFER.success) throw new Error(responseTopClassesCompPositiveFER.message);
+              
+              if (responseExpression.data) {          
+                setMoods((prevMoods) => {
+                  const newMoods =  responseExpression.data[0] || {};            
+                  const updatedMoods = prevMoods.map((mood) => {
+                    const moodKey = mood.label.toLowerCase().trim(); // Trim extra spaces
+                    const moodValue = newMoods[moodKey];
+                    return {
+                      ...mood,
+                      percentage: moodValue ? Number(moodValue).toFixed(2) : "0.00",
+                    };
+                  });        
+                  return updatedMoods;
+                });          
+              }
+  
+              if (responseTopClassesCurrPositveFER.data) {
+                  const result = responseTopClassesCurrPositveFER.data; // Assuming API returns an array of users
+                  console.log(result);
+                  // Format the results into the required structure
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  const formattedData = result.map((row: { id: number; name: string; students: number; happy: number; surprised: number; neutral: number; }) => ({
+                      id: row.id,
+                      name: row.name,
+                      students: Number(row.students),
+                      emotions: {
+                      happy: row.happy,
+                      surprised: row.surprised,
+                      neutral: row.neutral
+                      }
+                  }));
+                  setTopSubjectsCurrent(formattedData);                
+              }    
 
-  useEffect(() => {
-    console.log(studentUserId);
-    // Update the time every second
-    const interval = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
+              if (responseTopClassesCompPositiveFER.data) {
+                const result = responseTopClassesCompPositiveFER.data; // Assuming API returns an array of users
+                console.log(result);
+                // Format the results into the required structure
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const formattedData = result.map((row: { id: number; name: string; students: number; happy: number; surprised: number; neutral: number; }) => ({
+                    id: row.id,
+                    name: row.name,
+                    students: Number(row.students),
+                    emotions: {
+                    happy: row.happy,
+                    surprised: row.surprised,
+                    neutral: row.neutral
+                    }
+                }));
+                setTopSubjectsCompleted(formattedData);                
+            }    
+            } catch (error) {
+              console.log("Error fetching class subject:", error);
+              toast.error("Failed to fetch class subject!", {
+                description: error instanceof Error ? error.message : JSON.stringify(error),
+              });
+            }  
+            finally {
+              setIsLoading(false);
+            }     
+          }    
+          fetchData();    
+        }, [studentUserId]);
 
-    // Clean up the interval on component unmount
-    return () => clearInterval(interval);
-  }, []);
-
-  // Add new state for completed and current classes
-  const [completedClasses] = useState([
-    { 
-      id: 1, 
-      name: "Introduction to Psychology",
-      students: 35,
-      emotions: {
-        happy: 40,
-        surprised: 25,
-        neutral: 20
-      }
-    },
-    { 
-      id: 2, 
-      name: "World History 101",
-      students: 42,
-      emotions: {
-        happy: 35,
-        surprised: 30,
-        neutral: 25
-      }
-    },
-    { 
-      id: 3, 
-      name: "Computer Programming",
-      students: 22,
-      emotions: {
-        happy: 60,
-        surprised: 40,
-        neutral: 27
-      }
-    },
-    { 
-      id: 4, 
-      name: "Entrepreneurship",
-      students: 85,
-      emotions: {
-        happy: 56,
-        surprised: 32,
-        neutral: 30
-      }
-    },
-    // Add more completed classes...
-  ]);
-
-  const [currentClasses] = useState([
-    { 
-      id: 1, 
-      name: "Advanced Mathematics",
-      students: 38,
-      emotions: {
-        happy: 32,
-        surprised: 28,
-        neutral: 30
-      }
-    },
-    { 
-      id: 2, 
-      name: "English Literature",
-      students: 45,
-      emotions: {
-        happy: 38,
-        surprised: 22,
-        neutral: 25
-      }
-    },
-    // Add more current classes...
-  ]);
 
   return (   
     <> 
@@ -187,21 +172,25 @@ export default function Page() {
           </div>
         </header>
         <div className="flex-1 p-2 sm:p-4 pt-0">            
-            <div className="h-full flex flex-col gap-2 sm:gap-4">               
-              <ExpressionChartsComplete moods={moods} /> 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-5 flex-1">                
-                <TopClassesCard 
-                  title="Top Completed Classes with Positive Expressions"
-                  classes={completedClasses}
-                  schedule="Schedule: Mon/Wed/Fri 10:00 AM to 12:00 PM"
-                />
-                <TopClassesCard 
-                  title="Top Current Classes with Positive Expressions"
-                  classes={currentClasses}
-                  schedule="Schedule: Tue/Thu 2:00 PM to 4:00 PM"
-                />
-              </div>
-            </div>          
+            {isLoading ? (
+              <Loading/>
+              ) :  ( 
+                  <>
+                      <div className="h-full flex flex-col gap-2 sm:gap-4">
+                          <ExpressionChartsComplete moods={moods} />
+                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-5 flex-1">
+                              <TopClassesCard 
+                                  title="Top Completed Classes with Positive Expressions"
+                                  classes={topSubjectsCompleted}                                    
+                              />
+                              <TopClassesCard 
+                                  title="Top Current Classes with Positive Expressions"
+                                  classes={topSubjectsCurrent}                                        
+                              />
+                          </div>
+                      </div>          
+                  </>
+              )}           
         </div>
       </SidebarInset>
     </SidebarProvider>    

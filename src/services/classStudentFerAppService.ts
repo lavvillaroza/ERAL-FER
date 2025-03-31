@@ -256,3 +256,131 @@ export const getFERStudentsDataBySubjectScheduleIds = async (subject_id: number,
         throw new Error("ClassStudentFerAppService @ getFERStudentsDataBySubjectScheduleId API:" + error);
     }        
 }
+
+export const getOverAllFERChartDataByTeacherUserId = async (teacher_user_id: number) => { 
+    try {
+        const response = await fetch(`/api/class-student-fer/teacher-dashboard/${teacher_user_id}/chart`, {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json'
+            },            
+        });
+
+        const result = await response.json();
+        if (result.success === false) {
+            throw new Error(result.message);
+        }
+        return result;
+    }
+    catch (error) {
+        throw new Error("ClassStudentFerAppService @ getFERChartDataBySubjectId API:" + error);
+    }        
+}
+
+export const getTopClassesDataByTeacherUserId = async (teacher_user_id: number) => { 
+    try {
+        const response = await fetch(`/api/class-student-fer/teacher-dashboard/${teacher_user_id}/top-subjects`, {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json'
+            },            
+        });
+
+        const result = await response.json();
+        if (result.success === false) {
+            throw new Error(result.message);
+        }
+        return result;
+    }
+    catch (error) {
+        throw new Error("ClassStudentFerAppService @ getFERChartDataBySubjectId API:" + error);
+    }        
+}
+
+export const getTopStudentsDataByTeacherUserId = async (teacher_user_id: number) => { 
+    try {
+        const response = await fetch(`/api/class-student-fer/teacher-dashboard/${teacher_user_id}/top-students`, {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json'
+            },            
+        });
+
+        const result = await response.json();
+        if (result.success === false) {
+            throw new Error(result.message);
+        }
+        return result;
+    }
+    catch (error) {
+        throw new Error("ClassStudentFerAppService @ getFERChartDataBySubjectId API:" + error);
+    }        
+}
+
+
+export const getOverAllFERChartDataByStudentUserId = async (student_user_id: number) => { 
+    try {
+        const response = await fetch(`/api/class-student-fer/student-dashboard/${student_user_id}/chart`, {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json'
+            },            
+        });
+
+        const result = await response.json();
+        if (result.success === false) {
+            throw new Error(result.message);
+        }
+        return result;
+    }
+    catch (error) {
+        throw new Error("ClassStudentFerAppService @ getFERChartDataBySubjectId API:" + error);
+    }        
+}
+
+export const getTopClassesCurrentDataByStudentUserId = async (student_user_id: number) => { 
+    try {
+        const response = await fetch(`/api/class-student-fer/student-dashboard/${student_user_id}/top-subject-current`, {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json'
+            },            
+        });
+
+        const result = await response.json();
+        if (result.success === false) {
+            throw new Error(result.message);
+        }
+        return result;
+    }
+    catch (error) {
+        throw new Error("ClassStudentFerAppService @ getFERChartDataBySubjectId API:" + error);
+    }        
+}
+
+export const getTopClassesCompletedDataByStudentUserId = async (student_user_id: number) => { 
+    try {
+        const response = await fetch(`/api/class-student-fer/student-dashboard/${student_user_id}/top-subject-completed`, {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json'
+            },            
+        });
+
+        const result = await response.json();
+        if (result.success === false) {
+            throw new Error(result.message);
+        }
+        return result;
+    }
+    catch (error) {
+        throw new Error("ClassStudentFerAppService @ getFERChartDataBySubjectId API:" + error);
+    }        
+}
+

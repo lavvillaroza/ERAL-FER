@@ -37,8 +37,7 @@ export default function Register() {
   const onSubmit = async (data: any) => {
     try {      
       const response = await registerUser(data);
-      console.log(response.message);
-      
+      console.log(response.message);      
       setOpen(true);
     } catch (error) {
       setError("Registration failed: " + error);

@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
             );
       }
 
-      if (user.account_status === "new" || user.account_status === "deactivated") {
+      if (user.account_status === "new") {
           return NextResponse.json(
             {
                 success:false,
@@ -44,6 +44,15 @@ export async function POST(req: NextRequest) {
                 { status: 403 }
             );
       }
+
+      if (user.account_status === "disabled") {
+        return NextResponse.json(
+          {
+              success:false,
+              message: "Your account is disabled. Please contact the administration."},
+              { status: 403 }
+          );
+    }
 
       // Generate tokens
       const accessToken = signToken({ id: user.user_id, email: user.email, role: user.role }, SECRET_KEY);

@@ -4,15 +4,17 @@ import { AppSidebarTeacher } from "@/components/app-sidebar-teacher"
 import { useEffect, useState } from "react";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList } from "@/components/ui/breadcrumb";
 import { Separator } from "@radix-ui/react-separator";
-import { TopTenCard } from "@/components/top-ten-card";
-import { TopStudents } from "@/components/top-students";
+import { TopStudentsCard } from "@/components/top-students";
 import { ExpressionChartsComplete } from "@/components/expression-charts-complete";
 import { useRouter } from "next/navigation";
 import { getDecodedAuthToken, refreshAuthToken } from "@/services/authAppService";
 import { toast } from "sonner";
+import { getOverAllFERChartDataByTeacherUserId, getTopClassesDataByTeacherUserId, getTopStudentsDataByTeacherUserId } from "@/services/classStudentFerAppService";
+import Loading from "@/components/loading";
+import { TopClassesCard } from "@/components/top-classes-card";
 
 export default function Page() {
-    const [moods] = useState([
+    const [moods, setMoods] = useState([
         { icon: "😲", percentage: "0.00", label: "Surprised", bgClass: "bg-gray-100/50", color: "text-orange-500" },
         { icon: "😊", percentage: "0.00", label: "Happy", bgClass: "bg-gray-100/50", color: "text-green-500" },
         { icon: "😐", percentage: "0.00", label: "Neutral", bgClass: "bg-gray-100/50", color: "text-blue-500" },
@@ -21,23 +23,14 @@ export default function Page() {
         { icon: "😡", percentage: "0.00", label: "Angry", bgClass: "bg-gray-100/50", color: "text-red-500" },
         { icon: "😨", percentage: "0.00", label: "Fearful", bgClass: "bg-gray-100/50", color: "text-slate-500" },
         { icon: "😶", percentage: "0.00", label: "NA", bgClass: "bg-gray-100/50", color: "hsl(0, 0%, 50%)" },
-    ]);
-
-    const positiveClasses = [
-        { name: "Mathematics 101", happiness: "85", students: 30 },
-        { name: "Physics Advanced", happiness: "82", students: 25 },
-        { name: "Chemistry Lab", happiness: "80", students: 28 },
-        { name: "Biology 201", happiness: "78", students: 22 },
-        { name: "Computer Science", happiness: "77", students: 35 },
-        { name: "English Literature", happiness: "75", students: 27 },
-        { name: "History 101", happiness: "73", students: 31 },
-        { name: "Art Class", happiness: "72", students: 20 },
-        { name: "Music Theory", happiness: "70", students: 24 },
-        { name: "Physical Education", happiness: "69", students: 33 },
-    ];
+      ]);
 
     const router = useRouter(); 
     const [userId, setUserId] = useState<number>(0);  
+    const [isLoading, setIsLoading] = useState(true);  
+    const [topClasses, setTopClasses] = useState([]);
+    const [topStudents, setTopStudents] = useState([]);
+
     useEffect(() => {
         const checkSession = async () => {
         try {
@@ -68,6 +61,85 @@ export default function Page() {
         checkSession();
     }, [router]);
 
+    useEffect(() => {        
+        if (userId === 0) return;        
+        const fetchData = async () => {
+          try {                                    
+            const [responseExpression, responseTopStudentsPositveFER, responseTopClasses] = await Promise.all([
+              getOverAllFERChartDataByTeacherUserId(userId),
+              getTopStudentsDataByTeacherUserId(userId),          
+              getTopClassesDataByTeacherUserId(userId),              
+            ]); 
+                        
+            if (!responseExpression.success) throw new Error(responseExpression.message);
+            if (!responseTopStudentsPositveFER.success) throw new Error(responseTopStudentsPositveFER.message);
+            if (!responseTopClasses.success) throw new Error(responseTopClasses.message);
+            
+            if (responseExpression.data) {          
+              setMoods((prevMoods) => {
+                const newMoods =  responseExpression.data[0] || {};            
+                const updatedMoods = prevMoods.map((mood) => {
+                  const moodKey = mood.label.toLowerCase().trim(); // Trim extra spaces
+                  const moodValue = newMoods[moodKey];
+                  return {
+                    ...mood,
+                    percentage: moodValue ? Number(moodValue).toFixed(2) : "0.00",
+                  };
+                });        
+                return updatedMoods;
+              });          
+            }
+
+            if (responseTopStudentsPositveFER.data) {
+                const result = responseTopStudentsPositveFER.data; // Assuming API returns an array of users
+                console.log(result);
+                // Format the results into the required structure
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const formattedData = result.map((row: { class_subject_id: number; subject_name: string; student_user_id: number; student_name: string; course: string; 
+                                                        surprised: number; happy: number; neutral: number;}) => ({
+                    id: row.class_subject_id,
+                    name: row.student_name,
+                    course: row.course,
+                    subject: row.subject_name,                    
+                    emotions: {
+                    happy: row.happy,
+                    surprised: row.surprised,
+                    neutral: row.neutral
+                    }
+                }));
+                setTopStudents(formattedData);                
+            }    
+
+            if (responseTopClasses.data) {
+                const result = responseTopClasses.data; // Assuming API returns an array of users
+                console.log(result);
+                // Format the results into the required structure
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const formattedData = result.map((row: { id: number; name: string; students: number; happy: number; surprised: number; neutral: number; }) => ({
+                    id: row.id,
+                    name: row.name,
+                    students: Number(row.students),
+                    emotions: {
+                    happy: row.happy,
+                    surprised: row.surprised,
+                    neutral: row.neutral
+                    }
+                }));
+                setTopClasses(formattedData);                
+            }    
+          } catch (error) {
+            console.log("Error fetching class subject:", error);
+            toast.error("Failed to fetch class subject!", {
+              description: error instanceof Error ? error.message : JSON.stringify(error),
+            });
+          }  
+          finally {
+            setIsLoading(false);
+          }     
+        }    
+        fetchData();    
+      }, [userId]);
+
     return (    
         <SidebarProvider>
             <AppSidebarTeacher userId={userId}/>
@@ -93,18 +165,26 @@ export default function Page() {
                         </div>
                     </div>
                 </header>
-                <div className="flex-1 p-2 sm:p-4 pt-0">            
-                    <div className="h-full flex flex-col gap-2 sm:gap-4">
-                        <ExpressionChartsComplete moods={moods} />
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-5 flex-1">
-                            <TopStudents />
-                            <TopTenCard
-                                title="Top 10 Classes with Positive Expression"
-                                type="classes"
-                                data={positiveClasses}
-                            />
-                        </div>
-                    </div>          
+                <div className="flex-1 p-2 sm:p-4 pt-0">
+                     {isLoading ? (
+                        <Loading/>
+                        ) :  ( 
+                            <>
+                                <div className="h-full flex flex-col gap-2 sm:gap-4">
+                                    <ExpressionChartsComplete moods={moods} />
+                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-5 flex-1">
+                                        <TopStudentsCard 
+                                            title="Top Students with Positive Expressions"
+                                            students={topStudents}                                    
+                                        />
+                                        <TopClassesCard 
+                                            title="Top Classes with Positive Expressions"
+                                            classes={topClasses}                                        
+                                        />
+                                    </div>
+                                </div>          
+                            </>
+                        )}                    
                 </div>
             </SidebarInset>
         </SidebarProvider>    

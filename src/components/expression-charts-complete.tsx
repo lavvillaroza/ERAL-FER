@@ -51,8 +51,7 @@ export function ExpressionChartsComplete({
               <DonutChart
                 value={parseFloat(mood.percentage)}
                 color={mood.color}
-                size={responsiveSize}
-                
+                size={responsiveSize}                
                 strokeWidth={Math.max(4, Math.min(strokeWidth, responsiveSize / 8))}
               />
             </div>

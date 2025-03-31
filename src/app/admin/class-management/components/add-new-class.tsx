@@ -101,8 +101,7 @@ export default function AddClassForm() {
   };
 
   // Final confirmation to create class
-  const handleConfirmCreateClass = async () => {
-    console.log(classSubject.time_schedule);
+  const handleConfirmCreateClass = async () => {  
     try {      
       const response = await createClassSubject(classSubject);
       if (!response.success) {     

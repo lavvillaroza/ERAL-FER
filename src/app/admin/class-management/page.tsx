@@ -13,6 +13,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { getDecodedAuthToken, refreshAuthToken } from '@/services/authAppService'
 import { toast, Toaster } from "sonner"
+import { ScrollArea } from '@/components/ui/scroll-area'
 
 export default function ClassManagement() {  
   const router = useRouter(); 
@@ -86,13 +87,17 @@ export default function ClassManagement() {
                 </Card>
               </TabsContent>
               <TabsContent value="current-classes">
-                <Card className="p-6">
-                  <CurrentClasses />
+                <Card className="p-6 h-auto min-h-[770px] md:h-[770px] sm:h-auto">
+                  <ScrollArea className="h-[700px] pr-4">
+                    <CurrentClasses />
+                  </ScrollArea>                                    
                 </Card>
               </TabsContent>
               <TabsContent value="completed-classes">
-                <Card className="p-6">
-                  <CompletedClasses />
+                <Card className="p-6 h-auto min-h-[770px] md:h-[770px] sm:h-auto">
+                  <ScrollArea className="h-[700px] pr-4">
+                      <CompletedClasses />
+                  </ScrollArea>                  
                 </Card>
               </TabsContent>
             </Tabs>

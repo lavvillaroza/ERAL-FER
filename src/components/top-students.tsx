@@ -1,51 +1,64 @@
-import { TopTenCard } from "@/components/top-ten-card";
-import { useEffect, useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-interface Student {
-    name: string;
-    id: string;
-    course: string;
-}
+interface Emotions {
+    happy: number
+    surprised: number
+    neutral: number
+  }
+  
+  interface StudentItem {
+    id: number
+    name: string
+    course: string
+    subject: string
+    emotions: Emotions
+  }
+  
+  interface TopStudentsCardProps {
+    title: string
+    students: StudentItem[]  
+  }
 
-export function TopStudents() {
-    const [students, setStudents] = useState<Student[]>([]);
-
-    useEffect(() => {
-        // Simulating API call - replace this with your actual API call
-        const fetchStudents = async () => {
-            try {
-                // Replace this with your actual API endpoint
-                // const response = await fetch('/api/top-students');
-                // const data = await response.json();
-                
-                // Temporary mock data
-                const mockData = [
-                    { name: "Alice Johnson", id: "STU001", course: "Mathematics 101" },
-                    { name: "Bob Smith", id: "STU002", course: "Physics Advanced" },
-                    { name: "Carol White", id: "STU003", course: "Chemistry Lab" },
-                    { name: "David Brown", id: "STU004", course: "Biology 201" },
-                    { name: "Eve Wilson", id: "STU005", course: "Computer Science" },
-                ];
-                
-                setStudents(mockData);
-            } catch (error) {
-                console.error('Error fetching students:', error);
-            }
-        };
-
-        fetchStudents();
-        
-        // Optional: Set up polling to refresh data periodically
-        const interval = setInterval(fetchStudents, 30000); // Updates every 30 seconds
-        
-        return () => clearInterval(interval);
-    }, []);
-
+export function TopStudentsCard({title, students}: TopStudentsCardProps) {    
     return (
-        <TopTenCard
-            title="Top 10 Students with Positive Expression"
-            type="students"
-            data={students}
-        />
-    );
+        <Card className="shadow-lg">
+          <CardContent className="p-3 sm:p-6 h-full flex flex-col">
+            <h2 className="text-lg sm:text-xl md:text-2xl font-semibold mb-3 sm:mb-4 text-start">{title}</h2>
+            <ScrollArea className="flex-1 h-[400px] sm:h-[500px] pr-2 sm:pr-4">
+                {students.length === 0 ? (
+                    <div className="flex justify-center items-center h-full text-gray-500 text-sm sm:text-base italic">
+                        No available data
+                    </div>
+                ) : ( 
+                    <div className={`space-y-2 sm:space-y-4 pr-2 sm:pr-4`}>
+                        {students.map((item, index) => (
+                        <Card key={index} className="shadow-sm">
+                            <CardContent className="p-2 sm:p-2">
+                                <div className="flex items-center space-x-2 sm:space-x-4 p-2 sm:p-3 rounded-lg">
+                                    <Avatar>
+                                        <AvatarImage src={`/api/placeholder/32/32`} />
+                                        <AvatarFallback>{item.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                                    </Avatar>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="font-medium text-sm sm:text-base truncate">{item.name}</p>                            
+                                        <p className="text-xs sm:text-sm text-gray-500 truncate">{item.course}</p>
+                                        <p className="text-xs sm:text-sm text-gray-500 truncate">{item.subject}</p>
+                                    </div>
+                                    <div className="flex justify-end gap-x-2 sm:gap-x-4 text-xs sm:text-sm text-right flex-wrap">
+                                        <span className="flex items-center">😊 {item.emotions.happy}%</span>
+                                        <span className="flex items-center">😲 {item.emotions.surprised}%</span>
+                                        <span className="flex items-center">😐 {item.emotions.neutral}%</span>
+                                    </div>
+                                </div>                        
+                            </CardContent>
+                        </Card>
+                        ))}
+                    </div>
+                )}              
+            </ScrollArea>
+          </CardContent>
+        </Card>
+      );
 } 
